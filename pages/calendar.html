@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/train.css">
+<link rel="stylesheet" href="../css/calendar.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+<main class="page" style="padding:12px 8px">
+  <div class="container">
+    <div class="cal-header">
+      <button type="button" class="cal-nav-btn" id="btnPrevMonth">‹</button>
+      <h2 id="monthLabel">—</h2>
+      <button type="button" class="cal-nav-btn" id="btnNextMonth">›</button>
+    </div>
+
+    <div class="cal-weekdays">
+      <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+    </div>
+
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div class="cal-footer">
+      <div class="stat-item"><div class="v num" id="footerTotal">0</div><div class="k">Treinos no mês</div></div>
+      <div class="stat-item"><div class="v num" id="footerStreak">0</div><div class="k">Sequência atual</div></div>
+    </div>
+  </div>
+</main>
+
+<div class="rest-sheet" id="daySheet" role="dialog" aria-label="Treinos do dia">
+  <div class="rest-label">DIA</div>
+  <div id="daySheetDate" class="num" style="text-align:center;font-size:22px;margin-bottom:12px"></div>
+  <div id="daySheetList"></div>
+  <div class="rest-actions">
+    <a href="./history.html" class="btn-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center">Ver detalhes</a>
+    <button type="button" class="btn-skip" id="btnCloseDaySheet">Fechar</button>
+  </div>
+</div>
+
+<script type="module" src="../js/calendar.js"></script>
+</body>
+</html>

@@ -258,3 +258,40 @@ export async function getExerciseProgress(exerciseId) {
 
   return [...bySession.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
 }
+
+export async function getSessionsByMonth(year, month) {
+  const start = new Date(year, month - 1, 1).toISOString();
+  const end = new Date(year, month, 1).toISOString();
+
+  const { data: sessions, error } = await supabase
+    .from('workout_sessions')
+    .select('*, workouts(name)')
+    .gte('started_at', start)
+    .lt('started_at', end)
+    .order('started_at');
+  if (error) throw error;
+  if (sessions.length === 0) return [];
+
+  const summary = await getSessionSetsSummary(sessions.map(s => s.id));
+
+  return sessions.map(s => ({
+    ...s,
+    sets: summary[s.id]?.sets || 0,
+    volume: summary[s.id]?.volume || 0
+  }));
+}
+
+export async function getRecentCompletedSessionDates(days = 60) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('started_at')
+    .not('finished_at', 'is', null)
+    .gte('started_at', cutoff.toISOString())
+    .order('started_at', { ascending: false });
+  if (error) throw error;
+
+  return data.map(s => new Date(s.started_at).toDateString());
+}
