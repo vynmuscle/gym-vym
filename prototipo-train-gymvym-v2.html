@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GymVym — Treino A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --surface: #14171c;
+    --surface-2: #1b1f26;
+    --border: #262b33;
+    --text: #f2f3f5;
+    --muted: #8b93a1;
+    --red: #d9333f;
+    --green: #3fa958;
+    --yellow: #e9b93b;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+  body { padding-bottom: 120px; }
+  .num { font-family: 'Anton', sans-serif; letter-spacing: .02em; }
+
+  /* ===== Header ===== */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(11,13,16,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 12px;
+  }
+  .header-row { display: flex; justify-content: space-between; align-items: center; }
+  .brand { font-family: 'Anton', sans-serif; font-size: 15px; color: var(--red); letter-spacing: .08em; }
+  .elapsed { font-family: 'Anton', sans-serif; font-size: 22px; }
+  h1 { font-size: 17px; font-weight: 700; margin-top: 6px; }
+  .progress-track { height: 5px; background: var(--surface-2); border-radius: 99px; margin-top: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0%; background: var(--red); border-radius: 99px; transition: width .35s ease; }
+  .progress-label { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* ===== Card de exercício ===== */
+  main { padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
+  .exercise {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; padding-bottom: 12px;
+  }
+  .exercise.done { border-color: var(--green); }
+
+  .ex-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 8px; }
+  .ex-thumb {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    background: var(--surface-2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .ex-name { font-size: 17px; font-weight: 700; color: var(--yellow); flex: 1; }
+  .ex-menu { background: none; border: none; color: var(--muted); font-size: 22px; min-width: 44px; min-height: 44px; cursor: pointer; }
+
+  .ex-notes {
+    display: block; width: calc(100% - 28px); margin: 2px 14px 8px;
+    background: none; border: none; color: var(--muted);
+    font-family: 'Inter', sans-serif; font-size: 14px; resize: none;
+  }
+  .ex-notes::placeholder { color: #565e6b; }
+  .ex-notes:focus { outline: none; color: var(--text); }
+
+  .ex-rest { display: flex; align-items: center; gap: 8px; padding: 0 14px 12px; font-size: 14px; color: var(--red); font-weight: 600; }
+
+  /* ===== Tabela de séries ===== */
+  .sets-header, .set-row {
+    display: grid;
+    grid-template-columns: 44px 1fr 76px 76px 60px;
+    align-items: center; gap: 6px; padding: 0 10px;
+  }
+  .sets-header {
+    font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em;
+    padding-bottom: 8px; text-align: center;
+  }
+  .sets-header .left { text-align: left; padding-left: 4px; }
+  .set-row { min-height: 58px; }
+  .set-row:nth-child(even) { background: rgba(255,255,255,.025); }
+  .set-num { font-family: 'Anton', sans-serif; font-size: 18px; text-align: center; color: var(--text); }
+  .set-prev { font-size: 14px; color: var(--muted); padding-left: 4px; }
+  .set-input {
+    width: 100%; min-height: 46px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-family: 'Anton', sans-serif; font-size: 19px; text-align: center;
+  }
+  .set-input:focus { outline: 2px solid var(--yellow); outline-offset: 1px; border-color: transparent; }
+  .check-btn {
+    min-height: 46px; width: 100%;
+    border: 2px solid var(--border); border-radius: 10px;
+    background: var(--surface-2); color: var(--muted);
+    font-size: 18px; font-weight: 700; cursor: pointer;
+    transition: transform .08s ease, background .15s, border-color .15s, color .15s;
+  }
+  .check-btn:active { transform: scale(.93); }
+  .check-btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+  .set-row.completed .check-btn { background: var(--green); border-color: var(--green); color: #fff; }
+  .set-row.completed .set-input { opacity: .55; pointer-events: none; }
+  .set-row.completed .set-num { color: var(--green); }
+
+  .add-set-btn {
+    display: block; width: calc(100% - 24px); margin: 10px auto 0;
+    min-height: 48px; border-radius: 12px;
+    background: var(--surface-2); border: 1px dashed var(--border);
+    color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .add-set-btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+  /* ===== Timer de descanso (bottom sheet) ===== */
+  .rest-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: var(--surface-2);
+    border-top: 3px solid var(--red);
+    border-radius: 22px 22px 0 0;
+    padding: 18px 20px calc(20px + env(safe-area-inset-bottom));
+    transform: translateY(110%); transition: transform .3s cubic-bezier(.3,1.1,.4,1);
+    box-shadow: 0 -12px 40px rgba(0,0,0,.55);
+  }
+  .rest-sheet.open { transform: translateY(0); }
+  .rest-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .14em; text-align: center; }
+  .rest-time { font-family: 'Anton', sans-serif; font-size: 88px; line-height: 1; text-align: center; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+  .rest-time.ending { color: var(--red); }
+  .rest-context { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .rest-actions { display: flex; gap: 10px; }
+  .rest-actions button {
+    flex: 1; min-height: 56px; border-radius: 14px; border: none;
+    font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .btn-add { background: var(--surface); color: var(--text); border: 1px solid var(--border) !important; }
+  .btn-skip { background: var(--red); color: #fff; }
+  .rest-actions button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+  /* ===== Finalizar ===== */
+  .finish-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 65%, transparent);
+  }
+  .finish-btn {
+    width: 100%; min-height: 58px; border-radius: 16px;
+    background: var(--surface-2); color: var(--muted);
+    font-size: 17px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;
+    border: 1px solid var(--border);
+    transition: background .2s, color .2s;
+  }
+  .finish-btn.ready { background: var(--red); color: #fff; border-color: var(--red); }
+  .finish-btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+  /* ===== Resumo ===== */
+  .summary-overlay {
+    position: fixed; inset: 0; z-index: 50; display: none;
+    background: rgba(11,13,16,.96); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .summary-overlay.open { display: flex; }
+  .summary-card { width: 100%; max-width: 380px; text-align: center; }
+  .summary-card h2 { font-family: 'Anton', sans-serif; font-size: 34px; margin-bottom: 4px; }
+  .summary-card .sub { color: var(--muted); font-size: 14px; margin-bottom: 26px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 26px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 8px; }
+  .stat .v { font-family: 'Anton', sans-serif; font-size: 26px; }
+  .stat .k { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .08em; }
+  .stat:nth-child(1) .v { color: var(--red); }
+  .stat:nth-child(2) .v { color: var(--yellow); }
+  .stat:nth-child(3) .v { color: var(--green); }
+  .summary-card button {
+    width: 100%; min-height: 54px; border: none; border-radius: 14px;
+    background: var(--green); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <span class="brand" style="color: var(--text)">GYM <span style="color: var(--red)">VYM</span></span>
+    <span class="elapsed num" id="elapsed">00:00</span>
+  </div>
+  <h1>Treino A — Peito e Tríceps</h1>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label"><span id="doneCount">0</span> de <span id="totalCount">0</span> séries concluídas</div>
+</header>
+
+<main id="workout"></main>
+
+<div class="finish-bar">
+  <button class="finish-btn" id="finishBtn" onclick="finishWorkout()">Finalizar treino</button>
+</div>
+
+<div class="rest-sheet" id="restSheet" role="dialog" aria-label="Descanso">
+  <div class="rest-label">Descanso</div>
+  <div class="rest-time num" id="restTime">1:30</div>
+  <div class="rest-context" id="restContext"></div>
+  <div class="rest-actions">
+    <button class="btn-add" onclick="addRest(30)">+30s</button>
+    <button class="btn-skip" onclick="skipRest()">Pular descanso</button>
+  </div>
+</div>
+
+<div class="summary-overlay" id="summary">
+  <div class="summary-card">
+    <h2>Treino concluído!</h2>
+    <div class="sub">Treino A — Peito e Tríceps</div>
+    <div class="stats">
+      <div class="stat"><div class="v num" id="sumTime">—</div><div class="k">Duração</div></div>
+      <div class="stat"><div class="v num" id="sumSets">—</div><div class="k">Séries</div></div>
+      <div class="stat"><div class="v num" id="sumVolume">—</div><div class="k">Volume kg</div></div>
+    </div>
+    <button onclick="location.reload()">Voltar ao início</button>
+  </div>
+</div>
+
+<script>
+// ===== Mock: prescrição + histórico da última sessão (viria do Supabase) =====
+const WORKOUT = [
+  { name: 'Supino reto', icon: '🏋️', equip: 'Barra', rest: 90,
+    sets: [
+      { prev: '60kg x 12', kg: 60, reps: 12 },
+      { prev: '60kg x 12', kg: 60, reps: 12 },
+      { prev: '60kg x 10', kg: 60, reps: 10 },
+      { prev: '60kg x 8',  kg: 60, reps: 8  },
+    ]},
+  { name: 'Supino inclinado', icon: '🏋️', equip: 'Halteres', rest: 90,
+    sets: [
+      { prev: '22kg x 10', kg: 22, reps: 10 },
+      { prev: '22kg x 10', kg: 22, reps: 10 },
+      { prev: '22kg x 9',  kg: 22, reps: 10 },
+    ]},
+  { name: 'Crucifixo', icon: '🏋️', equip: 'Halteres', rest: 60,
+    sets: [
+      { prev: '14kg x 12', kg: 14, reps: 12 },
+      { prev: '14kg x 12', kg: 14, reps: 12 },
+      { prev: '14kg x 11', kg: 14, reps: 12 },
+    ]},
+  { name: 'Tríceps polia', icon: '🏋️', equip: 'Polia', rest: 60,
+    sets: [
+      { prev: '35kg x 12', kg: 35, reps: 12 },
+      { prev: '35kg x 12', kg: 35, reps: 12 },
+      { prev: '35kg x 12', kg: 35, reps: 12 },
+      { prev: '35kg x 10', kg: 35, reps: 10 },
+    ]},
+  { name: 'Tríceps francês', icon: '🏋️', equip: 'Halter', rest: 60,
+    sets: [
+      { prev: '12kg x 10', kg: 12, reps: 10 },
+      { prev: '12kg x 10', kg: 12, reps: 10 },
+      { prev: '12kg x 9',  kg: 12, reps: 10 },
+    ]},
+];
+
+let doneSets = 0, totalSets = 0, totalVolume = 0;
+let startTime = Date.now();
+let restInterval = null, restRemaining = 0;
+
+const main = document.getElementById('workout');
+
+function setRowHTML(ei, s, set) {
+  return `
+    <div class="set-row" id="set-${ei}-${s}">
+      <div class="set-num">${s}</div>
+      <div class="set-prev">${set.prev || '—'}</div>
+      <input class="set-input" type="number" inputmode="decimal" value="${set.kg}" aria-label="Carga em kg">
+      <input class="set-input" type="number" inputmode="numeric" value="${set.reps}" aria-label="Repetições">
+      <button class="check-btn" onclick="completeSet(${ei}, ${s})" aria-label="Concluir série ${s}">✓</button>
+    </div>`;
+}
+
+WORKOUT.forEach((ex, ei) => {
+  totalSets += ex.sets.length;
+  const card = document.createElement('section');
+  card.className = 'exercise';
+  card.id = 'ex-' + ei;
+  let rows = '';
+  ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set));
+  card.innerHTML = `
+    <div class="ex-head">
+      <div class="ex-thumb">${ex.icon}</div>
+      <div class="ex-name">${ex.name} (${ex.equip})</div>
+      <button class="ex-menu" aria-label="Opções do exercício">⋮</button>
+    </div>
+    <textarea class="ex-notes" rows="1" placeholder="Adicionar notas aqui..."></textarea>
+    <div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest/60)}min ${ex.rest%60}s</div>
+    <div class="sets-header">
+      <div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>✓</div>
+    </div>
+    <div class="sets-body" id="sets-${ei}">${rows}</div>
+    <button class="add-set-btn" onclick="addSet(${ei})">+ Adicionar série</button>`;
+  main.appendChild(card);
+});
+document.getElementById('totalCount').textContent = totalSets;
+
+// ===== Cronômetro =====
+setInterval(() => {
+  const t = Math.floor((Date.now() - startTime) / 1000);
+  document.getElementById('elapsed').textContent =
+    String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+}, 1000);
+
+// ===== Concluir série (no app real: INSERT em session_sets) =====
+function completeSet(ei, s) {
+  const row = document.getElementById(`set-${ei}-${s}`);
+  if (row.classList.contains('completed')) return;
+  row.classList.add('completed');
+  const inputs = row.querySelectorAll('.set-input');
+  const kg = parseFloat(inputs[0].value) || 0;
+  const reps = parseInt(inputs[1].value) || 0;
+  totalVolume += kg * reps;
+  doneSets++;
+  document.getElementById('doneCount').textContent = doneSets;
+  document.getElementById('progressFill').style.width = (doneSets / totalSets * 100) + '%';
+
+  const card = document.getElementById('ex-' + ei);
+  const total = card.querySelectorAll('.set-row').length;
+  const done = card.querySelectorAll('.set-row.completed').length;
+  if (done === total) card.classList.add('done');
+
+  if (doneSets >= totalSets) {
+    document.getElementById('finishBtn').classList.add('ready');
+    closeRest();
+    return;
+  }
+  startRest(WORKOUT[ei].rest, WORKOUT[ei].name, done, total);
+}
+
+// ===== Adicionar série =====
+function addSet(ei) {
+  const body = document.getElementById('sets-' + ei);
+  const n = body.querySelectorAll('.set-row').length + 1;
+  const last = WORKOUT[ei].sets[WORKOUT[ei].sets.length - 1];
+  body.insertAdjacentHTML('beforeend', setRowHTML(ei, n, { prev: '—', kg: last.kg, reps: last.reps }));
+  totalSets++;
+  document.getElementById('totalCount').textContent = totalSets;
+  document.getElementById('progressFill').style.width = (doneSets / totalSets * 100) + '%';
+  document.getElementById('finishBtn').classList.remove('ready');
+  document.getElementById('ex-' + ei).classList.remove('done');
+}
+
+// ===== Descanso =====
+function startRest(seconds, exName, done, total) {
+  restRemaining = seconds;
+  document.getElementById('restContext').textContent = `${exName} — série ${done}/${total} feita`;
+  updateRestDisplay();
+  document.getElementById('restSheet').classList.add('open');
+  clearInterval(restInterval);
+  restInterval = setInterval(() => {
+    restRemaining--;
+    updateRestDisplay();
+    if (restRemaining <= 0) {
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      closeRest();
+    }
+  }, 1000);
+}
+function updateRestDisplay() {
+  const el = document.getElementById('restTime');
+  el.textContent = Math.floor(restRemaining / 60) + ':' + String(restRemaining % 60).padStart(2, '0');
+  el.classList.toggle('ending', restRemaining <= 10);
+}
+function addRest(n) { restRemaining += n; updateRestDisplay(); }
+function skipRest() { closeRest(); }
+function closeRest() {
+  clearInterval(restInterval);
+  document.getElementById('restSheet').classList.remove('open');
+}
+
+// ===== Finalizar =====
+function finishWorkout() {
+  const t = Math.floor((Date.now() - startTime) / 1000);
+  document.getElementById('sumTime').textContent = Math.floor(t / 60) + 'min';
+  document.getElementById('sumSets').textContent = doneSets;
+  document.getElementById('sumVolume').textContent = totalVolume.toLocaleString('pt-BR');
+  closeRest();
+  document.getElementById('summary').classList.add('open');
+}
+</script>
+</body>
+</html>
