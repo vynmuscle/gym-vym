@@ -3,7 +3,8 @@ import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import {
   getWorkout, listExercises, listWorkoutExercises,
-  addWorkoutExercise, updateWorkoutExercise, removeWorkoutExercise
+  addWorkoutExercise, updateWorkoutExercise, removeWorkoutExercise,
+  searchLibraryExercises, addExerciseFromLibrary
 } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
@@ -140,3 +141,60 @@ if(exercisesCache.length === 0){
 
 resetForm();
 await loadList();
+
+// ── Buscar na biblioteca ────────────────────────────────────────────
+const btnToggleLibSearch = document.getElementById('btnToggleLibSearch');
+const libSearchPanel = document.getElementById('libSearchPanel');
+const libSearchInput = document.getElementById('libSearchInput');
+const libSearchResults = document.getElementById('libSearchResults');
+
+let libDebounceTimer = null;
+
+btnToggleLibSearch.addEventListener('click', () => {
+  const isOpen = libSearchPanel.style.display !== 'none';
+  libSearchPanel.style.display = isOpen ? 'none' : 'block';
+});
+
+async function runLibSearch(){
+  const query = libSearchInput.value.trim();
+
+  if(!query){
+    libSearchResults.innerHTML = '';
+    return;
+  }
+
+  const results = await searchLibraryExercises({ query, limit: 10 });
+
+  if(results.length === 0){
+    libSearchResults.innerHTML = '<p class="muted" style="padding:8px 0">Nenhum exercício encontrado.</p>';
+    return;
+  }
+
+  libSearchResults.innerHTML = results.map(ex => `
+    <div class="lib-result-item">
+      <div class="lib-result-info">
+        <strong>${ex.name}</strong><br>
+        <span class="muted">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
+      </div>
+      <button type="button" class="btn-icon" data-add-lib="${ex.id}">+</button>
+    </div>
+  `).join('');
+
+  libSearchResults.querySelectorAll('[data-add-lib]').forEach(btn => {
+    const ex = results.find(r => r.id === btn.dataset.addLib);
+    btn.addEventListener('click', async () => {
+      const created = await addExerciseFromLibrary(user.id, ex);
+      await loadExerciseOptions();
+      exerciseSelect.value = created.id;
+      showMessage(`"${ex.name}" adicionado. Já selecionado acima.`, 'success');
+      libSearchPanel.style.display = 'none';
+      libSearchInput.value = '';
+      libSearchResults.innerHTML = '';
+    });
+  });
+}
+
+libSearchInput.addEventListener('input', () => {
+  clearTimeout(libDebounceTimer);
+  libDebounceTimer = setTimeout(runLibSearch, 300);
+});

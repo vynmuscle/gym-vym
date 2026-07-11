@@ -121,7 +121,7 @@ async function toggleDetails(sessionId){
   const grouped = new Map();
   rows.forEach(r => {
     if(!grouped.has(r.exercise_id)){
-      grouped.set(r.exercise_id, { name: r.exercises.name, equipment: r.exercises.equipment, sets: [] });
+      grouped.set(r.exercise_id, { name: r.exercises.name, equipment: r.exercises.equipment, imageUrl: r.exercises.image_url, sets: [] });
     }
     grouped.get(r.exercise_id).sets.push(r);
   });
@@ -131,7 +131,7 @@ async function toggleDetails(sessionId){
   el.innerHTML = [...grouped.values()].map(ex => `
     <div class="exercise" style="margin-top:10px;padding-bottom:8px">
       <div class="ex-head" style="padding-bottom:8px">
-        <div class="ex-thumb">🏋️</div>
+        <div class="ex-thumb">${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="">` : '🏋️'}</div>
         <div class="ex-name">${ex.name}${ex.equipment ? ' (' + ex.equipment + ')' : ''}</div>
       </div>
       <div class="history-sets">

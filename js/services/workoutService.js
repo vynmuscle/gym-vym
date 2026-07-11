@@ -58,7 +58,7 @@ export async function deleteWorkout(id) {
 export async function listWorkoutExercises(workoutId) {
   const { data, error } = await supabase
     .from('workout_exercises')
-    .select('*, exercises(name, muscle_group, equipment)')
+    .select('*, exercises(name, muscle_group, equipment, image_url)')
     .eq('workout_id', workoutId)
     .order('sort_order');
   if (error) throw error;
@@ -155,7 +155,7 @@ export async function getSessionSetsSummary(sessionIds) {
 export async function getSessionDetails(sessionId) {
   const { data, error } = await supabase
     .from('session_sets')
-    .select('*, exercises(name, equipment)')
+    .select('*, exercises(name, equipment, image_url)')
     .eq('session_id', sessionId)
     .order('completed_at', { ascending: true });
   if (error) throw error;
@@ -165,4 +165,44 @@ export async function getSessionDetails(sessionId) {
 export async function deleteSession(id) {
   const { error } = await supabase.from('workout_sessions').delete().eq('id', id);
   if (error) throw error;
+}
+
+export async function searchLibraryExercises({ query, muscleGroup, offset = 0, limit = 24 }) {
+  let q = supabase
+    .from('library_exercises')
+    .select('*')
+    .order('name')
+    .range(offset, offset + limit - 1);
+
+  if (query) q = q.ilike('name', `%${query}%`);
+  if (muscleGroup) q = q.eq('muscle_group', muscleGroup);
+
+  const { data, error } = await q;
+  if (error) throw error;
+  return data;
+}
+
+export async function addExerciseFromLibrary(userId, libEx) {
+  const { data: existing, error: findErr } = await supabase
+    .from('exercises')
+    .select('*')
+    .eq('user_id', userId)
+    .ilike('name', libEx.name)
+    .maybeSingle();
+  if (findErr) throw findErr;
+  if (existing) return existing;
+
+  const { data, error } = await supabase
+    .from('exercises')
+    .insert({
+      user_id: userId,
+      name: libEx.name,
+      muscle_group: libEx.muscle_group,
+      equipment: libEx.equipment,
+      image_url: libEx.image_urls?.[0] || null
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }

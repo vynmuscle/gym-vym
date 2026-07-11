@@ -60,6 +60,7 @@ async function buildWorkout(){
       exerciseId: item.exercise_id,
       name: item.exercises.name,
       equipment: item.exercises.equipment,
+      imageUrl: item.exercises.image_url,
       rest: item.rest_seconds,
       sets: []
     };
@@ -91,7 +92,7 @@ async function buildWorkout(){
 
     card.innerHTML = `
       <div class="ex-head">
-        <div class="ex-thumb">🏋️</div>
+        <div class="ex-thumb">${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="">` : '🏋️'}</div>
         <div class="ex-name">${ex.name}${ex.equipment ? ' (' + ex.equipment + ')' : ''}</div>
       </div>
       <div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>

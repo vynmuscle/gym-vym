@@ -18,52 +18,88 @@
 <body>
 <main class="page">
   <div class="container">
-    <div class="panel" style="padding:20px">
-      <h2 id="formTitle">Novo exercício</h2>
-
-      <div class="form-group">
-        <label for="name">Nome</label>
-        <input type="text" id="name" placeholder="Ex: Supino reto">
-      </div>
-
-      <div class="form-group">
-        <label for="muscleGroup">Grupo muscular</label>
-        <select id="muscleGroup">
-          <option value="peito">Peito</option>
-          <option value="costas">Costas</option>
-          <option value="pernas">Pernas</option>
-          <option value="ombros">Ombros</option>
-          <option value="biceps">Bíceps</option>
-          <option value="triceps">Tríceps</option>
-          <option value="abdomen">Abdômen</option>
-          <option value="gluteos">Glúteos</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="equipment">Equipamento</label>
-        <select id="equipment">
-          <option value="">-</option>
-          <option value="barra">Barra</option>
-          <option value="halter">Halter</option>
-          <option value="maquina">Máquina</option>
-          <option value="polia">Polia</option>
-          <option value="peso corporal">Peso corporal</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="notes">Notas</label>
-        <input type="text" id="notes" placeholder="Opcional">
-      </div>
-
-      <button type="button" class="btn btn-primary" id="btnSave">Salvar</button>
-      <button type="button" class="btn btn-secondary" id="btnCancel" style="display:none">Cancelar edição</button>
-
-      <div id="mensagem" class="message"></div>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" id="tabMeus">Meus exercícios</button>
+      <button type="button" class="tab-btn" id="tabBiblioteca">Biblioteca</button>
     </div>
 
-    <div class="panel" id="listPanel" style="margin-top:16px"></div>
+    <div id="meusSection">
+      <div class="panel" style="padding:20px">
+        <h2 id="formTitle">Novo exercício</h2>
+
+        <div class="form-group">
+          <label for="name">Nome</label>
+          <input type="text" id="name" placeholder="Ex: Supino reto">
+        </div>
+
+        <div class="form-group">
+          <label for="muscleGroup">Grupo muscular</label>
+          <select id="muscleGroup">
+            <option value="peito">Peito</option>
+            <option value="costas">Costas</option>
+            <option value="pernas">Pernas</option>
+            <option value="ombros">Ombros</option>
+            <option value="biceps">Bíceps</option>
+            <option value="triceps">Tríceps</option>
+            <option value="abdomen">Abdômen</option>
+            <option value="gluteos">Glúteos</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="equipment">Equipamento</label>
+          <select id="equipment">
+            <option value="">-</option>
+            <option value="barra">Barra</option>
+            <option value="halter">Halter</option>
+            <option value="maquina">Máquina</option>
+            <option value="polia">Polia</option>
+            <option value="peso corporal">Peso corporal</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notas</label>
+          <input type="text" id="notes" placeholder="Opcional">
+        </div>
+
+        <button type="button" class="btn btn-primary" id="btnSave">Salvar</button>
+        <button type="button" class="btn btn-secondary" id="btnCancel" style="display:none">Cancelar edição</button>
+
+        <div id="mensagem" class="message"></div>
+      </div>
+
+      <div class="panel" id="listPanel" style="margin-top:16px"></div>
+    </div>
+
+    <div id="bibliotecaSection" style="display:none">
+      <div class="panel" style="padding:16px">
+        <div class="form-group">
+          <label for="libSearch">Buscar</label>
+          <input type="text" id="libSearch" placeholder="Nome do exercício...">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label for="libMuscleFilter">Grupo muscular</label>
+          <select id="libMuscleFilter">
+            <option value="">Todos</option>
+            <option value="peito">Peito</option>
+            <option value="costas">Costas</option>
+            <option value="pernas">Pernas</option>
+            <option value="ombros">Ombros</option>
+            <option value="biceps">Bíceps</option>
+            <option value="triceps">Tríceps</option>
+            <option value="abdomen">Abdômen</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel lib-detail" id="libDetailPanel" style="margin-top:16px;display:none"></div>
+
+      <div class="lib-grid" id="libGrid" style="margin-top:16px"></div>
+
+      <button type="button" class="btn btn-secondary full" id="btnLoadMore" style="margin-top:16px;display:none">Carregar mais</button>
+      <div id="libMensagem" class="message"></div>
+    </div>
   </div>
 </main>
 

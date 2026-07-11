@@ -31,6 +31,15 @@
         <select id="exerciseSelect"></select>
       </div>
 
+      <button type="button" class="btn btn-secondary full" id="btnToggleLibSearch">🔍 Buscar na biblioteca</button>
+
+      <div class="lib-search-panel" id="libSearchPanel" style="display:none">
+        <div class="form-group" style="margin-bottom:8px">
+          <input type="text" id="libSearchInput" placeholder="Buscar exercício na biblioteca...">
+        </div>
+        <div id="libSearchResults"></div>
+      </div>
+
       <div class="form-group">
         <label for="targetSets">Séries</label>
         <input type="number" id="targetSets" value="3" min="1">
