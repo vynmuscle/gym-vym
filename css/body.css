@@ -1,0 +1,77 @@
+.highlight-card{
+  padding:20px;
+  text-align:center;
+}
+
+.highlight-weight{
+  font-size:44px;
+  line-height:1;
+}
+
+.highlight-sub{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:4px;
+}
+
+.imc-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+
+.imc-value{
+  font-size:20px;
+}
+
+.imc-badge{
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--muted);
+}
+
+.imc-badge.normal{
+  color:var(--green);
+  border-color:var(--green);
+}
+
+.imc-badge.abaixo,
+.imc-badge.sobrepeso{
+  color:var(--yellow);
+  border-color:var(--yellow);
+}
+
+.imc-badge.obesidade{
+  color:var(--red);
+  border-color:var(--red);
+}
+
+.weight-delta{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:10px;
+}
+
+.imc-disclaimer{
+  color:var(--muted);
+  font-size:11px;
+  margin-top:14px;
+  line-height:1.4;
+}
+
+.measure-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 12px;
+}
+
+.measure-grid .form-group{
+  margin-bottom:16px;
+}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medidas - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/train.css">
+<link rel="stylesheet" href="../css/progress.css">
+<link rel="stylesheet" href="../css/body.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <h2>Medidas</h2>
+
+    <div id="emptyState" class="panel" style="display:none;text-align:center;padding:40px 20px">
+      <p class="muted">Nenhuma medida registrada ainda. Preencha o formulário abaixo pra começar a acompanhar sua evolução.</p>
+    </div>
+
+    <div id="highlightCard" class="panel highlight-card" style="display:none">
+      <div class="highlight-weight num" id="highlightWeight">—</div>
+      <div class="highlight-sub" id="highlightSub">—</div>
+
+      <div class="imc-row" id="imcRow" style="display:none">
+        <span class="imc-value num" id="imcValue">—</span>
+        <span class="imc-badge" id="imcBadge">—</span>
+      </div>
+
+      <div class="weight-delta" id="weightDelta"></div>
+
+      <div class="imc-disclaimer">IMC é uma referência geral e não considera composição corporal (massa muscular).</div>
+    </div>
+
+    <div class="panel" style="padding:20px;margin-top:16px">
+      <h2 id="formTitle">Nova medida</h2>
+
+      <div class="form-group">
+        <label for="measuredAt">Data</label>
+        <input type="date" id="measuredAt">
+      </div>
+
+      <div class="form-group">
+        <label for="weight">Peso (kg)</label>
+        <input type="number" id="weight" inputmode="decimal" step="0.1" placeholder="Ex: 78.5">
+      </div>
+
+      <div class="form-group">
+        <label for="height">Altura (cm)</label>
+        <input type="number" id="height" inputmode="decimal" step="0.1" placeholder="Ex: 175">
+      </div>
+
+      <div class="measure-grid">
+        <div class="form-group">
+          <label for="arm">Braço (cm)</label>
+          <input type="number" id="arm" inputmode="decimal" step="0.1" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label for="waist">Cintura (cm)</label>
+          <input type="number" id="waist" inputmode="decimal" step="0.1" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label for="chest">Peito (cm)</label>
+          <input type="number" id="chest" inputmode="decimal" step="0.1" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label for="hip">Quadril (cm)</label>
+          <input type="number" id="hip" inputmode="decimal" step="0.1" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label for="thigh">Coxa (cm)</label>
+          <input type="number" id="thigh" inputmode="decimal" step="0.1" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label for="calf">Panturrilha (cm)</label>
+          <input type="number" id="calf" inputmode="decimal" step="0.1" placeholder="Opcional">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Notas</label>
+        <input type="text" id="notes" placeholder="Opcional">
+      </div>
+
+      <button type="button" class="btn btn-primary" id="btnSave">Salvar</button>
+      <button type="button" class="btn btn-secondary" id="btnCancel" style="display:none">Cancelar edição</button>
+
+      <div id="mensagem" class="message"></div>
+    </div>
+
+    <div id="chartPanel" class="panel" style="margin-top:16px;padding:16px;display:none">
+      <div class="progress-toolbar">
+        <div class="form-group" style="margin-bottom:0">
+          <select id="metricSelect"></select>
+        </div>
+        <select id="periodSelect">
+          <option value="1">1 mês</option>
+          <option value="3">3 meses</option>
+          <option value="6" selected>6 meses</option>
+          <option value="all">Tudo</option>
+        </select>
+      </div>
+
+      <div class="chart-container" id="chartContainer">
+        <div class="chart-tooltip" id="chartTooltip" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="listPanel" style="margin-top:16px"></div>
+  </div>
+</main>
+
+<script type="module" src="../js/body.js"></script>
+</body>
+</html>

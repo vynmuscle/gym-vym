@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { href: '/pages/ai-workout.html', label: 'Gerar com IA', key: 'ai-workout' },
   { href: '/pages/progress.html', label: 'Progresso', key: 'progress' },
   { href: '/pages/calendar.html', label: 'Calendário', key: 'calendar' },
+  { href: '/pages/body.html', label: 'Medidas', key: 'body' },
 ];
 
 export function renderNav(active) {
