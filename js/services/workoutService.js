@@ -281,6 +281,58 @@ export async function getSessionsByMonth(year, month) {
   }));
 }
 
+// Janela de recuperação por grupo muscular (horas). Grupos grandes recuperam
+// mais devagar que os pequenos. Ajustar aqui se necessário.
+const RECOVERY_HOURS = {
+  peito: 72, costas: 72, pernas: 72, gluteos: 72,
+  ombros: 48, biceps: 48, triceps: 48, abdomen: 48
+};
+
+// Quantas séries recentes buscar pra descobrir a última data de cada grupo.
+// Uma query só (sem N+1); 500 cobre meses de treino em uso pessoal.
+const RECOVERY_LOOKBACK_SETS = 500;
+
+export async function getMuscleRecovery() {
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('completed_at, exercises(muscle_group)')
+    .order('completed_at', { ascending: false })
+    .limit(RECOVERY_LOOKBACK_SETS);
+  if (error) throw error;
+
+  const lastByGroup = {};
+  for (const row of data) {
+    const group = row.exercises?.muscle_group;
+    if (!group || lastByGroup[group]) continue;
+    lastByGroup[group] = row.completed_at;
+  }
+
+  const now = Date.now();
+
+  return MUSCLE_GROUPS.map(group => {
+    const lastTrained = lastByGroup[group] || null;
+    const windowHours = RECOVERY_HOURS[group];
+
+    if (!lastTrained) {
+      return { group, lastTrained: null, status: 'sem_registro', pct: 100, hoursSince: null, hoursRemaining: 0 };
+    }
+
+    const hoursSince = (now - new Date(lastTrained).getTime()) / 3600000;
+
+    if (hoursSince >= windowHours) {
+      return { group, lastTrained, status: 'recuperado', pct: 100, hoursSince, hoursRemaining: 0 };
+    }
+
+    return {
+      group, lastTrained,
+      status: 'em_recuperacao',
+      pct: Math.round((hoursSince / windowHours) * 100),
+      hoursSince,
+      hoursRemaining: Math.ceil(windowHours - hoursSince)
+    };
+  });
+}
+
 export async function getRecentCompletedSessionDates(days = 60) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);

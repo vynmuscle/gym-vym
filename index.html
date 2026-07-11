@@ -11,16 +11,32 @@
 <link rel="stylesheet" href="./css/layout.css">
 <link rel="stylesheet" href="./css/components.css">
 <link rel="stylesheet" href="./css/mobile.css">
+<link rel="stylesheet" href="./css/recovery.css">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#22c55e">
 </head>
 
 <body>
 <main class="page">
-  <div class="container panel" style="padding:24px">
-    <h1 class="brand-mark"><span class="gym">GYM</span><span class="vym">VYM</span></h1>
-    <p class="muted" id="userEmail"></p>
-    <button type="button" class="btn btn-secondary" id="btnLogout">Sair</button>
+  <div class="container panel" style="padding:20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <h1 class="brand-mark" style="font-size:22px;margin:0"><span class="gym">GYM</span><span class="vym">VYM</span></h1>
+      <p class="muted" id="userEmail" style="margin:4px 0 0;font-size:13px"></p>
+    </div>
+    <button type="button" class="btn btn-secondary" id="btnLogout" style="margin:0;min-height:44px">Sair</button>
+  </div>
+
+  <div class="container">
+    <div id="suggestionCard" class="panel suggestion-card" style="display:none">
+      <div class="suggestion-label">Hoje</div>
+      <div class="suggestion-name" id="suggestionName">—</div>
+      <div class="suggestion-warning" id="suggestionWarning" style="display:none"></div>
+      <button type="button" class="btn btn-primary full" id="btnStartSuggestion">▶ Treinar</button>
+    </div>
+
+    <h2 class="section-title">Recuperação</h2>
+    <div class="recovery-grid" id="recoveryGrid"></div>
+    <div class="recovery-disclaimer">Estimativa baseada no tempo desde o último treino. Ouça seu corpo e seu personal.</div>
   </div>
 </main>
 
