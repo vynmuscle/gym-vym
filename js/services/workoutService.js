@@ -112,3 +112,57 @@ export async function recordSet(userId, payload) {
   if (error) throw error;
   return data;
 }
+
+export async function listCompletedSessions() {
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('*, workouts(name)')
+    .not('finished_at', 'is', null)
+    .order('started_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function listIncompleteSessions() {
+  const cutoff = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('*, workouts(name)')
+    .is('finished_at', null)
+    .lt('started_at', cutoff)
+    .order('started_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getSessionSetsSummary(sessionIds) {
+  if (sessionIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('session_id, reps, weight')
+    .in('session_id', sessionIds);
+  if (error) throw error;
+
+  const summary = {};
+  for (const row of data) {
+    if (!summary[row.session_id]) summary[row.session_id] = { sets: 0, volume: 0 };
+    summary[row.session_id].sets++;
+    summary[row.session_id].volume += (row.weight || 0) * (row.reps || 0);
+  }
+  return summary;
+}
+
+export async function getSessionDetails(sessionId) {
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('*, exercises(name, equipment)')
+    .eq('session_id', sessionId)
+    .order('completed_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteSession(id) {
+  const { error } = await supabase.from('workout_sessions').delete().eq('id', id);
+  if (error) throw error;
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histórico - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/train.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <h2>Histórico</h2>
+
+    <div class="panel" id="incompletePanel" style="margin-top:16px;display:none">
+      <div style="padding:16px 16px 0"><strong>Incompletas</strong></div>
+      <div id="incompleteList"></div>
+    </div>
+
+    <div id="sessionsList" style="margin-top:16px"></div>
+
+    <div class="panel" id="emptyState" style="display:none;margin-top:16px;text-align:center;padding:40px 20px">
+      <p class="muted" style="margin-bottom:16px">Você ainda não treinou. Bora começar?</p>
+      <a href="./workouts.html" class="btn btn-primary">Ver fichas</a>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="../js/history.js"></script>
+</body>
+</html>
