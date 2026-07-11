@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerar com IA - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+
+    <div class="panel" id="formPanel" style="padding:20px">
+      <h2>Gerar ficha com IA</h2>
+      <p class="muted" style="margin-bottom:16px">Responda algumas perguntas e a IA monta uma proposta de treino pra você revisar.</p>
+
+      <div class="form-group">
+        <label for="objetivo">Objetivo</label>
+        <select id="objetivo">
+          <option value="hipertrofia">Hipertrofia</option>
+          <option value="emagrecimento">Emagrecimento</option>
+          <option value="força">Força</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="nivel">Nível</label>
+        <select id="nivel">
+          <option value="iniciante">Iniciante</option>
+          <option value="intermediário">Intermediário</option>
+          <option value="avançado">Avançado</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="diasSemana">Dias de treino por semana</label>
+        <select id="diasSemana">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="equipamento">Equipamento disponível</label>
+        <select id="equipamento">
+          <option value="academia completa">Academia completa</option>
+          <option value="halteres">Halteres</option>
+          <option value="peso corporal">Peso corporal</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="restricoes">Restrições ou lesões</label>
+        <input type="text" id="restricoes" placeholder="Opcional — ex: dor no ombro direito">
+      </div>
+
+      <button type="button" class="btn btn-primary full" id="btnGerar">Gerar treino</button>
+
+      <div id="mensagem" class="message"></div>
+    </div>
+
+    <div id="reviewSection" style="display:none">
+      <div class="ai-disclaimer">⚠️ Treino gerado por IA. Revise com um profissional de educação física antes de executar.</div>
+      <p class="ai-rationale" id="rationale"></p>
+      <div id="workoutsList"></div>
+
+      <button type="button" class="btn btn-secondary full" id="btnGerarNovo">← Gerar de novo</button>
+      <button type="button" class="btn btn-primary full" id="btnSalvar">Salvar fichas</button>
+
+      <div id="mensagemSalvar" class="message"></div>
+    </div>
+
+  </div>
+</main>
+
+<script type="module" src="../js/aiWorkout.js"></script>
+</body>
+</html>

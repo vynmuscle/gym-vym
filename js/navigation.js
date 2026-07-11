@@ -3,6 +3,7 @@ const NAV_ITEMS = [
   { href: '/pages/exercises.html', label: 'Exercícios', key: 'exercises' },
   { href: '/pages/workouts.html', label: 'Fichas', key: 'workouts' },
   { href: '/pages/history.html', label: 'Histórico', key: 'history' },
+  { href: '/pages/ai-workout.html', label: 'Gerar com IA', key: 'ai-workout' },
 ];
 
 export function renderNav(active) {
