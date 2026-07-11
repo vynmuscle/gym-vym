@@ -173,7 +173,7 @@ async function runLibSearch(){
   libSearchResults.innerHTML = results.map(ex => `
     <div class="lib-result-item">
       <div class="lib-result-info">
-        <strong>${ex.name}</strong><br>
+        <strong>${ex.name_pt || ex.name}</strong><br>
         <span class="muted">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
       </div>
       <button type="button" class="btn-icon" data-add-lib="${ex.id}">+</button>
@@ -186,7 +186,7 @@ async function runLibSearch(){
       const created = await addExerciseFromLibrary(user.id, ex);
       await loadExerciseOptions();
       exerciseSelect.value = created.id;
-      showMessage(`"${ex.name}" adicionado. Já selecionado acima.`, 'success');
+      showMessage(`"${ex.name_pt || ex.name}" adicionado. Já selecionado acima.`, 'success');
       libSearchPanel.style.display = 'none';
       libSearchInput.value = '';
       libSearchResults.innerHTML = '';

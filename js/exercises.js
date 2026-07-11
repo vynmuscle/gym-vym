@@ -179,7 +179,7 @@ async function loadLibrary(reset){
     card.dataset.libId = ex.id;
     card.innerHTML = `
       <div class="lib-thumb">${ex.image_urls?.[0] ? `<img src="${ex.image_urls[0]}" alt="">` : '🏋️'}</div>
-      <span class="lib-card-name">${ex.name}</span>
+      <span class="lib-card-name">${ex.name_pt || ex.name}</span>
       <span class="lib-card-meta">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
     `;
     card.addEventListener('click', () => showLibDetail(ex));
@@ -200,13 +200,13 @@ function showLibDetail(ex){
   libDetailPanel.innerHTML = `
     <div class="lib-detail-header">
       <div>
-        <h3 style="margin-bottom:4px">${ex.name}</h3>
+        <h3 style="margin-bottom:4px">${ex.name_pt || ex.name}</h3>
         <span class="lib-card-meta">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}${ex.level ? ' · ' + ex.level : ''}</span>
       </div>
       <button type="button" class="btn-icon" id="btnCloseLibDetail">✕</button>
     </div>
     ${ex.image_urls?.length ? `<div class="lib-detail-images">${ex.image_urls.map(url => `<img src="${url}" alt="">`).join('')}</div>` : ''}
-    <div class="lib-detail-instructions">${ex.instructions || 'Sem instruções disponíveis.'}</div>
+    <div class="lib-detail-instructions">${ex.instructions_pt || ex.instructions || 'Sem instruções disponíveis.'}</div>
     <button type="button" class="btn btn-primary full" id="btnAddFromLib">Adicionar aos meus exercícios</button>
   `;
 
@@ -216,7 +216,7 @@ function showLibDetail(ex){
 
   document.getElementById('btnAddFromLib').addEventListener('click', async () => {
     await addExerciseFromLibrary(user.id, ex);
-    showLibMessage(`"${ex.name}" adicionado aos seus exercícios.`, 'success');
+    showLibMessage(`"${ex.name_pt || ex.name}" adicionado aos seus exercícios.`, 'success');
   });
 
   libDetailPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });

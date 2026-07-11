@@ -174,7 +174,7 @@ export async function searchLibraryExercises({ query, muscleGroup, offset = 0, l
     .order('name')
     .range(offset, offset + limit - 1);
 
-  if (query) q = q.ilike('name', `%${query}%`);
+  if (query) q = q.or(`name.ilike.%${query}%,name_pt.ilike.%${query}%`);
   if (muscleGroup) q = q.eq('muscle_group', muscleGroup);
 
   const { data, error } = await q;
@@ -183,11 +183,17 @@ export async function searchLibraryExercises({ query, muscleGroup, offset = 0, l
 }
 
 export async function addExerciseFromLibrary(userId, libEx) {
+  const targetName = libEx.name_pt || libEx.name;
+
+  const orNames = libEx.name_pt && libEx.name_pt !== libEx.name
+    ? `name.ilike.${libEx.name},name.ilike.${libEx.name_pt}`
+    : `name.ilike.${libEx.name}`;
+
   const { data: existing, error: findErr } = await supabase
     .from('exercises')
     .select('*')
     .eq('user_id', userId)
-    .ilike('name', libEx.name)
+    .or(orNames)
     .maybeSingle();
   if (findErr) throw findErr;
   if (existing) return existing;
@@ -196,7 +202,7 @@ export async function addExerciseFromLibrary(userId, libEx) {
     .from('exercises')
     .insert({
       user_id: userId,
-      name: libEx.name,
+      name: targetName,
       muscle_group: libEx.muscle_group,
       equipment: libEx.equipment,
       image_url: libEx.image_urls?.[0] || null
