@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Treino - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/train.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+
+<header>
+  <a href="./workouts.html" class="header-back">‹ Sair do treino</a>
+  <div class="header-row">
+    <span class="brand"><span style="color:var(--text)">GYM</span><span style="color:var(--red)">VYM</span></span>
+    <span class="elapsed num" id="elapsed">00:00</span>
+  </div>
+  <h1 id="workoutName">Carregando...</h1>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label"><span id="doneCount">0</span> de <span id="totalCount">0</span> séries concluídas</div>
+</header>
+
+<main id="workout"></main>
+
+<div class="finish-bar">
+  <button type="button" class="finish-btn" id="finishBtn">Finalizar treino</button>
+</div>
+
+<div class="rest-sheet" id="restSheet" role="dialog" aria-label="Descanso">
+  <div class="rest-label">Descanso</div>
+  <div class="rest-time num" id="restTime">0:00</div>
+  <div class="rest-context" id="restContext"></div>
+  <div class="rest-actions">
+    <button type="button" class="btn-add" id="btnAddRest">+30s</button>
+    <button type="button" class="btn-skip" id="btnSkipRest">Pular descanso</button>
+  </div>
+</div>
+
+<div class="summary-overlay" id="summary">
+  <div class="summary-card">
+    <h2 class="num">Treino concluído!</h2>
+    <div class="sub" id="summarySub"></div>
+    <div class="stats">
+      <div class="stat"><div class="v num" id="sumTime">—</div><div class="k">Duração</div></div>
+      <div class="stat"><div class="v num" id="sumSets">—</div><div class="k">Séries</div></div>
+      <div class="stat"><div class="v num" id="sumVolume">—</div><div class="k">Volume kg</div></div>
+    </div>
+    <button type="button" id="btnBackToWorkouts">Voltar às fichas</button>
+  </div>
+</div>
+
+<script type="module" src="../js/train.js"></script>
+</body>
+</html>

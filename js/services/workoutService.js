@@ -81,3 +81,34 @@ export async function removeWorkoutExercise(id) {
   const { error } = await supabase.from('workout_exercises').delete().eq('id', id);
   if (error) throw error;
 }
+
+export async function createWorkoutSession(userId, workoutId) {
+  const { data, error } = await supabase.from('workout_sessions').insert({ user_id: userId, workout_id: workoutId }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function finishWorkoutSession(id) {
+  const { data, error } = await supabase.from('workout_sessions').update({ finished_at: new Date().toISOString() }).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getLastSets(exerciseId) {
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('*')
+    .eq('exercise_id', exerciseId)
+    .order('completed_at', { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  if (data.length === 0) return [];
+  const lastSessionId = data[0].session_id;
+  return data.filter(s => s.session_id === lastSessionId).sort((a, b) => a.set_number - b.set_number);
+}
+
+export async function recordSet(userId, payload) {
+  const { data, error } = await supabase.from('session_sets').insert({ ...payload, user_id: userId }).select().single();
+  if (error) throw error;
+  return data;
+}

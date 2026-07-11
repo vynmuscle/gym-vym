@@ -49,6 +49,7 @@ async function loadList(){
         <span class="list-item-sub">${w.description || ''}</span>
       </div>
       <div class="list-item-actions">
+        ${w.is_active ? `<a href="./train.html?id=${w.id}" class="btn-icon" title="Treinar">▶</a>` : ''}
         <a href="./workout-edit.html?id=${w.id}" class="btn-icon" title="Montar exercícios">🏋</a>
         <button type="button" class="btn-icon" data-edit="${w.id}">✎</button>
         <button type="button" class="btn-icon danger" data-delete="${w.id}">✕</button>
