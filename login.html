@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/base.css">
+<link rel="stylesheet" href="./css/layout.css">
+<link rel="stylesheet" href="./css/components.css">
+<link rel="stylesheet" href="./css/mobile.css">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+<main class="auth-page">
+  <section class="auth-card">
+    <div class="brand">
+      <h1 class="brand-mark"><span class="gym">GYM</span><span class="vym">VYM</span></h1>
+    </div>
+    <p class="muted">Entre para registrar seu treino</p>
+
+    <div class="form-group">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" placeholder="Sua senha" autocomplete="current-password">
+    </div>
+
+    <button type="button" class="btn btn-primary full" id="btnLogin">Entrar</button>
+    <button type="button" class="btn btn-secondary full" id="btnCadastro">Cadastrar</button>
+
+    <div id="mensagem" class="message"></div>
+  </section>
+</main>
+
+<script type="module" src="./js/auth.js"></script>
+</body>
+</html>

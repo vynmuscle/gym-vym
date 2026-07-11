@@ -1,0 +1,9 @@
+@media (max-width: 480px){
+  .auth-card{
+    padding:24px;
+  }
+}
+
+body{
+  padding-bottom:env(safe-area-inset-bottom);
+}

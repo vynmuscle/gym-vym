@@ -1,0 +1,138 @@
+.auth-page{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at top left,rgba(217,51,63,.10),transparent 32%),
+    radial-gradient(circle at bottom right,rgba(63,169,88,.06),transparent 34%),
+    var(--bg);
+}
+
+.auth-card,
+.panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+}
+
+.auth-card{
+  width:100%;
+  max-width:420px;
+  padding:32px;
+}
+
+.brand{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  margin-bottom:32px;
+}
+
+.brand-mark{
+  font-size:26px;
+}
+.brand-mark .gym{
+  color:var(--text);
+}
+.brand-mark .vym{
+  color:var(--red);
+}
+
+.brand p.muted{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.form-group{
+  margin-bottom:16px;
+}
+
+label{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+  margin-bottom:8px;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  min-height:52px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--surface-2);
+  color:var(--text);
+  font-size:15px;
+  outline:none;
+  touch-action:manipulation;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+
+input::placeholder{
+  color:var(--muted);
+}
+
+input:focus{
+  border-color:var(--yellow);
+}
+
+.btn{
+  border:0;
+  border-radius:8px;
+  padding:14px 16px;
+  min-height:52px;
+  font-weight:700;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  transition:opacity .15s ease,transform .15s ease;
+  margin-bottom:8px;
+  font-size:15px;
+}
+
+.btn:active{
+  opacity:.8;
+  transform:scale(.97);
+}
+
+.btn.full{
+  width:100%;
+}
+
+.btn-primary{
+  background:var(--red);
+  color:#fff;
+}
+
+.btn-secondary{
+  background:var(--surface-2);
+  color:var(--text);
+  border:1px solid var(--border);
+}
+
+.message{
+  min-height:22px;
+  margin-top:12px;
+  color:var(--yellow);
+  font-weight:600;
+  font-size:13px;
+}
+
+.message.success{
+  color:var(--green);
+}
+
+.message.danger{
+  color:var(--red);
+}
+
+.message.warning{
+  color:var(--yellow);
+}

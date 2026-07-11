@@ -1,0 +1,9 @@
+.page{
+  min-height:100vh;
+  padding:24px;
+}
+
+.container{
+  max-width:640px;
+  margin:0 auto;
+}
