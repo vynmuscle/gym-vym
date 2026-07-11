@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Montar ficha - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <div class="panel" style="padding:20px">
+      <a href="./workouts.html" class="muted">&larr; Voltar pras fichas</a>
+      <h2 id="workoutName">Carregando...</h2>
+    </div>
+
+    <div class="panel" style="padding:20px;margin-top:16px">
+      <h3 id="formTitle">Adicionar exercício</h3>
+
+      <div class="form-group">
+        <label for="exerciseSelect">Exercício</label>
+        <select id="exerciseSelect"></select>
+      </div>
+
+      <div class="form-group">
+        <label for="targetSets">Séries</label>
+        <input type="number" id="targetSets" value="3" min="1">
+      </div>
+
+      <div class="form-group">
+        <label for="targetReps">Repetições</label>
+        <input type="text" id="targetReps" placeholder="Ex: 8-12" value="10">
+      </div>
+
+      <div class="form-group">
+        <label for="targetWeight">Carga sugerida (kg)</label>
+        <input type="number" id="targetWeight" step="0.5">
+      </div>
+
+      <div class="form-group">
+        <label for="restSeconds">Descanso (segundos)</label>
+        <input type="number" id="restSeconds" value="90" min="0">
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Notas</label>
+        <input type="text" id="notes" placeholder="Opcional">
+      </div>
+
+      <button type="button" class="btn btn-primary" id="btnSave">Adicionar</button>
+      <button type="button" class="btn btn-secondary" id="btnCancel" style="display:none">Cancelar edição</button>
+
+      <div id="mensagem" class="message"></div>
+    </div>
+
+    <div class="panel" id="listPanel" style="margin-top:16px"></div>
+  </div>
+</main>
+
+<script type="module" src="../js/workoutEdit.js"></script>
+</body>
+</html>

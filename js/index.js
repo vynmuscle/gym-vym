@@ -1,9 +1,12 @@
 import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
+import { renderNav } from './navigation.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('./login.html');
 const user = sd.session.user;
+
+renderNav('dashboard');
 
 document.getElementById('userEmail').innerText = user.email;
 

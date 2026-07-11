@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exercícios - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <div class="panel" style="padding:20px">
+      <h2 id="formTitle">Novo exercício</h2>
+
+      <div class="form-group">
+        <label for="name">Nome</label>
+        <input type="text" id="name" placeholder="Ex: Supino reto">
+      </div>
+
+      <div class="form-group">
+        <label for="muscleGroup">Grupo muscular</label>
+        <select id="muscleGroup">
+          <option value="peito">Peito</option>
+          <option value="costas">Costas</option>
+          <option value="pernas">Pernas</option>
+          <option value="ombros">Ombros</option>
+          <option value="biceps">Bíceps</option>
+          <option value="triceps">Tríceps</option>
+          <option value="abdomen">Abdômen</option>
+          <option value="gluteos">Glúteos</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="equipment">Equipamento</label>
+        <select id="equipment">
+          <option value="">-</option>
+          <option value="barra">Barra</option>
+          <option value="halter">Halter</option>
+          <option value="maquina">Máquina</option>
+          <option value="polia">Polia</option>
+          <option value="peso corporal">Peso corporal</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Notas</label>
+        <input type="text" id="notes" placeholder="Opcional">
+      </div>
+
+      <button type="button" class="btn btn-primary" id="btnSave">Salvar</button>
+      <button type="button" class="btn btn-secondary" id="btnCancel" style="display:none">Cancelar edição</button>
+
+      <div id="mensagem" class="message"></div>
+    </div>
+
+    <div class="panel" id="listPanel" style="margin-top:16px"></div>
+  </div>
+</main>
+
+<script type="module" src="../js/exercises.js"></script>
+</body>
+</html>
