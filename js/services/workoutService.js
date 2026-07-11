@@ -212,3 +212,49 @@ export async function addExerciseFromLibrary(userId, libEx) {
   if (error) throw error;
   return data;
 }
+
+export async function listExercisesWithProgress() {
+  const { data: sets, error } = await supabase.from('session_sets').select('exercise_id');
+  if (error) throw error;
+
+  const uniqueIds = [...new Set(sets.map(s => s.exercise_id))];
+  if (uniqueIds.length === 0) return [];
+
+  const { data: exercises, error: exError } = await supabase
+    .from('exercises')
+    .select('id, name')
+    .in('id', uniqueIds)
+    .order('name');
+  if (exError) throw exError;
+  return exercises;
+}
+
+export async function getExerciseProgress(exerciseId) {
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('weight, reps, session_id, completed_at, workout_sessions(started_at)')
+    .eq('exercise_id', exerciseId)
+    .order('completed_at', { ascending: true });
+  if (error) throw error;
+
+  const bySession = new Map();
+  for (const row of data) {
+    const date = row.workout_sessions?.started_at;
+    if (!date) continue;
+
+    if (!bySession.has(row.session_id)) {
+      bySession.set(row.session_id, { date, maxWeight: 0, topReps: 0, volume: 0 });
+    }
+
+    const s = bySession.get(row.session_id);
+    const w = row.weight || 0;
+    const r = row.reps || 0;
+    if (w > s.maxWeight) {
+      s.maxWeight = w;
+      s.topReps = r;
+    }
+    s.volume += w * r;
+  }
+
+  return [...bySession.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
+}

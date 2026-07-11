@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progresso - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/train.css">
+<link rel="stylesheet" href="../css/progress.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#22c55e">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <h2>Progresso</h2>
+
+    <div class="panel" style="padding:16px">
+      <div class="form-group" style="margin-bottom:0">
+        <label for="exerciseSelect">Exercício</label>
+        <select id="exerciseSelect">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="emptyState" class="panel" style="display:none;margin-top:16px;text-align:center;padding:40px 20px"></div>
+
+    <div id="progressContent" style="display:none">
+      <div class="stats" style="margin-top:16px;margin-bottom:0">
+        <div class="stat"><div class="v num" id="cardPR">—</div><div class="k">Recorde (PR)</div></div>
+        <div class="stat"><div class="v num" id="cardLast">—</div><div class="k">Última sessão</div></div>
+        <div class="stat"><div class="v num" id="cardEvolution">—</div><div class="k">Evolução 4 sem.</div></div>
+      </div>
+
+      <div class="panel" style="margin-top:16px;padding:16px">
+        <div class="progress-toolbar">
+          <div class="metric-toggle">
+            <button type="button" class="tab-btn active" id="metricMax">Carga máxima</button>
+            <button type="button" class="tab-btn" id="metricVolume">Volume</button>
+          </div>
+          <select id="periodSelect">
+            <option value="1">1 mês</option>
+            <option value="3">3 meses</option>
+            <option value="6" selected>6 meses</option>
+            <option value="all">Tudo</option>
+          </select>
+        </div>
+
+        <div class="chart-container" id="chartContainer">
+          <div class="chart-tooltip" id="chartTooltip" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="../js/progress.js"></script>
+</body>
+</html>

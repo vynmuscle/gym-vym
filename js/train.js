@@ -215,6 +215,7 @@ finishBtn.addEventListener('click', async () => {
 });
 
 document.getElementById('btnBackToWorkouts').addEventListener('click', () => navigate('./workouts.html'));
+document.getElementById('btnViewProgress').addEventListener('click', () => navigate('./progress.html'));
 
 setInterval(() => {
   const t = Math.floor((Date.now() - startTime) / 1000);

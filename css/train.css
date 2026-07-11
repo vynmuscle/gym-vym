@@ -427,6 +427,13 @@ main{
   cursor:pointer;
 }
 
+.summary-card button.secondary{
+  background:var(--surface-2);
+  color:var(--text);
+  border:1px solid var(--border);
+  margin-bottom:10px;
+}
+
 .history-set-row{
   display:flex;
   justify-content:space-between;
