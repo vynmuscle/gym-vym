@@ -167,7 +167,7 @@ export async function deleteSession(id) {
   if (error) throw error;
 }
 
-export async function searchLibraryExercises({ query, muscleGroup, offset = 0, limit = 24 }) {
+export async function searchLibraryExercises({ query, muscleGroup, equipment, offset = 0, limit = 24 }) {
   let q = supabase
     .from('library_exercises')
     .select('*')
@@ -176,10 +176,29 @@ export async function searchLibraryExercises({ query, muscleGroup, offset = 0, l
 
   if (query) q = q.or(`name.ilike.%${query}%,name_pt.ilike.%${query}%`);
   if (muscleGroup) q = q.eq('muscle_group', muscleGroup);
+  if (equipment) q = q.eq('equipment', equipment);
 
   const { data, error } = await q;
   if (error) throw error;
   return data;
+}
+
+// Contagem de exercícios da biblioteca por grupo muscular + primeira imagem de
+// cada grupo (pro fundo dos cards do seletor). Uma query só, leve (873 linhas
+// só com muscle_group + image_urls).
+export async function getLibraryGroupCounts() {
+  const { data, error } = await supabase.from('library_exercises').select('muscle_group, image_urls');
+  if (error) throw error;
+
+  const counts = {};
+  const images = {};
+  for (const row of data) {
+    counts[row.muscle_group] = (counts[row.muscle_group] || 0) + 1;
+    if (!images[row.muscle_group] && row.image_urls?.[0]) {
+      images[row.muscle_group] = row.image_urls[0];
+    }
+  }
+  return { counts, images };
 }
 
 export async function addExerciseFromLibrary(userId, libEx) {

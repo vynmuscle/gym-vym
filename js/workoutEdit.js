@@ -2,10 +2,10 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
+import { openExercisePicker } from './exercisePicker.js';
 import {
-  getWorkout, listExercises, listWorkoutExercises,
-  addWorkoutExercise, updateWorkoutExercise, removeWorkoutExercise,
-  searchLibraryExercises, addExerciseFromLibrary
+  getWorkout, listWorkoutExercises,
+  addWorkoutExercise, updateWorkoutExercise, removeWorkoutExercise
 } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
@@ -19,7 +19,9 @@ const workoutId = new URLSearchParams(location.search).get('id');
 if(!workoutId) navigate('./workouts.html');
 
 const workoutNameEl = document.getElementById('workoutName');
-const exerciseSelect = document.getElementById('exerciseSelect');
+const addSection = document.getElementById('addSection');
+const editSection = document.getElementById('editSection');
+const btnOpenPicker = document.getElementById('btnOpenPicker');
 const targetSetsInput = document.getElementById('targetSets');
 const targetRepsInput = document.getElementById('targetReps');
 const targetWeightInput = document.getElementById('targetWeight');
@@ -27,32 +29,33 @@ const restSecondsInput = document.getElementById('restSeconds');
 const notesInput = document.getElementById('notes');
 const btnSave = document.getElementById('btnSave');
 const btnCancel = document.getElementById('btnCancel');
-const formTitle = document.getElementById('formTitle');
 const mensagem = document.getElementById('mensagem');
 const listPanel = document.getElementById('listPanel');
 
 let editingId = null;
-let exercisesCache = [];
 
 function showMessage(text, type = 'info'){
   mensagem.className = `message ${type}`;
   mensagem.innerText = text;
 }
 
-function resetForm(){
+function showAddMode(){
   editingId = null;
-  targetSetsInput.value = 3;
-  targetRepsInput.value = '10';
-  targetWeightInput.value = '';
-  restSecondsInput.value = 90;
-  notesInput.value = '';
-  formTitle.innerText = 'Adicionar exercício';
-  btnCancel.style.display = 'none';
+  addSection.style.display = 'block';
+  editSection.style.display = 'none';
 }
 
-async function loadExerciseOptions(){
-  exercisesCache = await listExercises();
-  exerciseSelect.innerHTML = exercisesCache.map(ex => `<option value="${ex.id}">${ex.name}</option>`).join('');
+function showEditMode(item){
+  editingId = item.id;
+  targetSetsInput.value = item.target_sets;
+  targetRepsInput.value = item.target_reps;
+  targetWeightInput.value = item.target_weight || '';
+  restSecondsInput.value = item.rest_seconds;
+  notesInput.value = item.notes || '';
+  addSection.style.display = 'none';
+  editSection.style.display = 'block';
+  showMessage('');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function loadList(){
@@ -77,24 +80,11 @@ async function loadList(){
   `).join('');
 
   listPanel.querySelectorAll('[data-edit]').forEach(btn => {
-    btn.addEventListener('click', () => startEdit(items.find(i => i.id === btn.dataset.edit)));
+    btn.addEventListener('click', () => showEditMode(items.find(i => i.id === btn.dataset.edit)));
   });
   listPanel.querySelectorAll('[data-delete]').forEach(btn => {
     btn.addEventListener('click', () => removeItem(btn.dataset.delete));
   });
-}
-
-function startEdit(item){
-  editingId = item.id;
-  exerciseSelect.value = item.exercise_id;
-  targetSetsInput.value = item.target_sets;
-  targetRepsInput.value = item.target_reps;
-  targetWeightInput.value = item.target_weight || '';
-  restSecondsInput.value = item.rest_seconds;
-  notesInput.value = item.notes || '';
-  formTitle.innerText = 'Editar exercício da ficha';
-  btnCancel.style.display = 'inline-block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function removeItem(id){
@@ -103,15 +93,28 @@ async function removeItem(id){
   await loadList();
 }
 
+btnOpenPicker.addEventListener('click', () => {
+  openExercisePicker({
+    userId: user.id,
+    onPick: async (ex) => {
+      await addWorkoutExercise(user.id, {
+        workout_id: workoutId,
+        exercise_id: ex.id,
+        target_sets: 3,
+        target_reps: '10',
+        target_weight: null,
+        rest_seconds: 90,
+        notes: null
+      });
+      await loadList();
+    }
+  });
+});
+
 btnSave.addEventListener('click', async () => {
-  if(!exerciseSelect.value){
-    showMessage('Cadastre um exercício primeiro.', 'warning');
-    return;
-  }
+  if(!editingId) return;
 
   const payload = {
-    workout_id: workoutId,
-    exercise_id: exerciseSelect.value,
     target_sets: Number(targetSetsInput.value) || 1,
     target_reps: targetRepsInput.value.trim() || '10',
     target_weight: targetWeightInput.value ? Number(targetWeightInput.value) : null,
@@ -119,84 +122,16 @@ btnSave.addEventListener('click', async () => {
     notes: notesInput.value.trim() || null
   };
 
-  if(editingId){
-    await updateWorkoutExercise(editingId, payload);
-    showMessage('Exercício atualizado.', 'success');
-  } else {
-    await addWorkoutExercise(user.id, payload);
-    showMessage('Exercício adicionado.', 'success');
-  }
-
-  resetForm();
+  await updateWorkoutExercise(editingId, payload);
+  showMessage('Exercício atualizado.', 'success');
+  showAddMode();
   await loadList();
 });
 
-btnCancel.addEventListener('click', resetForm);
+btnCancel.addEventListener('click', showAddMode);
 
 const workout = await getWorkout(workoutId);
 workoutNameEl.innerText = workout.name;
 
-await loadExerciseOptions();
-if(exercisesCache.length === 0){
-  showMessage('Cadastre exercícios antes de montar a ficha.', 'warning');
-}
-
-resetForm();
+showAddMode();
 await loadList();
-
-// ── Buscar na biblioteca ────────────────────────────────────────────
-const btnToggleLibSearch = document.getElementById('btnToggleLibSearch');
-const libSearchPanel = document.getElementById('libSearchPanel');
-const libSearchInput = document.getElementById('libSearchInput');
-const libSearchResults = document.getElementById('libSearchResults');
-
-let libDebounceTimer = null;
-
-btnToggleLibSearch.addEventListener('click', () => {
-  const isOpen = libSearchPanel.style.display !== 'none';
-  libSearchPanel.style.display = isOpen ? 'none' : 'block';
-});
-
-async function runLibSearch(){
-  const query = libSearchInput.value.trim();
-
-  if(!query){
-    libSearchResults.innerHTML = '';
-    return;
-  }
-
-  const results = await searchLibraryExercises({ query, limit: 10 });
-
-  if(results.length === 0){
-    libSearchResults.innerHTML = '<p class="muted" style="padding:8px 0">Nenhum exercício encontrado.</p>';
-    return;
-  }
-
-  libSearchResults.innerHTML = results.map(ex => `
-    <div class="lib-result-item">
-      <div class="lib-result-info">
-        <strong>${ex.name_pt || ex.name}</strong><br>
-        <span class="muted">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
-      </div>
-      <button type="button" class="btn-icon" data-add-lib="${ex.id}">+</button>
-    </div>
-  `).join('');
-
-  libSearchResults.querySelectorAll('[data-add-lib]').forEach(btn => {
-    const ex = results.find(r => r.id === btn.dataset.addLib);
-    btn.addEventListener('click', async () => {
-      const created = await addExerciseFromLibrary(user.id, ex);
-      await loadExerciseOptions();
-      exerciseSelect.value = created.id;
-      showMessage(`"${ex.name_pt || ex.name}" adicionado. Já selecionado acima.`, 'success');
-      libSearchPanel.style.display = 'none';
-      libSearchInput.value = '';
-      libSearchResults.innerHTML = '';
-    });
-  });
-}
-
-libSearchInput.addEventListener('input', () => {
-  clearTimeout(libDebounceTimer);
-  libDebounceTimer = setTimeout(runLibSearch, 300);
-});
