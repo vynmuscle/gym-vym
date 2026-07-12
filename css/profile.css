@@ -1,0 +1,36 @@
+.stepper{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:24px;
+  margin-top:8px;
+}
+
+.stepper-btn{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  font-size:24px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.stepper-btn:active{
+  transform:scale(.93);
+}
+
+.stepper-value{
+  font-size:36px;
+  min-width:50px;
+  text-align:center;
+}
+
+.stepper-sub{
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  margin-top:8px;
+}

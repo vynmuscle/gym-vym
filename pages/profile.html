@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/profile.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#0b0d10">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <h2>Perfil</h2>
+
+    <div class="panel" style="padding:20px;margin-top:16px">
+      <div class="form-group">
+        <label for="displayName">Nome de exibição</label>
+        <input type="text" id="displayName" placeholder="Como quer ser chamado">
+      </div>
+
+      <div class="form-group">
+        <label for="emailField">E-mail</label>
+        <input type="email" id="emailField" disabled>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0">
+        <label style="text-align:center;display:block">Meta semanal de treinos</label>
+        <div class="stepper">
+          <button type="button" class="stepper-btn" id="btnGoalMinus" aria-label="Diminuir meta">−</button>
+          <div class="stepper-value num" id="goalValue">4</div>
+          <button type="button" class="stepper-btn" id="btnGoalPlus" aria-label="Aumentar meta">+</button>
+        </div>
+        <div class="stepper-sub">treinos por semana</div>
+      </div>
+
+      <button type="button" class="btn btn-primary full" id="btnSave" style="margin-top:20px">Salvar</button>
+
+      <div id="mensagem" class="message"></div>
+    </div>
+
+    <div class="panel" style="padding:20px;margin-top:16px">
+      <button type="button" class="btn btn-secondary full" id="btnLogout">Sair</button>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="../js/profile.js"></script>
+</body>
+</html>
