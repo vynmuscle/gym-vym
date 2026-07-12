@@ -1,4 +1,4 @@
 export const SUPABASE_URL = 'https://lyxzqejagdwkrnpfemkd.supabase.co';
 export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5eHpxZWphZ2R3a3JucGZlbWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MjI2NTEsImV4cCI6MjA5OTI5ODY1MX0.65-KEdB1J1jkIYD_UoUvons6TW7VLstYuvqTo_xQwHI';
 
-export const APP_VERSION = 6;
+export const APP_VERSION = 7;

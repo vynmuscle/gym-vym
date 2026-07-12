@@ -8,6 +8,15 @@
   margin-bottom:0;
 }
 
+.photo-actions-secondary{
+  margin-top:8px;
+}
+
+.photo-actions-secondary .btn{
+  width:100%;
+  margin-bottom:0;
+}
+
 .photo-review{
   padding:16px;
   margin-top:16px;

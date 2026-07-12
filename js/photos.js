@@ -11,9 +11,11 @@ initPWA();
 
 await renderNav('evolution');
 
-const btnNewPhoto = document.getElementById('btnNewPhoto');
+const btnTakePhoto = document.getElementById('btnTakePhoto');
+const btnGallery = document.getElementById('btnGallery');
 const btnCompare = document.getElementById('btnCompare');
-const fileInput = document.getElementById('fileInput');
+const fileInputCamera = document.getElementById('fileInputCamera');
+const fileInputGallery = document.getElementById('fileInputGallery');
 const reviewPanel = document.getElementById('reviewPanel');
 const reviewImg = document.getElementById('reviewImg');
 const photoDate = document.getElementById('photoDate');
@@ -83,20 +85,39 @@ async function compressImage(file){
   return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
 }
 
-btnNewPhoto.addEventListener('click', () => fileInput.click());
-
-fileInput.addEventListener('change', async () => {
-  const file = fileInput.files[0];
-  fileInput.value = '';
+async function handleFileSelected(file){
   if(!file) return;
 
-  pendingBlob = await compressImage(file);
+  let blob;
+  try {
+    blob = await compressImage(file);
+  } catch(err) {
+    showMessage('Esse formato de foto (ex: HEIC do iPhone) não é suportado aqui. Tire a foto no formato "Mais compatível" nas configurações da câmera do iPhone, ou escolha um JPEG/PNG já existente.', 'warning');
+    return;
+  }
+
+  pendingBlob = blob;
   reviewImg.src = URL.createObjectURL(pendingBlob);
   photoDate.value = todayStr();
   photoNotes.value = '';
   showMessage('');
   reviewPanel.style.display = 'block';
   reviewPanel.scrollIntoView({ behavior: 'smooth' });
+}
+
+btnTakePhoto.addEventListener('click', () => fileInputCamera.click());
+btnGallery.addEventListener('click', () => fileInputGallery.click());
+
+fileInputCamera.addEventListener('change', async () => {
+  const file = fileInputCamera.files[0];
+  fileInputCamera.value = '';
+  await handleFileSelected(file);
+});
+
+fileInputGallery.addEventListener('change', async () => {
+  const file = fileInputGallery.files[0];
+  fileInputGallery.value = '';
+  await handleFileSelected(file);
 });
 
 btnCancelPhoto.addEventListener('click', () => {

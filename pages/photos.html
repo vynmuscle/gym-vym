@@ -22,11 +22,15 @@
     <h2>Fotos de progresso</h2>
 
     <div class="photo-actions" style="margin-top:16px">
-      <button type="button" class="btn btn-primary" id="btnNewPhoto">📷 Nova foto</button>
+      <button type="button" class="btn btn-primary" id="btnTakePhoto">📷 Tirar foto</button>
+      <button type="button" class="btn btn-primary" id="btnGallery">🖼 Galeria/Arquivos</button>
+    </div>
+    <div class="photo-actions-secondary">
       <button type="button" class="btn btn-secondary" id="btnCompare">Comparar</button>
     </div>
 
-    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="fileInputCamera" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="fileInputGallery" accept="image/*" style="display:none">
 
     <div class="panel photo-review" id="reviewPanel" style="display:none">
       <img id="reviewImg" alt="Prévia">
