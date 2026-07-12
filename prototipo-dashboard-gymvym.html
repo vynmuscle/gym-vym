@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Gym Vym — Início</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --surface: #14171c;
+    --surface-2: #1b1f26;
+    --border: #262b33;
+    --text: #f2f3f5;
+    --muted: #8b93a1;
+    --red: #d9333f;
+    --green: #3fa958;
+    --yellow: #e9b93b;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+  body { padding-bottom: 96px; }
+  .num { font-family: 'Anton', sans-serif; letter-spacing: .02em; }
+
+  /* ===== Header ===== */
+  header { padding: 18px 16px 4px; }
+  .brand { font-family: 'Anton', sans-serif; font-size: 16px; letter-spacing: .08em; }
+  .brand .vym { color: var(--red); }
+  .greeting { margin-top: 14px; }
+  .greeting h1 { font-size: 22px; font-weight: 800; }
+  .greeting p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  main { padding: 16px 16px 0; display: flex; flex-direction: column; gap: 14px; }
+  .section-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; margin-bottom: 10px; }
+
+  /* ===== Semana ===== */
+  .week-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .week-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .day { text-align: center; }
+  .day .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .day .dot {
+    width: 34px; height: 34px; margin: 0 auto; border-radius: 50%;
+    border: 2px solid var(--border); color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .day.done .dot { background: var(--green); border-color: var(--green); color: #fff; }
+  .day.today .dot { border-color: var(--red); color: var(--text); }
+  .day.today .lbl { color: var(--red); }
+
+  /* ===== Hero: treino de hoje ===== */
+  .hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--surface) 0%, #1c1114 100%);
+    border: 1px solid var(--border); border-radius: 18px; padding: 18px 16px;
+  }
+  .hero::after {
+    content: ''; position: absolute; right: -30px; top: -30px;
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 14px solid var(--red); opacity: .12;
+  }
+  .hero .tag { font-size: 11px; color: var(--yellow); text-transform: uppercase; letter-spacing: .14em; font-weight: 700; }
+  .hero h2 { font-family: 'Anton', sans-serif; font-size: 30px; letter-spacing: .02em; margin: 6px 0 2px; line-height: 1.1; }
+  .hero .why { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .hero .why b { color: var(--green); font-weight: 600; }
+  .hero-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; min-height: 54px; border: none; border-radius: 14px;
+    background: var(--red); color: #fff; font-size: 16px; font-weight: 800;
+    font-family: 'Inter', sans-serif; cursor: pointer;
+  }
+  .hero-btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+  /* ===== Progresso da semana ===== */
+  .progress-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 14px; display: flex; align-items: center; gap: 16px;
+  }
+  .ring { position: relative; width: 92px; height: 92px; flex-shrink: 0; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .pct {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: 'Anton', sans-serif; font-size: 24px; color: var(--yellow);
+  }
+  .progress-info .big { font-size: 15px; font-weight: 700; }
+  .progress-info .sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .streak { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px;
+    padding: 5px 12px; font-size: 13px; font-weight: 600; }
+  .streak .fire { color: var(--yellow); }
+
+  /* ===== Recuperação (condensada) ===== */
+  .recovery-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .recovery-strip::-webkit-scrollbar { display: none; }
+  .muscle-chip {
+    flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 14px; text-align: center; min-width: 86px;
+  }
+  .muscle-chip .m { font-size: 13px; font-weight: 600; }
+  .muscle-chip .bar { height: 4px; border-radius: 99px; background: var(--surface-2); margin-top: 8px; overflow: hidden; }
+  .muscle-chip .bar i { display: block; height: 100%; border-radius: 99px; }
+  .muscle-chip .st { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .muscle-chip.ok .bar i { width: 100%; background: var(--green); }
+  .muscle-chip.rec .bar i { background: var(--yellow); }
+
+  /* ===== Bottom Navigation ===== */
+  nav.bottom {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    display: grid; grid-template-columns: 1fr 1fr 76px 1fr 1fr;
+    align-items: end;
+    background: rgba(17,20,25,.97); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
+    padding: 8px 8px calc(10px + env(safe-area-inset-bottom));
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 600;
+    min-height: 52px; justify-content: center; border-radius: 10px;
+  }
+  .nav-item svg { width: 23px; height: 23px; stroke: currentColor; fill: none; stroke-width: 1.9; }
+  .nav-item.active { color: var(--text); }
+  .nav-item.active .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--red); }
+  .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+  .nav-item:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+  .nav-train {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 62px; height: 62px; margin: 0 auto; margin-top: -26px;
+    border-radius: 50%; border: none; cursor: pointer;
+    background: var(--red); color: #fff;
+    box-shadow: 0 6px 20px rgba(217,51,63,.45), 0 0 0 5px var(--bg);
+    font-family: 'Inter', sans-serif;
+  }
+  .nav-train svg { width: 26px; height: 26px; fill: #fff; }
+  .nav-train:active { transform: scale(.95); }
+  .nav-train:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+  .nav-train-label { font-size: 10.5px; font-weight: 700; color: var(--red); text-align: center; margin-top: 4px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">GYM <span class="vym">VYM</span></div>
+  <div class="greeting">
+    <h1>Fala, Márcio! 💪</h1>
+    <p>sábado, 11 de julho</p>
+  </div>
+</header>
+
+<main>
+  <!-- Semana -->
+  <div class="week-card">
+    <div class="section-title">Sua semana</div>
+    <div class="week-row">
+      <div class="day done"><div class="lbl">seg</div><div class="dot">✓</div></div>
+      <div class="day done"><div class="lbl">ter</div><div class="dot">✓</div></div>
+      <div class="day"><div class="lbl">qua</div><div class="dot">·</div></div>
+      <div class="day done"><div class="lbl">qui</div><div class="dot">✓</div></div>
+      <div class="day done"><div class="lbl">sex</div><div class="dot">✓</div></div>
+      <div class="day today"><div class="lbl">sáb</div><div class="dot">?</div></div>
+      <div class="day"><div class="lbl">dom</div><div class="dot">·</div></div>
+    </div>
+  </div>
+
+  <!-- Hero: treino de hoje -->
+  <div class="hero">
+    <div class="tag">Treino de hoje</div>
+    <h2>Treino C — Pernas e Ombros</h2>
+    <div class="why">Pernas e ombros <b>100% recuperados</b> · último treino há 4 dias</div>
+    <button class="hero-btn">▶ &nbsp;Iniciar treino</button>
+  </div>
+
+  <!-- Progresso da semana -->
+  <div class="progress-card">
+    <div class="ring">
+      <svg width="92" height="92" viewBox="0 0 92 92">
+        <circle cx="46" cy="46" r="39" stroke="#1b1f26" stroke-width="9" fill="none"/>
+        <circle cx="46" cy="46" r="39" stroke="#e9b93b" stroke-width="9" fill="none"
+                stroke-linecap="round" stroke-dasharray="245" stroke-dashoffset="61"/>
+      </svg>
+      <div class="pct">75%</div>
+    </div>
+    <div class="progress-info">
+      <div class="big">Você está no caminho certo!</div>
+      <div class="sub">4 de 5 treinos planejados esta semana</div>
+      <div class="streak"><span class="fire">🔥</span> 12 dias de sequência</div>
+    </div>
+  </div>
+
+  <!-- Recuperação -->
+  <div>
+    <div class="section-title">Recuperação</div>
+    <div class="recovery-strip">
+      <div class="muscle-chip ok"><div class="m">Pernas</div><div class="bar"><i></i></div><div class="st">Pronto</div></div>
+      <div class="muscle-chip ok"><div class="m">Ombros</div><div class="bar"><i></i></div><div class="st">Pronto</div></div>
+      <div class="muscle-chip rec"><div class="m">Peito</div><div class="bar"><i style="width:60%"></i></div><div class="st">18h rest.</div></div>
+      <div class="muscle-chip rec"><div class="m">Tríceps</div><div class="bar"><i style="width:45%"></i></div><div class="st">22h rest.</div></div>
+      <div class="muscle-chip ok"><div class="m">Costas</div><div class="bar"><i></i></div><div class="st">Pronto</div></div>
+      <div class="muscle-chip ok"><div class="m">Bíceps</div><div class="bar"><i></i></div><div class="st">Pronto</div></div>
+    </div>
+  </div>
+</main>
+
+<!-- Bottom Navigation -->
+<nav class="bottom">
+  <button class="nav-item active">
+    <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    Início
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-item">
+    <svg viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-6"/><path d="M22 20H2"/></svg>
+    Evolução
+    <div class="nav-dot"></div>
+  </button>
+  <div>
+    <button class="nav-train" aria-label="Iniciar treino">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <div class="nav-train-label">Treinar</div>
+  </div>
+  <button class="nav-item">
+    <svg viewBox="0 0 24 24"><path d="M6.5 6.5h11v11h-11z"/><path d="M3 9.5v5"/><path d="M21 9.5v5"/><path d="M6.5 12h11"/></svg>
+    Fichas
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-item">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+    Perfil
+    <div class="nav-dot"></div>
+  </button>
+</nav>
+
+</body>
+</html>

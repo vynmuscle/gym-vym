@@ -12,7 +12,7 @@ if(!sd.session) navigate('../login.html');
 const user = sd.session.user;
 initPWA();
 
-renderNav('exercises');
+await renderNav('workouts');
 
 const nameInput = document.getElementById('name');
 const muscleGroupInput = document.getElementById('muscleGroup');
@@ -235,3 +235,7 @@ btnLoadMore.addEventListener('click', () => loadLibrary(false));
 tabBiblioteca.addEventListener('click', () => {
   if(libResults.length === 0) loadLibrary(true);
 }, { once: true });
+
+if(new URLSearchParams(location.search).get('tab') === 'biblioteca'){
+  tabBiblioteca.click();
+}

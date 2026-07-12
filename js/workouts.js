@@ -9,7 +9,7 @@ if(!sd.session) navigate('../login.html');
 const user = sd.session.user;
 initPWA();
 
-renderNav('workouts');
+await renderNav('workouts');
 
 const nameInput = document.getElementById('name');
 const descriptionInput = document.getElementById('description');

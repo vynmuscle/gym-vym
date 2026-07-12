@@ -8,7 +8,7 @@ const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
 initPWA();
 
-renderNav('calendar');
+await renderNav('evolution');
 
 const monthLabel = document.getElementById('monthLabel');
 const calGrid = document.getElementById('calGrid');

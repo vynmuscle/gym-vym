@@ -8,7 +8,7 @@ const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
 initPWA();
 
-renderNav('progress');
+await renderNav('evolution');
 
 const exerciseSelect = document.getElementById('exerciseSelect');
 const emptyState = document.getElementById('emptyState');

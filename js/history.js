@@ -11,7 +11,7 @@ const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
 initPWA();
 
-renderNav('history');
+await renderNav('evolution');
 
 const incompletePanel = document.getElementById('incompletePanel');
 const incompleteList = document.getElementById('incompleteList');

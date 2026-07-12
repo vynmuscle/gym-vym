@@ -11,7 +11,7 @@ if(!sd.session) navigate('../login.html');
 const user = sd.session.user;
 initPWA();
 
-renderNav('body');
+await renderNav('evolution');
 
 const emptyState = document.getElementById('emptyState');
 const highlightCard = document.getElementById('highlightCard');

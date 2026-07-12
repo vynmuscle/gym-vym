@@ -9,7 +9,7 @@ if(!sd.session) navigate('../login.html');
 const user = sd.session.user;
 initPWA();
 
-renderNav('ai-workout');
+await renderNav('workouts');
 
 const formPanel = document.getElementById('formPanel');
 const reviewSection = document.getElementById('reviewSection');

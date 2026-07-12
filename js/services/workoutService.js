@@ -347,3 +347,61 @@ export async function getRecentCompletedSessionDates(days = 60) {
 
   return data.map(s => new Date(s.started_at).toDateString());
 }
+
+export async function getActiveSessionToday() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('id, workout_id')
+    .is('finished_at', null)
+    .gte('started_at', startOfDay.toISOString())
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Ficha sugerida do dia: maior média de recuperação entre os grupos da ficha;
+// se nenhuma ficha está 100% recuperada, sugere a que foi treinada há mais
+// tempo (com warn=true pro chamador avisar o usuário).
+export async function getSuggestedWorkout() {
+  const [workouts, recovery] = await Promise.all([listWorkouts(), getMuscleRecovery()]);
+  const activeWorkouts = workouts.filter(w => w.is_active);
+  if (activeWorkouts.length === 0) return null;
+
+  const recoveryByGroup = {};
+  recovery.forEach(r => { recoveryByGroup[r.group] = r; });
+
+  const candidates = [];
+
+  for (const workout of activeWorkouts) {
+    const items = await listWorkoutExercises(workout.id);
+    const groups = [...new Set(items.map(i => i.exercises.muscle_group))];
+    if (groups.length === 0) continue;
+
+    const groupStatuses = groups.map(g => recoveryByGroup[g]);
+    const avgPct = groupStatuses.reduce((sum, g) => sum + g.pct, 0) / groupStatuses.length;
+    const allRecovered = groupStatuses.every(g => g.status !== 'em_recuperacao');
+
+    const recencyScore = Math.min(...groupStatuses.map(g =>
+      g.lastTrained ? new Date(g.lastTrained).getTime() : -Infinity
+    ));
+
+    candidates.push({ workout, avgPct, allRecovered, recencyScore, groups });
+  }
+
+  if (candidates.length === 0) return null;
+
+  const fullyRecovered = candidates.filter(c => c.allRecovered);
+
+  if (fullyRecovered.length > 0) {
+    const chosen = fullyRecovered.reduce((a, b) => b.avgPct > a.avgPct ? b : a);
+    return { ...chosen, warn: false };
+  }
+
+  const chosen = candidates.reduce((a, b) => b.recencyScore < a.recencyScore ? b : a);
+  return { ...chosen, warn: true };
+}

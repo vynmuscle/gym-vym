@@ -2,14 +2,14 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
-import { getMuscleRecovery, listWorkouts, listWorkoutExercises } from './services/workoutService.js';
+import { getMuscleRecovery, getSuggestedWorkout } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('./login.html');
 initPWA();
 const user = sd.session.user;
 
-renderNav('dashboard');
+await renderNav('dashboard');
 
 document.getElementById('userEmail').innerText = user.email;
 
@@ -56,50 +56,14 @@ function renderRecoveryGrid(recovery){
   `).join('');
 }
 
-async function buildSuggestion(recovery){
-  const workouts = (await listWorkouts()).filter(w => w.is_active);
-  if(workouts.length === 0) return;
-
-  const recoveryByGroup = {};
-  recovery.forEach(r => { recoveryByGroup[r.group] = r; });
-
-  const candidates = [];
-
-  for(const workout of workouts){
-    const items = await listWorkoutExercises(workout.id);
-    const groups = [...new Set(items.map(i => i.exercises.muscle_group))];
-    if(groups.length === 0) continue;
-
-    const groupStatuses = groups.map(g => recoveryByGroup[g]);
-    const avgPct = groupStatuses.reduce((sum, g) => sum + g.pct, 0) / groupStatuses.length;
-    const allRecovered = groupStatuses.every(g => g.status !== 'em_recuperacao');
-
-    // "Recência" da ficha: treino do grupo trabalhado mais recentemente.
-    // Grupo nunca treinado conta como muito antigo (prioriza a sugestão).
-    const recencyScore = Math.min(...groupStatuses.map(g =>
-      g.lastTrained ? new Date(g.lastTrained).getTime() : -Infinity
-    ));
-
-    candidates.push({ workout, avgPct, allRecovered, recencyScore });
-  }
-
-  if(candidates.length === 0) return;
-
-  const fullyRecovered = candidates.filter(c => c.allRecovered);
-
-  let chosen, warn;
-  if(fullyRecovered.length > 0){
-    chosen = fullyRecovered.reduce((a, b) => b.avgPct > a.avgPct ? b : a);
-    warn = false;
-  } else {
-    chosen = candidates.reduce((a, b) => b.recencyScore < a.recencyScore ? b : a);
-    warn = true;
-  }
+async function buildSuggestion(){
+  const chosen = await getSuggestedWorkout();
+  if(!chosen) return;
 
   suggestionCard.style.display = 'block';
   suggestionName.textContent = chosen.workout.name;
-  suggestionWarning.style.display = warn ? 'block' : 'none';
-  suggestionWarning.textContent = warn
+  suggestionWarning.style.display = chosen.warn ? 'block' : 'none';
+  suggestionWarning.textContent = chosen.warn
     ? 'Todos os grupos dessa ficha ainda estão em recuperação — sugestão baseada na que foi treinada há mais tempo.'
     : '';
 
@@ -110,4 +74,4 @@ async function buildSuggestion(recovery){
 
 const recovery = await getMuscleRecovery();
 renderRecoveryGrid(recovery);
-await buildSuggestion(recovery);
+await buildSuggestion();

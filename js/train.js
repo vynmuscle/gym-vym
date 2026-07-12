@@ -14,7 +14,9 @@ const user = sd.session.user;
 
 initPWA();
 
-const workoutId = new URLSearchParams(location.search).get('id');
+const urlParams = new URLSearchParams(location.search);
+const workoutId = urlParams.get('id');
+const existingSessionId = urlParams.get('session');
 if(!workoutId) navigate('./workouts.html');
 
 const workoutNameEl = document.getElementById('workoutName');
@@ -250,6 +252,6 @@ setInterval(() => {
 
 const workout = await getWorkout(workoutId);
 workoutNameEl.textContent = workout.name;
-session = await createWorkoutSession(user.id, workoutId);
+session = existingSessionId ? { id: existingSessionId } : await createWorkoutSession(user.id, workoutId);
 await buildWorkout();
 flushQueue();

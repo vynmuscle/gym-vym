@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="../css/layout.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/hub.css">
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#0b0d10">
 </head>
@@ -18,11 +19,22 @@
 <body>
 <main class="page">
   <div class="container">
-    <div class="panel" style="padding:16px;text-align:center">
-      <a href="./ai-workout.html" class="btn btn-primary full">✨ Gerar ficha com IA</a>
+    <div class="shortcut-row">
+      <a href="./exercises.html" class="shortcut-chip">
+        <svg viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5"/><path d="M4 9 9 4l2 2-5 5z"/><path d="M15 20l5-5-2-2-5 5z"/></svg>
+        Exercícios
+      </a>
+      <a href="./exercises.html?tab=biblioteca" class="shortcut-chip">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Biblioteca
+      </a>
+      <a href="./ai-workout.html" class="shortcut-chip">
+        <svg viewBox="0 0 24 24"><path d="M12 3v4"/><path d="M12 17v4"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M5.6 5.6l2.8 2.8"/><path d="M15.6 15.6l2.8 2.8"/><path d="M5.6 18.4l2.8-2.8"/><path d="M15.6 8.4l2.8-2.8"/></svg>
+        Gerar com IA
+      </a>
     </div>
 
-    <div class="panel" style="padding:20px;margin-top:16px">
+    <div class="panel" style="padding:20px">
       <h2 id="formTitle">Nova ficha</h2>
 
       <div class="form-group">

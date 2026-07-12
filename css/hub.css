@@ -1,0 +1,70 @@
+.hub-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.hub-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:24px 12px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  text-decoration:none;
+  color:var(--text);
+  min-height:110px;
+}
+
+.hub-card svg{
+  width:28px;
+  height:28px;
+  stroke:var(--yellow);
+  fill:none;
+  stroke-width:1.8;
+}
+
+.hub-card span{
+  font-weight:700;
+  font-size:14px;
+}
+
+.hub-card:active{
+  transform:scale(.97);
+}
+
+.shortcut-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:16px;
+}
+
+.shortcut-chip{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  padding:12px 6px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  text-decoration:none;
+  color:var(--text);
+  font-size:11px;
+  font-weight:600;
+  text-align:center;
+  min-height:64px;
+  justify-content:center;
+}
+
+.shortcut-chip svg{
+  width:20px;
+  height:20px;
+  stroke:var(--yellow);
+  fill:none;
+  stroke-width:1.8;
+}

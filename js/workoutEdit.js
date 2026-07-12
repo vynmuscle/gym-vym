@@ -13,7 +13,7 @@ if(!sd.session) navigate('../login.html');
 const user = sd.session.user;
 initPWA();
 
-renderNav('workouts');
+await renderNav('workouts');
 
 const workoutId = new URLSearchParams(location.search).get('id');
 if(!workoutId) navigate('./workouts.html');
