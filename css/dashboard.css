@@ -1,0 +1,290 @@
+.greeting{
+  margin-bottom:4px;
+}
+
+.greeting h1{
+  font-size:22px;
+  font-weight:800;
+}
+
+.greeting p{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.section-title{
+  font-size:12px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+/* ===== Semana ===== */
+.week-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+}
+
+.week-row{
+  display:grid;
+  grid-template-columns:repeat(7, 1fr);
+  gap:4px;
+}
+
+.day{
+  text-align:center;
+}
+
+.day .lbl{
+  font-size:10px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:6px;
+}
+
+.day .dot{
+  width:34px;
+  height:34px;
+  margin:0 auto;
+  border-radius:50%;
+  border:2px solid var(--border);
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  font-weight:700;
+}
+
+.day.done .dot{
+  background:var(--green);
+  border-color:var(--green);
+  color:#fff;
+}
+
+.day.today .dot{
+  border-color:var(--red);
+  color:var(--text);
+}
+
+.day.today .lbl{
+  color:var(--red);
+}
+
+/* ===== Hero: treino de hoje ===== */
+.hero{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(135deg, var(--surface) 0%, #1c1114 100%);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px 16px;
+}
+
+.hero::after{
+  content:'';
+  position:absolute;
+  right:-30px;
+  top:-30px;
+  width:140px;
+  height:140px;
+  border-radius:50%;
+  border:14px solid var(--red);
+  opacity:.12;
+}
+
+.hero .tag{
+  font-size:11px;
+  color:var(--yellow);
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-weight:700;
+}
+
+.hero h2{
+  font-family:'Anton', sans-serif;
+  font-size:28px;
+  letter-spacing:.02em;
+  margin:6px 0 2px;
+  line-height:1.1;
+}
+
+.hero .why{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:14px;
+}
+
+.hero .why b{
+  color:var(--green);
+  font-weight:600;
+}
+
+.hero .why.warn b{
+  color:var(--yellow);
+}
+
+.hero-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  min-height:54px;
+  border:none;
+  border-radius:14px;
+  background:var(--red);
+  color:#fff;
+  font-size:16px;
+  font-weight:800;
+  font-family:'Inter', sans-serif;
+  cursor:pointer;
+}
+
+.hero-btn:focus-visible{
+  outline:2px solid var(--yellow);
+  outline-offset:2px;
+}
+
+.hero-done{
+  text-align:center;
+}
+
+.hero-done .tag{
+  color:var(--green);
+}
+
+.hero-done h2{
+  font-size:22px;
+  font-family:'Inter', sans-serif;
+  font-weight:800;
+}
+
+.hero-done .stats{
+  margin-top:14px;
+  margin-bottom:14px;
+}
+
+/* ===== Progresso da semana ===== */
+.progress-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 14px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.ring{
+  position:relative;
+  width:92px;
+  height:92px;
+  flex-shrink:0;
+}
+
+.ring svg{
+  transform:rotate(-90deg);
+}
+
+.ring .pct{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Anton', sans-serif;
+  font-size:24px;
+  color:var(--yellow);
+}
+
+.progress-info .big{
+  font-size:15px;
+  font-weight:700;
+}
+
+.progress-info .sub{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:3px;
+}
+
+.streak{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:10px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:99px;
+  padding:5px 12px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.streak .fire{
+  color:var(--yellow);
+}
+
+/* ===== Recuperação (condensada) ===== */
+.recovery-strip{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding-bottom:4px;
+  scrollbar-width:none;
+}
+
+.recovery-strip::-webkit-scrollbar{
+  display:none;
+}
+
+.muscle-chip{
+  flex-shrink:0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 14px;
+  text-align:center;
+  min-width:86px;
+}
+
+.muscle-chip .m{
+  font-size:13px;
+  font-weight:600;
+}
+
+.muscle-chip .bar{
+  height:4px;
+  border-radius:99px;
+  background:var(--surface-2);
+  margin-top:8px;
+  overflow:hidden;
+}
+
+.muscle-chip .bar i{
+  display:block;
+  height:100%;
+  border-radius:99px;
+}
+
+.muscle-chip .st{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.muscle-chip.ok .bar i{
+  width:100%;
+  background:var(--green);
+}
+
+.muscle-chip.rec .bar i{
+  background:var(--yellow);
+}

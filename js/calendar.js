@@ -3,6 +3,7 @@ import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { getSessionsByMonth, getRecentCompletedSessionDates } from './services/workoutService.js';
+import { computeStreak, formatDuration } from './utils.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -34,31 +35,6 @@ function workoutInitial(name){
   const match = name.match(/treino\s+([a-z])\b/i);
   if(match) return match[1].toUpperCase();
   return name.trim().charAt(0).toUpperCase();
-}
-
-function formatDuration(startIso, endIso){
-  const totalMin = Math.round((new Date(endIso) - new Date(startIso)) / 60000);
-  if(totalMin < 60) return `${totalMin}min`;
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  return `${h}h ${String(m).padStart(2, '0')}min`;
-}
-
-function computeStreak(dateStrings){
-  const daySet = new Set(dateStrings);
-  let checkDate = new Date();
-
-  if(!daySet.has(checkDate.toDateString())){
-    checkDate.setDate(checkDate.getDate() - 1);
-    if(!daySet.has(checkDate.toDateString())) return 0;
-  }
-
-  let streak = 0;
-  while(daySet.has(checkDate.toDateString())){
-    streak++;
-    checkDate.setDate(checkDate.getDate() - 1);
-  }
-  return streak;
 }
 
 function buildCalendarDays(year, month){

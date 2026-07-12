@@ -21,7 +21,7 @@ const NAV_ITEMS = [
   }
 ];
 
-async function handleTrainClick(){
+export async function handleTrainClick(){
   try {
     const active = await getActiveSessionToday();
     if(active){

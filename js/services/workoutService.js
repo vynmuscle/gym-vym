@@ -405,3 +405,42 @@ export async function getSuggestedWorkout() {
   const chosen = candidates.reduce((a, b) => b.recencyScore < a.recencyScore ? b : a);
   return { ...chosen, warn: true };
 }
+
+// Sessões finalizadas num intervalo [startISO, endISO) — usada pra semana
+// atual (grid seg-dom) e pro anel de progresso. Uma query só.
+export async function getSessionDatesInRange(startISO, endISO) {
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('started_at')
+    .not('finished_at', 'is', null)
+    .gte('started_at', startISO)
+    .lt('started_at', endISO);
+  if (error) throw error;
+
+  return data.map(s => new Date(s.started_at).toDateString());
+}
+
+export async function getTodaysCompletedSessions() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const { data: sessions, error } = await supabase
+    .from('workout_sessions')
+    .select('*, workouts(name)')
+    .not('finished_at', 'is', null)
+    .gte('started_at', startOfDay.toISOString())
+    .lte('started_at', endOfDay.toISOString())
+    .order('started_at', { ascending: false });
+  if (error) throw error;
+  if (sessions.length === 0) return [];
+
+  const summary = await getSessionSetsSummary(sessions.map(s => s.id));
+
+  return sessions.map(s => ({
+    ...s,
+    sets: summary[s.id]?.sets || 0,
+    volume: summary[s.id]?.volume || 0
+  }));
+}
