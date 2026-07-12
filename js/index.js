@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
-import { renderNav, handleTrainClick } from './navigation.js';
+import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import {
   getMuscleRecovery, getSuggestedWorkout, getTodaysCompletedSessions,
@@ -134,7 +134,9 @@ async function renderHero(){
       <a href="./pages/ai-workout.html" class="hero-ai-link">Renovar treinos com IA</a>
     </div>`;
 
-  document.getElementById('btnStartHero').addEventListener('click', handleTrainClick);
+  document.getElementById('btnStartHero').addEventListener('click', () => {
+    navigate('./pages/train.html?id=' + suggestion.workout.id);
+  });
 }
 
 function renderRecovery(recovery){

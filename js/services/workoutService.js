@@ -375,6 +375,7 @@ export async function getActiveSessionToday() {
     .from('workout_sessions')
     .select('id, workout_id')
     .is('finished_at', null)
+    .not('workout_id', 'is', null)
     .gte('started_at', startOfDay.toISOString())
     .order('started_at', { ascending: false })
     .limit(1)

@@ -17,7 +17,21 @@ initPWA();
 const urlParams = new URLSearchParams(location.search);
 const workoutId = urlParams.get('id');
 const existingSessionId = urlParams.get('session');
-if(!workoutId) navigate('./workouts.html');
+const workoutIdValid = !!workoutId && workoutId !== 'null' && workoutId !== 'undefined';
+
+const trainError = document.getElementById('trainError');
+const trainErrorMsg = document.getElementById('trainErrorMsg');
+const trainErrorLink = document.getElementById('trainErrorLink');
+
+function showTrainError(msg, linkHref, linkLabel){
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('.finish-bar').style.display = 'none';
+  document.getElementById('workout').style.display = 'none';
+  trainErrorMsg.textContent = msg;
+  trainErrorLink.href = linkHref;
+  trainErrorLink.textContent = linkLabel;
+  trainError.style.display = 'block';
+}
 
 const workoutNameEl = document.getElementById('workoutName');
 const elapsedEl = document.getElementById('elapsed');
@@ -250,8 +264,25 @@ setInterval(() => {
   elapsedEl.textContent = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
 }, 1000);
 
-const workout = await getWorkout(workoutId);
-workoutNameEl.textContent = workout.name;
-session = existingSessionId ? { id: existingSessionId } : await createWorkoutSession(user.id, workoutId);
-await buildWorkout();
-flushQueue();
+if(!workoutIdValid){
+  showTrainError('Nenhuma ficha selecionada.', './workouts.html', 'Ver fichas');
+} else {
+  let workout;
+  try {
+    workout = await getWorkout(workoutId);
+  } catch(err) {
+    showTrainError('Essa ficha não foi encontrada.', './workouts.html', 'Ver fichas');
+  }
+
+  if(workout){
+    const items = await listWorkoutExercises(workoutId);
+    if(items.length === 0){
+      showTrainError('Essa ficha ainda não tem exercícios.', `./workout-edit.html?id=${workoutId}`, 'Montar exercícios');
+    } else {
+      workoutNameEl.textContent = workout.name;
+      session = existingSessionId ? { id: existingSessionId } : await createWorkoutSession(user.id, workoutId);
+      await buildWorkout();
+      flushQueue();
+    }
+  }
+}
