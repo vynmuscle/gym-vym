@@ -22,6 +22,9 @@ html,body{
   color:var(--text);
   font-family:'Inter',sans-serif;
   -webkit-font-smoothing:antialiased;
+  /* Protecao final — a causa raiz de qualquer overflow lateral deve ser
+     corrigida na origem antes de depender disso. */
+  overflow-x:hidden;
 }
 
 h1,h2,h3,.brand-mark,.font-display{
