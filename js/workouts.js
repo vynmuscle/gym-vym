@@ -1,11 +1,13 @@
 import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
+import { initPWA } from './pwa.js';
 import { listWorkouts, createWorkout, updateWorkout, deleteWorkout } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
 const user = sd.session.user;
+initPWA();
 
 renderNav('workouts');
 

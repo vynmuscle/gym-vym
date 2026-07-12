@@ -226,6 +226,16 @@ main{
   color:var(--green);
 }
 
+.set-row.pending .check-btn{
+  background:var(--yellow);
+  border-color:var(--yellow);
+  color:var(--bg);
+}
+
+.set-row.pending .set-num{
+  color:var(--yellow);
+}
+
 .add-set-btn{
   display:block;
   width:calc(100% - 24px);

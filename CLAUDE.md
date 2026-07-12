@@ -53,6 +53,7 @@ api/        → serverless functions (só na Fase 2)
 - Migrations SQL: sempre em arquivo novo datado em `database/`, nunca editar migration antiga.
 - Toda tabela nova: `user_id` + RLS com 4 policies (select/insert/update/delete).
 - Cache-busting: `?v=XXX` nos imports de JS/CSS, incrementar `APP_VERSION` no `js/config.js` a cada deploy.
+- `sw.js`: incrementar `CACHE_VERSION` (topo do arquivo) sempre que JS/CSS/HTML mudar — senão o service worker pode continuar servindo versão antiga do cache pro usuário offline. Ideal manter em sincronia com `APP_VERSION`.
 - Mobile-first: alvos de toque com mínimo 52px; testar mentalmente o uso "na academia, com mão suada".
 - Gravação resiliente: dados de treino são salvos a cada ação (✓ da série), nunca só no final.
 

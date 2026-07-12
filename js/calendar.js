@@ -1,10 +1,12 @@
 import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
+import { initPWA } from './pwa.js';
 import { getSessionsByMonth, getRecentCompletedSessionDates } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
+initPWA();
 
 renderNav('calendar');
 

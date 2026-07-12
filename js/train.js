@@ -1,5 +1,7 @@
 import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
+import { initPWA } from './pwa.js';
+import { queueSet, flushQueue, onSetSynced } from './services/offlineQueue.js';
 import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession,
@@ -9,6 +11,8 @@ import {
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
 const user = sd.session.user;
+
+initPWA();
 
 const workoutId = new URLSearchParams(location.search).get('id');
 if(!workoutId) navigate('./workouts.html');
@@ -113,6 +117,15 @@ async function buildWorkout(){
   });
 }
 
+onSetSynced((item) => {
+  if(!item.meta) return;
+  const row = document.getElementById(`set-${item.meta.ei}-${item.meta.setNumber}`);
+  if(!row) return;
+  row.classList.remove('pending');
+  const checkBtn = row.querySelector('.check-btn');
+  if(checkBtn) checkBtn.textContent = '✓';
+});
+
 async function completeSet(ei, setNumber){
   const row = document.getElementById(`set-${ei}-${setNumber}`);
   if(row.classList.contains('completed')) return;
@@ -122,15 +135,27 @@ async function completeSet(ei, setNumber){
   const reps = parseInt(inputs[1].value) || 0;
   const ex = exercisesData[ei];
 
-  await recordSet(user.id, {
+  const payload = {
     session_id: session.id,
     exercise_id: ex.exerciseId,
     set_number: setNumber,
     reps,
     weight: kg
-  });
+  };
+
+  let pending = false;
+  try {
+    await recordSet(user.id, payload);
+  } catch(err) {
+    queueSet(user.id, payload, { ei, setNumber });
+    pending = true;
+  }
 
   row.classList.add('completed');
+  if(pending){
+    row.classList.add('pending');
+    row.querySelector('.check-btn').textContent = '⏳';
+  }
   totalVolume += kg * reps;
   doneSets++;
   doneCountEl.textContent = doneSets;
@@ -203,6 +228,7 @@ document.getElementById('btnAddRest').addEventListener('click', () => {
 document.getElementById('btnSkipRest').addEventListener('click', closeRest);
 
 finishBtn.addEventListener('click', async () => {
+  await flushQueue();
   await finishWorkoutSession(session.id);
 
   const t = Math.floor((Date.now() - startTime) / 1000);
@@ -226,3 +252,4 @@ const workout = await getWorkout(workoutId);
 workoutNameEl.textContent = workout.name;
 session = await createWorkoutSession(user.id, workoutId);
 await buildWorkout();
+flushQueue();

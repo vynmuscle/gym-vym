@@ -1,5 +1,8 @@
 import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
+import { initPWA } from './pwa.js';
+
+initPWA();
 
 const emailInput = document.getElementById('email');
 const senhaInput = document.getElementById('senha');
