@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fotos - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/photos.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#0b0d10">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <h2>Fotos de progresso</h2>
+
+    <div class="photo-actions" style="margin-top:16px">
+      <button type="button" class="btn btn-primary" id="btnNewPhoto">📷 Nova foto</button>
+      <button type="button" class="btn btn-secondary" id="btnCompare">Comparar</button>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none">
+
+    <div class="panel photo-review" id="reviewPanel" style="display:none">
+      <img id="reviewImg" alt="Prévia">
+      <div class="form-group">
+        <label for="photoDate">Data</label>
+        <input type="date" id="photoDate">
+      </div>
+      <div class="form-group">
+        <label for="photoNotes">Nota</label>
+        <input type="text" id="photoNotes" placeholder="Opcional">
+      </div>
+      <button type="button" class="btn btn-primary full" id="btnSavePhoto">Salvar</button>
+      <button type="button" class="btn btn-secondary full" id="btnCancelPhoto">Cancelar</button>
+      <div id="mensagem" class="message"></div>
+    </div>
+
+    <div id="emptyState" class="panel" style="display:none;text-align:center;padding:40px 20px;margin-top:16px">
+      <p class="muted">Registre o ponto de partida. Daqui a 3 meses você vai agradecer.</p>
+    </div>
+
+    <div class="photo-grid" id="photoGrid"></div>
+  </div>
+</main>
+
+<div class="compare-bar" id="compareBar" style="display:none">
+  <span id="compareCount">0/2 selecionadas</span>
+  <button type="button" class="btn btn-primary" id="btnViewCompare" style="margin:0" disabled>Ver comparação</button>
+</div>
+
+<div class="photo-viewer" id="photoViewer">
+  <button type="button" class="btn-icon" id="btnCloseViewer" style="align-self:flex-end;margin-bottom:12px">✕</button>
+  <img id="viewerImg" alt="Foto">
+  <div class="meta">
+    <div class="date" id="viewerDate">—</div>
+    <div class="notes" id="viewerNotes"></div>
+  </div>
+  <button type="button" class="btn btn-secondary full" id="btnDeletePhoto">Excluir</button>
+</div>
+
+<div class="photo-viewer" id="compareViewer">
+  <button type="button" class="btn-icon" id="btnCloseCompare" style="align-self:flex-end;margin-bottom:12px">✕</button>
+  <div class="compare-row">
+    <div>
+      <img id="compareImg1" alt="Foto mais antiga">
+      <div class="meta"><div class="date" id="compareDate1"></div></div>
+    </div>
+    <div>
+      <img id="compareImg2" alt="Foto mais recente">
+      <div class="meta"><div class="date" id="compareDate2"></div></div>
+    </div>
+  </div>
+  <div class="compare-diff" id="compareDiff"></div>
+</div>
+
+<script type="module" src="../js/photos.js"></script>
+</body>
+</html>

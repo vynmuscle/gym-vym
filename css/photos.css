@@ -1,0 +1,143 @@
+.photo-actions{
+  display:flex;
+  gap:8px;
+}
+
+.photo-actions .btn{
+  flex:1;
+  margin-bottom:0;
+}
+
+.photo-review{
+  padding:16px;
+  margin-top:16px;
+}
+
+.photo-review img{
+  width:100%;
+  border-radius:var(--radius);
+  margin-bottom:14px;
+  display:block;
+}
+
+.photo-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:6px;
+  margin-top:16px;
+}
+
+.photo-thumb{
+  position:relative;
+  aspect-ratio:1;
+  border-radius:10px;
+  overflow:hidden;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  cursor:pointer;
+}
+
+.photo-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.photo-thumb .date{
+  position:absolute;
+  left:0; right:0; bottom:0;
+  padding:4px;
+  font-size:10px;
+  text-align:center;
+  background:linear-gradient(to top, rgba(0,0,0,.7), transparent);
+  color:#fff;
+}
+
+.photo-thumb.selected{
+  outline:3px solid var(--yellow);
+  outline-offset:-3px;
+}
+
+.photo-thumb.selected::after{
+  content:'✓';
+  position:absolute;
+  top:4px; right:4px;
+  width:22px; height:22px;
+  border-radius:50%;
+  background:var(--yellow);
+  color:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:700;
+}
+
+.compare-bar{
+  position:fixed;
+  left:16px; right:16px;
+  bottom:calc(16px + env(safe-area-inset-bottom));
+  z-index:35;
+  background:var(--surface-2);
+  border:1px solid var(--yellow);
+  border-radius:var(--radius);
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.photo-viewer{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:none;
+  flex-direction:column;
+  background:rgba(11,13,16,.97);
+  backdrop-filter:blur(6px);
+  padding:16px;
+  overflow-y:auto;
+}
+
+.photo-viewer.open{
+  display:flex;
+}
+
+.photo-viewer img{
+  width:100%;
+  border-radius:var(--radius);
+  margin-bottom:16px;
+}
+
+.photo-viewer .meta{
+  text-align:center;
+  margin-bottom:16px;
+}
+
+.photo-viewer .meta .date{
+  font-size:18px;
+  font-weight:700;
+}
+
+.photo-viewer .meta .notes{
+  color:var(--muted);
+  font-size:14px;
+  margin-top:4px;
+}
+
+.compare-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.compare-diff{
+  text-align:center;
+  font-size:14px;
+  color:var(--yellow);
+  font-weight:700;
+  margin-bottom:20px;
+}
