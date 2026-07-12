@@ -68,3 +68,46 @@
   fill:none;
   stroke-width:1.8;
 }
+
+.shortcut-chip.accent{
+  background:rgba(217,51,63,.12);
+  border-color:var(--red);
+  color:var(--red);
+}
+
+.shortcut-chip.accent svg{
+  stroke:var(--red);
+}
+
+.archived-section{
+  margin-top:16px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--surface);
+  overflow:hidden;
+}
+
+.archived-section summary{
+  padding:14px 16px;
+  cursor:pointer;
+  color:var(--muted);
+  font-weight:700;
+  font-size:13px;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.archived-section summary::-webkit-details-marker{
+  display:none;
+}
+
+.archived-section summary::after{
+  content:'▾';
+  font-size:12px;
+}
+
+.archived-section[open] summary::after{
+  content:'▴';
+}

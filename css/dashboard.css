@@ -152,6 +152,15 @@
   outline-offset:2px;
 }
 
+.hero-ai-link{
+  display:block;
+  text-align:center;
+  margin-top:12px;
+  font-size:12px;
+  color:var(--muted);
+  text-decoration:underline;
+}
+
 .hero-done{
   text-align:center;
 }

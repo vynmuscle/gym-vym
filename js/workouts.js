@@ -19,6 +19,9 @@ const btnCancel = document.getElementById('btnCancel');
 const formTitle = document.getElementById('formTitle');
 const mensagem = document.getElementById('mensagem');
 const listPanel = document.getElementById('listPanel');
+const archivedSection = document.getElementById('archivedSection');
+const archivedSummary = document.getElementById('archivedSummary');
+const archivedList = document.getElementById('archivedList');
 
 let editingId = null;
 
@@ -38,31 +41,62 @@ function resetForm(){
 
 async function loadList(){
   const workouts = await listWorkouts();
+  const active = workouts.filter(w => w.is_active);
+  const archived = workouts.filter(w => !w.is_active);
 
-  if(workouts.length === 0){
-    listPanel.innerHTML = '<p class="muted" style="padding:20px">Nenhuma ficha cadastrada ainda.</p>';
-    return;
+  if(active.length === 0){
+    listPanel.innerHTML = '<p class="muted" style="padding:20px">Nenhuma ficha ativa no momento.</p>';
+  } else {
+    listPanel.innerHTML = active.map(w => `
+      <div class="list-item">
+        <div class="list-item-info">
+          <span class="list-item-title">${w.name}</span>
+          <span class="list-item-sub">${w.description || ''}</span>
+        </div>
+        <div class="list-item-actions">
+          <a href="./train.html?id=${w.id}" class="btn-icon" title="Treinar">▶</a>
+          <a href="./workout-edit.html?id=${w.id}" class="btn-icon" title="Montar exercícios">🏋</a>
+          <button type="button" class="btn-icon" data-edit="${w.id}">✎</button>
+          <button type="button" class="btn-icon danger" data-delete="${w.id}">✕</button>
+        </div>
+      </div>
+    `).join('');
+
+    listPanel.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => startEdit(active.find(w => w.id === btn.dataset.edit)));
+    });
+    listPanel.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.addEventListener('click', () => removeWorkout(btn.dataset.delete));
+    });
   }
 
-  listPanel.innerHTML = workouts.map(w => `
+  archivedSection.style.display = archived.length === 0 ? 'none' : 'block';
+  archivedSummary.textContent = `Arquivadas (${archived.length})`;
+
+  archivedList.innerHTML = archived.map(w => `
     <div class="list-item">
       <div class="list-item-info">
-        <span class="list-item-title">${w.name}${w.is_active ? '' : ' (inativa)'}</span>
+        <span class="list-item-title">${w.name}</span>
         <span class="list-item-sub">${w.description || ''}</span>
       </div>
       <div class="list-item-actions">
-        ${w.is_active ? `<a href="./train.html?id=${w.id}" class="btn-icon" title="Treinar">▶</a>` : ''}
-        <a href="./workout-edit.html?id=${w.id}" class="btn-icon" title="Montar exercícios">🏋</a>
+        <button type="button" class="btn-icon" data-reactivate="${w.id}" title="Reativar">↺</button>
         <button type="button" class="btn-icon" data-edit="${w.id}">✎</button>
         <button type="button" class="btn-icon danger" data-delete="${w.id}">✕</button>
       </div>
     </div>
   `).join('');
 
-  listPanel.querySelectorAll('[data-edit]').forEach(btn => {
-    btn.addEventListener('click', () => startEdit(workouts.find(w => w.id === btn.dataset.edit)));
+  archivedList.querySelectorAll('[data-reactivate]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await updateWorkout(btn.dataset.reactivate, { is_active: true });
+      await loadList();
+    });
   });
-  listPanel.querySelectorAll('[data-delete]').forEach(btn => {
+  archivedList.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => startEdit(archived.find(w => w.id === btn.dataset.edit)));
+  });
+  archivedList.querySelectorAll('[data-delete]').forEach(btn => {
     btn.addEventListener('click', () => removeWorkout(btn.dataset.delete));
   });
 }

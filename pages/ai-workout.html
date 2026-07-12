@@ -54,6 +54,16 @@
       </div>
 
       <div class="form-group">
+        <label for="tempoTreino">Quanto tempo você tem por treino?</label>
+        <select id="tempoTreino">
+          <option value="30">30min</option>
+          <option value="45">45min</option>
+          <option value="60" selected>1h</option>
+          <option value="90">1h30</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label for="equipamento">Equipamento disponível</label>
         <select id="equipamento">
           <option value="academia completa">Academia completa</option>
@@ -76,6 +86,20 @@
       <div class="ai-disclaimer">⚠️ Treino gerado por IA. Revise com um profissional de educação física antes de executar.</div>
       <p class="ai-rationale" id="rationale"></p>
       <div id="workoutsList"></div>
+
+      <div class="panel" style="padding:16px;margin-bottom:16px">
+        <div class="form-group" style="margin-bottom:10px">
+          <label style="display:flex;align-items:center;gap:8px;color:var(--text);margin-bottom:10px">
+            <input type="radio" name="renewMode" value="replace" id="modeReplace" checked style="width:20px;height:20px">
+            Substituir meus treinos atuais
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;color:var(--text)">
+            <input type="radio" name="renewMode" value="add" id="modeAdd" style="width:20px;height:20px">
+            Adicionar às minhas fichas
+          </label>
+        </div>
+        <div class="message warning" id="renewWarning">Suas fichas ativas atuais serão arquivadas — o histórico e o progresso delas continuam intactos.</div>
+      </div>
 
       <button type="button" class="btn btn-secondary full" id="btnGerarNovo">← Gerar de novo</button>
       <button type="button" class="btn btn-primary full" id="btnSalvar">Salvar fichas</button>

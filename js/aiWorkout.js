@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
-import { listExercises, createExercise, createWorkout, addWorkoutExercise } from './services/workoutService.js';
+import { listExercises, createExercise, createWorkout, addWorkoutExercise, listWorkouts, updateWorkout } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -16,6 +16,7 @@ const reviewSection = document.getElementById('reviewSection');
 const objetivoInput = document.getElementById('objetivo');
 const nivelInput = document.getElementById('nivel');
 const diasSemanaInput = document.getElementById('diasSemana');
+const tempoTreinoInput = document.getElementById('tempoTreino');
 const equipamentoInput = document.getElementById('equipamento');
 const restricoesInput = document.getElementById('restricoes');
 const btnGerar = document.getElementById('btnGerar');
@@ -25,6 +26,15 @@ const workoutsListEl = document.getElementById('workoutsList');
 const btnGerarNovo = document.getElementById('btnGerarNovo');
 const btnSalvar = document.getElementById('btnSalvar');
 const mensagemSalvar = document.getElementById('mensagemSalvar');
+const modeReplace = document.getElementById('modeReplace');
+const modeAdd = document.getElementById('modeAdd');
+const renewWarning = document.getElementById('renewWarning');
+
+function updateRenewWarning(){
+  renewWarning.style.display = modeReplace.checked ? 'block' : 'none';
+}
+modeReplace.addEventListener('change', updateRenewWarning);
+modeAdd.addEventListener('change', updateRenewWarning);
 
 let reviewData = null;
 
@@ -113,6 +123,7 @@ btnGerar.addEventListener('click', async () => {
         objetivo: objetivoInput.value,
         nivel: nivelInput.value,
         dias_semana: diasSemanaInput.value,
+        tempo_treino: tempoTreinoInput.value,
         equipamento: equipamentoInput.value,
         restricoes: restricoesInput.value.trim()
       })
@@ -127,6 +138,8 @@ btnGerar.addEventListener('click', async () => {
 
     reviewData = data;
     renderReview();
+    modeReplace.checked = true;
+    updateRenewWarning();
     showMessage('');
     formPanel.style.display = 'none';
     reviewSection.style.display = 'block';
@@ -156,6 +169,13 @@ btnSalvar.addEventListener('click', async () => {
   showSaveMessage('Salvando...');
 
   try {
+    if(modeReplace.checked){
+      const currentActive = (await listWorkouts()).filter(w => w.is_active);
+      for(const w of currentActive){
+        await updateWorkout(w.id, { is_active: false });
+      }
+    }
+
     const existing = await listExercises();
     const exerciseCache = new Map(existing.map(e => [e.name.trim().toLowerCase(), e.id]));
 

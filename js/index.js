@@ -109,6 +109,7 @@ async function renderHero(){
           <div class="stat"><div class="v num">${Math.round(totalVolume).toLocaleString('pt-BR')}</div><div class="k">Volume kg</div></div>
         </div>
         <a href="./pages/history.html" class="btn btn-secondary full" style="text-decoration:none;display:flex;align-items:center;justify-content:center">Ver histórico</a>
+        <a href="./pages/ai-workout.html" class="hero-ai-link">Renovar treinos com IA</a>
       </div>`;
     return;
   }
@@ -130,6 +131,7 @@ async function renderHero(){
       <h2>${suggestion.workout.name}</h2>
       <div class="why${suggestion.warn ? ' warn' : ''}">${why}</div>
       <button type="button" class="hero-btn" id="btnStartHero">▶ &nbsp;Iniciar treino</button>
+      <a href="./pages/ai-workout.html" class="hero-ai-link">Renovar treinos com IA</a>
     </div>`;
 
   document.getElementById('btnStartHero').addEventListener('click', handleTrainClick);

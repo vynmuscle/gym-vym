@@ -3,6 +3,14 @@ const SUPABASE_URL = 'https://lyxzqejagdwkrnpfemkd.supabase.co';
 const MUSCLE_GROUPS = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'abdomen', 'gluteos'];
 const EQUIPMENT_OPTIONS = ['barra', 'halter', 'maquina', 'polia', 'peso corporal'];
 
+// Quanto tempo (minutos) por treino -> orientação de volume pro prompt
+const TIME_GUIDANCE = {
+  '30': '4 a 5 exercícios, 3 séries cada',
+  '45': '5 a 6 exercícios, 3 a 4 séries cada',
+  '60': '6 a 7 exercícios, 3 a 4 séries cada',
+  '90': '7 a 8 exercícios, 4 séries cada'
+};
+
 export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', 'https://gym-vym.vercel.app');
@@ -21,13 +29,13 @@ export default async function handler(req, res) {
   if (!authRes.ok) return res.status(403).json({ error: 'Forbidden' });
 
   try {
-    const { objetivo, nivel, dias_semana, equipamento, restricoes } = req.body;
+    const { objetivo, nivel, dias_semana, equipamento, restricoes, tempo_treino } = req.body;
 
-    if (!objetivo || !nivel || !dias_semana || !equipamento) {
-      return res.status(400).json({ error: 'Preencha objetivo, nível, dias por semana e equipamento.' });
+    if (!objetivo || !nivel || !dias_semana || !equipamento || !tempo_treino) {
+      return res.status(400).json({ error: 'Preencha objetivo, nível, dias por semana, equipamento e tempo por treino.' });
     }
 
-    const prompt = buildPrompt({ objetivo, nivel, dias_semana, equipamento, restricoes });
+    const prompt = buildPrompt({ objetivo, nivel, dias_semana, equipamento, restricoes, tempo_treino });
     const result = await callClaudeForWorkout(prompt);
 
     if (!result) {
@@ -42,17 +50,20 @@ export default async function handler(req, res) {
   }
 }
 
-function buildPrompt({ objetivo, nivel, dias_semana, equipamento, restricoes }) {
+function buildPrompt({ objetivo, nivel, dias_semana, equipamento, restricoes, tempo_treino }) {
+  const volumeGuidance = TIME_GUIDANCE[tempo_treino] || TIME_GUIDANCE['60'];
+
   return `Você é um personal trainer experiente e cuidadoso, especializado em montar fichas de treino de academia.
 
 Monte uma divisão de treino com base em:
 - Objetivo: ${objetivo}
 - Nível: ${nivel}
 - Dias de treino por semana: ${dias_semana}
+- Tempo disponível por treino: ${tempo_treino} minutos
 - Equipamento disponível: ${equipamento}
 - Restrições ou lesões: ${restricoes || 'nenhuma informada'}
 
-Monte exatamente ${dias_semana} ficha(s) de treino (uma por dia de treino), com 4 a 6 exercícios cada, adequados ao equipamento disponível e respeitando as restrições informadas.
+Monte exatamente ${dias_semana} ficha(s) de treino (uma por dia de treino), adequadas ao equipamento disponível e respeitando as restrições informadas. Ajuste o volume pro tempo disponível: aproximadamente ${volumeGuidance} — inclua descanso (rest_seconds) coerente com esse volume caber no tempo informado.
 
 Responda APENAS com JSON válido, sem markdown, sem texto antes ou depois, no formato exato:
 {
