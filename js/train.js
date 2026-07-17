@@ -54,9 +54,46 @@ let totalSets = 0;
 let totalVolume = 0;
 const startTime = Date.now();
 let restInterval = null;
-let restRemaining = 0;
+let restEndTime = 0;
+let restExName = '';
+let restDone = 0;
+let restTotal = 0;
 let session = null;
 let exercisesData = [];
+
+const REST_STORAGE_KEY = 'gymvym_rest_end';
+
+if('Notification' in window && Notification.permission === 'default'){
+  Notification.requestPermission().catch(() => {});
+}
+
+function playRestSound(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+    osc.onended = () => ctx.close();
+  } catch(err) {}
+}
+
+function notifyRestOver(exName){
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  if(!document.hidden) return;
+  try {
+    new Notification('Descanso terminado!', {
+      body: `Hora de voltar: ${exName}`,
+      icon: '/icons/icon-192.png',
+      tag: 'gymvym-rest'
+    });
+  } catch(err) {}
+}
 
 function setRowHTML(ei, setNumber, prevLabel, kg, reps){
   return `
@@ -211,37 +248,72 @@ function addSet(ei){
 }
 
 function startRest(seconds, exName, done, total){
-  restRemaining = seconds;
+  restEndTime = Date.now() + seconds * 1000;
+  restExName = exName;
+  restDone = done;
+  restTotal = total;
+  localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName, done, total }));
   restContext.textContent = `${exName} — série ${done}/${total} feita`;
-  updateRestDisplay();
   restSheet.classList.add('open');
+  updateRestDisplay();
   clearInterval(restInterval);
-  restInterval = setInterval(() => {
-    restRemaining--;
-    updateRestDisplay();
-    if(restRemaining <= 0){
-      if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      closeRest();
-    }
-  }, 1000);
+  restInterval = setInterval(updateRestDisplay, 1000);
 }
 
 function updateRestDisplay(){
-  restTime.textContent = Math.floor(restRemaining / 60) + ':' + String(restRemaining % 60).padStart(2, '0');
-  restTime.classList.toggle('ending', restRemaining <= 10);
+  const remaining = Math.max(0, Math.round((restEndTime - Date.now()) / 1000));
+  restTime.textContent = Math.floor(remaining / 60) + ':' + String(remaining % 60).padStart(2, '0');
+  restTime.classList.toggle('ending', remaining <= 10);
+  if(remaining <= 0){
+    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    playRestSound();
+    notifyRestOver(restExName);
+    closeRest();
+  }
 }
 
 function closeRest(){
   clearInterval(restInterval);
   restSheet.classList.remove('open');
+  localStorage.removeItem(REST_STORAGE_KEY);
 }
 
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden) return;
+  if(!restSheet.classList.contains('open')) return;
+  updateRestDisplay();
+});
+
 document.getElementById('btnAddRest').addEventListener('click', () => {
-  restRemaining += 30;
+  restEndTime += 30000;
+  localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName: restExName, done: restDone, total: restTotal }));
   updateRestDisplay();
 });
 
 document.getElementById('btnSkipRest').addEventListener('click', closeRest);
+
+(function restoreRestFromStorage(){
+  const raw = localStorage.getItem(REST_STORAGE_KEY);
+  if(!raw) return;
+  try {
+    const saved = JSON.parse(raw);
+    if(saved.endTime > Date.now()){
+      restEndTime = saved.endTime;
+      restExName = saved.exName;
+      restDone = saved.done;
+      restTotal = saved.total;
+      restContext.textContent = `${saved.exName} — série ${saved.done}/${saved.total} feita`;
+      restSheet.classList.add('open');
+      updateRestDisplay();
+      clearInterval(restInterval);
+      restInterval = setInterval(updateRestDisplay, 1000);
+    } else {
+      localStorage.removeItem(REST_STORAGE_KEY);
+    }
+  } catch(err) {
+    localStorage.removeItem(REST_STORAGE_KEY);
+  }
+})();
 
 finishBtn.addEventListener('click', async () => {
   await flushQueue();
