@@ -140,7 +140,7 @@ async function toggleDetails(sessionId){
         ${ex.sets.map((s, i) => `
           <div class="history-set-row">
             <span class="num">${i + 1}</span>
-            <span>${s.weight ?? 0}kg × ${s.reps ?? 0}</span>
+            <span>${s.duration_seconds ? Math.round(s.duration_seconds / 60) + 'min' : (s.weight ?? 0) + 'kg × ' + (s.reps ?? 0)}</span>
           </div>
         `).join('')}
       </div>

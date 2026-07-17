@@ -1,6 +1,7 @@
 import { supabase } from '../supabaseClient.js';
 
 export const MUSCLE_GROUPS = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'abdomen', 'gluteos'];
+export const EXERCISE_GROUPS = [...MUSCLE_GROUPS, 'cardio'];
 export const EQUIPMENT_OPTIONS = ['barra', 'halter', 'maquina', 'polia', 'peso corporal'];
 
 export async function listExercises() {
@@ -58,9 +59,20 @@ export async function deleteWorkout(id) {
 export async function listWorkoutExercises(workoutId) {
   const { data, error } = await supabase
     .from('workout_exercises')
-    .select('*, exercises(name, muscle_group, equipment, image_url)')
+    .select('*, exercises(name, muscle_group, equipment, image_url, instructions)')
     .eq('workout_id', workoutId)
     .order('sort_order');
+  if (error) throw error;
+  return data;
+}
+
+export async function swapWorkoutExerciseExercise(id, exerciseId) {
+  const { data, error } = await supabase
+    .from('workout_exercises')
+    .update({ exercise_id: exerciseId })
+    .eq('id', id)
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }
@@ -224,7 +236,8 @@ export async function addExerciseFromLibrary(userId, libEx) {
       name: targetName,
       muscle_group: libEx.muscle_group,
       equipment: libEx.equipment,
-      image_url: libEx.image_urls?.[0] || null
+      image_url: libEx.image_urls?.[0] || null,
+      instructions: libEx.instructions_pt || libEx.instructions || null
     })
     .select()
     .single();
@@ -399,7 +412,7 @@ export async function getSuggestedWorkout() {
 
   for (const workout of activeWorkouts) {
     const items = await listWorkoutExercises(workout.id);
-    const groups = [...new Set(items.map(i => i.exercises.muscle_group))];
+    const groups = [...new Set(items.map(i => i.exercises.muscle_group))].filter(g => g !== 'cardio');
     if (groups.length === 0) continue;
 
     const groupStatuses = groups.map(g => recoveryByGroup[g]);

@@ -31,19 +31,24 @@
     <div class="panel" style="padding:20px;margin-top:16px;display:none" id="editSection">
       <h3>Editar exercício da ficha</h3>
 
-      <div class="form-group">
+      <div class="form-group" id="groupTargetSets">
         <label for="targetSets">Séries</label>
         <input type="number" id="targetSets" value="3" min="1">
       </div>
 
-      <div class="form-group">
+      <div class="form-group" id="groupTargetReps">
         <label for="targetReps">Repetições</label>
         <input type="text" id="targetReps" placeholder="Ex: 8-12" value="10">
       </div>
 
-      <div class="form-group">
+      <div class="form-group" id="groupTargetWeight">
         <label for="targetWeight">Carga sugerida (kg)</label>
         <input type="number" id="targetWeight" step="0.5">
+      </div>
+
+      <div class="form-group" id="groupTargetDuration" style="display:none">
+        <label for="targetDuration">Duração (minutos)</label>
+        <input type="number" id="targetDuration" min="1" value="20">
       </div>
 
       <div class="form-group">

@@ -1,11 +1,12 @@
 import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { initPWA } from './pwa.js';
+import { openExercisePicker } from './exercisePicker.js';
 import { queueSet, flushQueue, onSetSynced } from './services/offlineQueue.js';
 import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession,
-  getLastSets, recordSet
+  getLastSets, recordSet, swapWorkoutExerciseExercise
 } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
@@ -95,15 +96,183 @@ function notifyRestOver(exName){
   } catch(err) {}
 }
 
-function setRowHTML(ei, setNumber, prevLabel, kg, reps){
+function setRowHTML(ei, setNumber, set, isCardio){
+  const checkCol = `
+    <div class="check-col">
+      <button type="button" class="check-btn" data-exercise="${ei}" data-set="${setNumber}" aria-label="Concluir série ${setNumber}">✓</button>
+      <button type="button" class="note-btn" aria-label="Observação">📝</button>
+    </div>`;
+
+  if(isCardio){
+    return `
+      <div class="set-row" id="set-${ei}-${setNumber}">
+        <div class="set-num">${setNumber}</div>
+        <div class="set-prev">${set.prev || '—'}</div>
+        <div class="stepper-col">
+          <button type="button" class="step-btn" data-step="1" data-field="durationMin">+</button>
+          <input class="set-input" type="number" inputmode="numeric" value="${set.durationMin ?? ''}" aria-label="Minutos" data-field="durationMin">
+          <button type="button" class="step-btn" data-step="-1" data-field="durationMin">−</button>
+        </div>
+        <div class="set-cardio-unit">min</div>
+        ${checkCol}
+      </div>
+      <div class="set-note-row" id="note-${ei}-${setNumber}" style="display:none">
+        <input type="text" class="set-note-input" placeholder="Observação (opcional)">
+      </div>`;
+  }
+
   return `
     <div class="set-row" id="set-${ei}-${setNumber}">
       <div class="set-num">${setNumber}</div>
-      <div class="set-prev">${prevLabel || '—'}</div>
-      <input class="set-input" type="number" inputmode="decimal" value="${kg ?? ''}" aria-label="Carga em kg">
-      <input class="set-input" type="number" inputmode="numeric" value="${reps ?? ''}" aria-label="Repetições">
-      <button type="button" class="check-btn" data-exercise="${ei}" data-set="${setNumber}" aria-label="Concluir série ${setNumber}">✓</button>
+      <div class="set-prev">${set.prev || '—'}</div>
+      <div class="stepper-col">
+        <button type="button" class="step-btn" data-step="1" data-field="kg">+</button>
+        <input class="set-input" type="number" inputmode="decimal" value="${set.kg ?? ''}" aria-label="Carga em kg" data-field="kg">
+        <button type="button" class="step-btn" data-step="-1" data-field="kg">−</button>
+      </div>
+      <div class="stepper-col">
+        <button type="button" class="step-btn" data-step="1" data-field="reps">+</button>
+        <input class="set-input" type="number" inputmode="numeric" value="${set.reps ?? ''}" aria-label="Repetições" data-field="reps">
+        <button type="button" class="step-btn" data-step="-1" data-field="reps">−</button>
+      </div>
+      ${checkCol}
+    </div>
+    <div class="set-note-row" id="note-${ei}-${setNumber}" style="display:none">
+      <input type="text" class="set-note-input" placeholder="Observação (opcional)">
     </div>`;
+}
+
+function wireRow(ei, setNumber){
+  const row = document.getElementById(`set-${ei}-${setNumber}`);
+  if(!row) return;
+
+  row.querySelector('.check-btn').addEventListener('click', () => completeSet(ei, setNumber));
+
+  row.querySelectorAll('.step-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = row.querySelector(`[data-field="${btn.dataset.field}"]`);
+      const step = Number(btn.dataset.step);
+      const next = Math.max(0, (parseFloat(input.value) || 0) + step);
+      input.value = next;
+    });
+  });
+
+  const noteBtn = row.querySelector('.note-btn');
+  if(noteBtn){
+    noteBtn.addEventListener('click', () => {
+      const noteRow = document.getElementById(`note-${ei}-${setNumber}`);
+      const open = noteRow.style.display !== 'none';
+      noteRow.style.display = open ? 'none' : 'block';
+      if(!open) noteRow.querySelector('.set-note-input').focus();
+    });
+  }
+}
+
+function showExerciseInfo(ex){
+  const overlay = document.createElement('div');
+  overlay.className = 'ex-info-overlay';
+  overlay.innerHTML = `
+    <div class="ex-info-card">
+      <button type="button" class="ex-info-close" aria-label="Fechar">✕</button>
+      <h3>${ex.name}</h3>
+      ${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="" class="ex-info-img">` : ''}
+      <div class="ex-info-text">${ex.instructions || 'Sem instruções disponíveis para este exercício.'}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('.ex-info-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
+}
+
+function swapExercise(ei){
+  const ex = exercisesData[ei];
+  openExercisePicker({
+    userId: user.id,
+    initialGroup: ex.muscleGroup,
+    onPick: async (newEx) => {
+      await swapWorkoutExerciseExercise(ex.workoutExerciseId, newEx.id);
+      await refreshExerciseCard(ei, newEx);
+    }
+  });
+}
+
+async function refreshExerciseCard(ei, newEx){
+  const ex = exercisesData[ei];
+  const card = document.getElementById('ex-' + ei);
+  const doneInCard = card.querySelectorAll('.set-row.completed').length;
+  doneSets = Math.max(0, doneSets - doneInCard);
+  doneCountEl.textContent = doneSets;
+
+  const isCardio = newEx.muscle_group === 'cardio';
+  const lastSets = await getLastSets(newEx.id);
+  const setCount = ex.sets.length;
+
+  ex.exerciseId = newEx.id;
+  ex.name = newEx.name;
+  ex.equipment = newEx.equipment;
+  ex.imageUrl = newEx.image_url;
+  ex.instructions = newEx.instructions;
+  ex.muscleGroup = newEx.muscle_group;
+  ex.isCardio = isCardio;
+  ex.sets = [];
+
+  for(let i = 0; i < setCount; i++){
+    const prev = lastSets[i];
+    if(isCardio){
+      ex.sets.push({
+        prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min` : null,
+        durationMin: prev ? Math.round((prev.duration_seconds || 0) / 60) : 20
+      });
+    } else {
+      ex.sets.push({
+        prev: prev ? `${prev.weight ?? 0}kg x ${prev.reps ?? 0}` : null,
+        kg: prev ? prev.weight : null,
+        reps: prev ? prev.reps : null
+      });
+    }
+  }
+
+  renderExerciseCard(ei);
+  progressFill.style.width = totalSets ? (doneSets / totalSets * 100) + '%' : '0%';
+  finishBtn.classList.remove('ready');
+}
+
+function renderExerciseCard(ei){
+  const ex = exercisesData[ei];
+  let card = document.getElementById('ex-' + ei);
+  if(!card){
+    card = document.createElement('section');
+    card.className = 'exercise';
+    card.id = 'ex-' + ei;
+    workoutMain.appendChild(card);
+  }
+  card.classList.remove('done');
+
+  let rows = '';
+  ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set, ex.isCardio));
+
+  const restLabel = ex.isCardio ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
+  const headerLabels = ex.isCardio
+    ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div></div><div>✓</div>`
+    : `<div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>✓</div>`;
+
+  card.innerHTML = `
+    <div class="ex-head">
+      <div class="ex-thumb">${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="">` : '🏋️'}</div>
+      <div class="ex-name">${ex.name}${ex.equipment ? ' (' + ex.equipment + ')' : ''}</div>
+      <button type="button" class="ex-action-btn" aria-label="Como executar">ℹ️</button>
+      <button type="button" class="ex-action-btn" aria-label="Substituir exercício">🔁</button>
+    </div>
+    ${restLabel}
+    <div class="sets-header">${headerLabels}</div>
+    <div class="sets-body" id="sets-${ei}">${rows}</div>
+    <button type="button" class="add-set-btn" data-exercise="${ei}">+ Adicionar série</button>`;
+
+  ex.sets.forEach((_, i) => wireRow(ei, i + 1));
+
+  card.querySelector('.add-set-btn').addEventListener('click', () => addSet(ei));
+  const [infoBtn, swapBtn] = card.querySelectorAll('.ex-action-btn');
+  infoBtn.addEventListener('click', () => showExerciseInfo(ex));
+  swapBtn.addEventListener('click', () => swapExercise(ei));
 }
 
 async function buildWorkout(){
@@ -112,23 +281,36 @@ async function buildWorkout(){
 
   for(const item of items){
     const lastSets = await getLastSets(item.exercise_id);
+    const isCardio = item.exercises.muscle_group === 'cardio';
 
     const ex = {
+      workoutExerciseId: item.id,
       exerciseId: item.exercise_id,
       name: item.exercises.name,
       equipment: item.exercises.equipment,
       imageUrl: item.exercises.image_url,
+      instructions: item.exercises.instructions,
+      muscleGroup: item.exercises.muscle_group,
+      isCardio,
       rest: item.rest_seconds,
       sets: []
     };
 
-    for(let i = 0; i < item.target_sets; i++){
+    const setCount = isCardio ? 1 : item.target_sets;
+    for(let i = 0; i < setCount; i++){
       const prev = lastSets[i];
-      ex.sets.push({
-        prev: prev ? `${prev.weight ?? 0}kg x ${prev.reps ?? 0}` : null,
-        kg: prev ? prev.weight : item.target_weight,
-        reps: prev ? prev.reps : (parseInt(item.target_reps) || '')
-      });
+      if(isCardio){
+        ex.sets.push({
+          prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min` : null,
+          durationMin: prev ? Math.round((prev.duration_seconds || 0) / 60) : Math.round((item.target_duration_seconds || 1200) / 60)
+        });
+      } else {
+        ex.sets.push({
+          prev: prev ? `${prev.weight ?? 0}kg x ${prev.reps ?? 0}` : null,
+          kg: prev ? prev.weight : item.target_weight,
+          reps: prev ? prev.reps : (parseInt(item.target_reps) || '')
+        });
+      }
     }
 
     exercisesData.push(ex);
@@ -138,36 +320,7 @@ async function buildWorkout(){
   totalCountEl.textContent = totalSets;
 
   workoutMain.innerHTML = '';
-
-  exercisesData.forEach((ex, ei) => {
-    const card = document.createElement('section');
-    card.className = 'exercise';
-    card.id = 'ex-' + ei;
-
-    let rows = '';
-    ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set.prev, set.kg, set.reps));
-
-    card.innerHTML = `
-      <div class="ex-head">
-        <div class="ex-thumb">${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="">` : '🏋️'}</div>
-        <div class="ex-name">${ex.name}${ex.equipment ? ' (' + ex.equipment + ')' : ''}</div>
-      </div>
-      <div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>
-      <div class="sets-header">
-        <div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>✓</div>
-      </div>
-      <div class="sets-body" id="sets-${ei}">${rows}</div>
-      <button type="button" class="add-set-btn" data-exercise="${ei}">+ Adicionar série</button>`;
-
-    workoutMain.appendChild(card);
-  });
-
-  workoutMain.querySelectorAll('.check-btn').forEach(btn => {
-    btn.addEventListener('click', () => completeSet(Number(btn.dataset.exercise), Number(btn.dataset.set)));
-  });
-  workoutMain.querySelectorAll('.add-set-btn').forEach(btn => {
-    btn.addEventListener('click', () => addSet(Number(btn.dataset.exercise)));
-  });
+  exercisesData.forEach((ex, ei) => renderExerciseCard(ei));
 }
 
 onSetSynced((item) => {
@@ -183,18 +336,34 @@ async function completeSet(ei, setNumber){
   const row = document.getElementById(`set-${ei}-${setNumber}`);
   if(row.classList.contains('completed')) return;
 
-  const inputs = row.querySelectorAll('.set-input');
-  const kg = parseFloat(inputs[0].value) || 0;
-  const reps = parseInt(inputs[1].value) || 0;
   const ex = exercisesData[ei];
+  const noteRow = document.getElementById(`note-${ei}-${setNumber}`);
+  const noteValue = noteRow?.querySelector('.set-note-input')?.value.trim() || null;
 
-  const payload = {
-    session_id: session.id,
-    exercise_id: ex.exerciseId,
-    set_number: setNumber,
-    reps,
-    weight: kg
-  };
+  let payload;
+  let kg = 0, reps = 0;
+
+  if(ex.isCardio){
+    const minutes = parseFloat(row.querySelector('[data-field="durationMin"]').value) || 0;
+    payload = {
+      session_id: session.id,
+      exercise_id: ex.exerciseId,
+      set_number: setNumber,
+      duration_seconds: Math.round(minutes * 60),
+      notes: noteValue
+    };
+  } else {
+    kg = parseFloat(row.querySelector('[data-field="kg"]').value) || 0;
+    reps = parseInt(row.querySelector('[data-field="reps"]').value) || 0;
+    payload = {
+      session_id: session.id,
+      exercise_id: ex.exerciseId,
+      set_number: setNumber,
+      reps,
+      weight: kg,
+      notes: noteValue
+    };
+  }
 
   let pending = false;
   try {
@@ -209,7 +378,7 @@ async function completeSet(ei, setNumber){
     row.classList.add('pending');
     row.querySelector('.check-btn').textContent = '⏳';
   }
-  totalVolume += kg * reps;
+  if(!ex.isCardio) totalVolume += kg * reps;
   doneSets++;
   doneCountEl.textContent = doneSets;
   progressFill.style.width = (doneSets / totalSets * 100) + '%';
@@ -225,7 +394,7 @@ async function completeSet(ei, setNumber){
     return;
   }
 
-  startRest(ex.rest, ex.name, done, total);
+  if(ex.rest > 0) startRest(ex.rest, ex.name, done, total);
 }
 
 function addSet(ei){
@@ -233,12 +402,10 @@ function addSet(ei){
   const body = document.getElementById('sets-' + ei);
   const setNumber = body.querySelectorAll('.set-row').length + 1;
   const last = ex.sets[ex.sets.length - 1];
-  const newSet = { prev: null, kg: last.kg, reps: last.reps };
+  const newSet = ex.isCardio ? { prev: null, durationMin: last.durationMin } : { prev: null, kg: last.kg, reps: last.reps };
   ex.sets.push(newSet);
-  body.insertAdjacentHTML('beforeend', setRowHTML(ei, setNumber, null, newSet.kg, newSet.reps));
-
-  document.querySelector(`#set-${ei}-${setNumber} .check-btn`)
-    .addEventListener('click', () => completeSet(ei, setNumber));
+  body.insertAdjacentHTML('beforeend', setRowHTML(ei, setNumber, newSet, ex.isCardio));
+  wireRow(ei, setNumber);
 
   totalSets++;
   totalCountEl.textContent = totalSets;

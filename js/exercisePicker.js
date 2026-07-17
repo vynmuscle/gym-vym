@@ -10,7 +10,8 @@ const GROUPS = [
   { key: 'ombros', label: 'Ombros' },
   { key: 'biceps', label: 'Bíceps' },
   { key: 'triceps', label: 'Tríceps' },
-  { key: 'abdomen', label: 'Abdômen' }
+  { key: 'abdomen', label: 'Abdômen' },
+  { key: 'cardio', label: 'Cardio' }
 ];
 
 const EQUIP_CHIPS = [
@@ -24,7 +25,7 @@ const EQUIP_CHIPS = [
 
 const LIB_PAGE_SIZE = 24;
 
-export function openExercisePicker({ userId, onPick }){
+export function openExercisePicker({ userId, onPick, initialGroup }){
   const overlay = document.createElement('div');
   overlay.className = 'ex-picker';
   overlay.innerHTML = `
@@ -75,15 +76,19 @@ export function openExercisePicker({ userId, onPick }){
   }
 
   async function pick(libEx){
-    let ex;
-    if(libEx.__mine){
-      ex = libEx;
-    } else {
-      ex = await addExerciseFromLibrary(userId, libEx);
-      if(!myExercises.some(e => e.id === ex.id)) myExercises.push(ex);
+    try {
+      let ex;
+      if(libEx.__mine){
+        ex = libEx;
+      } else {
+        ex = await addExerciseFromLibrary(userId, libEx);
+        if(!myExercises.some(e => e.id === ex.id)) myExercises.push(ex);
+      }
+      showToast(`${ex.name} adicionado`);
+      await onPick(ex);
+    } catch(err) {
+      showToast('Não foi possível adicionar. Tente de novo.');
     }
-    showToast(`${ex.name} adicionado`);
-    await onPick(ex);
   }
 
   function renderGroupsView(){
@@ -228,6 +233,10 @@ export function openExercisePicker({ userId, onPick }){
 
   (async () => {
     [myExercises, groupData] = await Promise.all([listExercises(), getLibraryGroupCounts()]);
-    renderGroupsView();
+    if(initialGroup){
+      await openGroup(initialGroup);
+    } else {
+      renderGroupsView();
+    }
   })();
 }
