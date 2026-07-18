@@ -1,6 +1,6 @@
 // Service worker clássico (não module) — Firefox ainda não suporta SW do tipo module.
 // Bumpar CACHE_VERSION junto com APP_VERSION (js/config.js) sempre que JS/CSS/HTML mudar.
-const CACHE_VERSION = 12;
+const CACHE_VERSION = 13;
 const CACHE_NAME = `gymvym-v${CACHE_VERSION}`;
 
 const CACHE_FIRST_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'raw.githubusercontent.com'];
@@ -50,6 +50,18 @@ async function cacheFirst(request) {
   }
   return fresh;
 }
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if ('focus' in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow('/pages/train.html');
+    })
+  );
+});
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;

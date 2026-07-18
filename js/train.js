@@ -64,31 +64,112 @@ let exercisesData = [];
 
 const REST_STORAGE_KEY = 'gymvym_rest_end';
 
-if('Notification' in window && Notification.permission === 'default'){
-  Notification.requestPermission().catch(() => {});
-}
-
-function playRestSound(){
+// Áudio precisa ser criado/desbloqueado dentro de um gesto real do usuário
+// (toque no ✓), senão o navegador mantém o AudioContext suspenso e o som
+// não toca. Reaproveitamos o mesmo contexto depois, no setInterval do
+// descanso, que não é um gesto do usuário.
+let audioCtx = null;
+function unlockAudio(){
+  if(audioCtx) return;
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.5);
-    osc.onended = () => ctx.close();
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   } catch(err) {}
 }
 
-function notifyRestOver(exName){
+function playRestSound(){
+  if(!audioCtx) return;
+  try {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.5);
+  } catch(err) {}
+}
+
+// Loop de áudio silencioso: mantém a aba "tocando mídia" pro Android/Chrome
+// não suspender o JS quando o app é minimizado ou a tela apaga — sem isso,
+// o setInterval do descanso simplesmente para e nada dispara na hora certa.
+// Só funciona enquanto tiver sido iniciado dentro de um gesto do usuário.
+let keepAliveAudio = null;
+let keepAliveStarted = false;
+
+function createSilentAudioURL(durationSec, sampleRate){
+  const numSamples = sampleRate * durationSec;
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+  function writeString(offset, str){
+    for(let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  }
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+  return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+}
+
+function startKeepAlive(){
+  if(keepAliveStarted) return;
+  keepAliveStarted = true;
+  try {
+    keepAliveAudio = new Audio(createSilentAudioURL(2, 8000));
+    keepAliveAudio.loop = true;
+    keepAliveAudio.play().catch(() => {});
+  } catch(err) {}
+}
+
+function stopKeepAlive(){
+  if(keepAliveAudio){
+    keepAliveAudio.pause();
+    keepAliveAudio = null;
+  }
+  keepAliveStarted = false;
+}
+
+// Tela sempre acesa durante o treino (não resolve app minimizado, só
+// evita a tela apagar sozinha enquanto o app está aberto).
+let wakeLock = null;
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch(err) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && !wakeLock) requestWakeLock();
+});
+
+let notificationPermissionRequested = false;
+function ensureNotificationPermission(){
+  if(notificationPermissionRequested) return;
+  notificationPermissionRequested = true;
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission().catch(() => {});
+  }
+}
+
+async function notifyRestOver(exName){
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
   if(!document.hidden) return;
+  if(!('serviceWorker' in navigator)) return;
   try {
-    new Notification('Descanso terminado!', {
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification('Descanso terminado!', {
       body: `Hora de voltar: ${exName}`,
       icon: '/icons/icon-192.png',
       tag: 'gymvym-rest'
@@ -194,7 +275,13 @@ function wireRow(ei, setNumber){
   const row = document.getElementById(`set-${ei}-${setNumber}`);
   if(!row) return;
 
-  row.querySelector('.check-btn').addEventListener('click', () => completeSet(ei, setNumber));
+  row.querySelector('.check-btn').addEventListener('click', () => {
+    unlockAudio();
+    startKeepAlive();
+    ensureNotificationPermission();
+    requestWakeLock();
+    completeSet(ei, setNumber);
+  });
 
   row.querySelectorAll('.value-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -546,6 +633,8 @@ finishBtn.addEventListener('click', async () => {
   sumSets.textContent = doneSets;
   sumVolume.textContent = totalVolume.toLocaleString('pt-BR');
   closeRest();
+  stopKeepAlive();
+  if(wakeLock) wakeLock.release().catch(() => {});
   summaryOverlay.classList.add('open');
 });
 
