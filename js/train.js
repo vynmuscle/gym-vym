@@ -96,24 +96,22 @@ function notifyRestOver(exName){
   } catch(err) {}
 }
 
-const wheelOverlay = document.getElementById('wheelOverlay');
-const wheelTitle = document.getElementById('wheelTitle');
+const wheelPopover = document.getElementById('wheelPopover');
 const wheelCol = document.getElementById('wheelCol');
-const wheelCancel = document.getElementById('wheelCancel');
-const wheelConfirm = document.getElementById('wheelConfirm');
 
 const WHEEL_ITEM_HEIGHT = 40;
+const WHEEL_VISIBLE_HEIGHT = 160;
 const WHEEL_FIELD_CONFIG = {
-  kg: { title: 'Carga (kg)', min: 0, max: 300, step: 0.5, unit: 'kg' },
-  reps: { title: 'Repetições', min: 0, max: 50, step: 1, unit: '' },
-  durationMin: { title: 'Duração (min)', min: 0, max: 180, step: 1, unit: 'min' }
+  kg: { min: 0, max: 300, step: 0.5, unit: 'kg' },
+  reps: { min: 0, max: 50, step: 1, unit: '' },
+  durationMin: { min: 0, max: 180, step: 1, unit: 'min' }
 };
 
 function formatWheelValue(v){
   return Number.isInteger(v) ? String(v) : v.toFixed(1);
 }
 
-function openWheelPicker(field, currentValue){
+function openWheelPicker(field, currentValue, anchorEl){
   const config = WHEEL_FIELD_CONFIG[field];
   return new Promise(resolve => {
     const values = [];
@@ -123,36 +121,45 @@ function openWheelPicker(field, currentValue){
     let selectedIndex = values.findIndex(v => v === currentValue);
     if(selectedIndex < 0) selectedIndex = 0;
 
-    wheelTitle.textContent = config.title;
-    wheelCol.innerHTML = values.map(v => `<div class="wheel-item">${formatWheelValue(v)}${config.unit ? ' ' + config.unit : ''}</div>`).join('');
+    wheelCol.innerHTML = values.map((v, i) => `<div class="wheel-item" data-index="${i}">${formatWheelValue(v)}${config.unit ? ' ' + config.unit : ''}</div>`).join('');
     wheelCol.style.paddingTop = WHEEL_ITEM_HEIGHT + 'px';
     wheelCol.style.paddingBottom = WHEEL_ITEM_HEIGHT + 'px';
-    wheelOverlay.style.display = 'flex';
+
+    const rect = anchorEl.getBoundingClientRect();
+    const popH = WHEEL_VISIBLE_HEIGHT;
+    wheelPopover.style.display = 'block';
+    const width = Math.max(rect.width, 90);
+    wheelPopover.style.width = width + 'px';
+    wheelPopover.style.top = (rect.top - popH - 10 > 8 ? rect.top - popH - 10 : rect.bottom + 10) + 'px';
+    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 8));
+    wheelPopover.style.left = left + 'px';
+
     wheelCol.scrollTop = selectedIndex * WHEEL_ITEM_HEIGHT;
 
-    let settledIndex = selectedIndex;
-    let scrollTimer;
-
-    function onScroll(){
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        settledIndex = Math.max(0, Math.min(values.length - 1, Math.round(wheelCol.scrollTop / WHEEL_ITEM_HEIGHT)));
-        wheelCol.scrollTo({ top: settledIndex * WHEEL_ITEM_HEIGHT, behavior: 'smooth' });
-      }, 120);
-    }
-    wheelCol.addEventListener('scroll', onScroll);
+    let settled = false;
 
     function finish(result){
-      clearTimeout(scrollTimer);
-      wheelCol.removeEventListener('scroll', onScroll);
-      wheelOverlay.style.display = 'none';
-      wheelConfirm.onclick = null;
-      wheelCancel.onclick = null;
+      if(settled) return;
+      settled = true;
+      wheelPopover.style.display = 'none';
+      wheelCol.removeEventListener('click', onItemClick);
+      document.removeEventListener('click', onOutsideClick, true);
       resolve(result);
     }
 
-    wheelConfirm.onclick = () => finish(values[settledIndex]);
-    wheelCancel.onclick = () => finish(null);
+    function onItemClick(e){
+      const item = e.target.closest('.wheel-item');
+      if(!item) return;
+      finish(values[Number(item.dataset.index)]);
+    }
+    wheelCol.addEventListener('click', onItemClick);
+
+    function onOutsideClick(e){
+      if(!wheelPopover.contains(e.target)){
+        finish(null);
+      }
+    }
+    setTimeout(() => document.addEventListener('click', onOutsideClick, true), 0);
   });
 }
 
@@ -160,7 +167,6 @@ function setRowHTML(ei, setNumber, set, isCardio){
   const checkCol = `
     <div class="check-col">
       <button type="button" class="check-btn" data-exercise="${ei}" data-set="${setNumber}" aria-label="Concluir série ${setNumber}">✓</button>
-      <button type="button" class="note-btn" aria-label="Observação">📝</button>
     </div>`;
 
   if(isCardio){
@@ -171,9 +177,6 @@ function setRowHTML(ei, setNumber, set, isCardio){
         <button type="button" class="value-btn" data-field="durationMin" data-value="${set.durationMin ?? 0}">${formatWheelValue(set.durationMin ?? 0)}</button>
         <div class="set-cardio-unit">min</div>
         ${checkCol}
-      </div>
-      <div class="set-note-row" id="note-${ei}-${setNumber}" style="display:none">
-        <input type="text" class="set-note-input" placeholder="Observação (opcional)">
       </div>`;
   }
 
@@ -184,9 +187,6 @@ function setRowHTML(ei, setNumber, set, isCardio){
       <button type="button" class="value-btn" data-field="kg" data-value="${set.kg ?? 0}">${formatWheelValue(set.kg ?? 0)}</button>
       <button type="button" class="value-btn" data-field="reps" data-value="${set.reps ?? 0}">${formatWheelValue(set.reps ?? 0)}</button>
       ${checkCol}
-    </div>
-    <div class="set-note-row" id="note-${ei}-${setNumber}" style="display:none">
-      <input type="text" class="set-note-input" placeholder="Observação (opcional)">
     </div>`;
 }
 
@@ -200,23 +200,13 @@ function wireRow(ei, setNumber){
     btn.addEventListener('click', async () => {
       const field = btn.dataset.field;
       const current = parseFloat(btn.dataset.value) || 0;
-      const result = await openWheelPicker(field, current);
+      const result = await openWheelPicker(field, current, btn);
       if(result !== null){
         btn.dataset.value = result;
         btn.textContent = formatWheelValue(result);
       }
     });
   });
-
-  const noteBtn = row.querySelector('.note-btn');
-  if(noteBtn){
-    noteBtn.addEventListener('click', () => {
-      const noteRow = document.getElementById(`note-${ei}-${setNumber}`);
-      const open = noteRow.style.display !== 'none';
-      noteRow.style.display = open ? 'none' : 'block';
-      if(!open) noteRow.querySelector('.set-note-input').focus();
-    });
-  }
 }
 
 function showExerciseInfo(ex){
@@ -312,6 +302,10 @@ function renderExerciseCard(ei){
       <div class="ex-name">${ex.name}${ex.equipment ? ' (' + ex.equipment + ')' : ''}</div>
       <button type="button" class="ex-action-btn" aria-label="Como executar">ℹ️</button>
       <button type="button" class="ex-action-btn" aria-label="Substituir exercício">🔁</button>
+      <button type="button" class="ex-action-btn" aria-label="Observação">📝</button>
+    </div>
+    <div class="ex-note-row" id="exnote-${ei}" style="display:none">
+      <input type="text" class="ex-note-input" placeholder="Observação sobre este exercício (opcional)" value="${ex.note || ''}">
     </div>
     ${restLabel}
     <div class="sets-header">${headerLabels}</div>
@@ -321,9 +315,18 @@ function renderExerciseCard(ei){
   ex.sets.forEach((_, i) => wireRow(ei, i + 1));
 
   card.querySelector('.add-set-btn').addEventListener('click', () => addSet(ei));
-  const [infoBtn, swapBtn] = card.querySelectorAll('.ex-action-btn');
+  const [infoBtn, swapBtn, noteBtn] = card.querySelectorAll('.ex-action-btn');
   infoBtn.addEventListener('click', () => showExerciseInfo(ex));
   swapBtn.addEventListener('click', () => swapExercise(ei));
+
+  const exNoteRow = document.getElementById(`exnote-${ei}`);
+  const exNoteInput = exNoteRow.querySelector('.ex-note-input');
+  noteBtn.addEventListener('click', () => {
+    const open = exNoteRow.style.display !== 'none';
+    exNoteRow.style.display = open ? 'none' : 'block';
+    if(!open) exNoteInput.focus();
+  });
+  exNoteInput.addEventListener('input', () => { ex.note = exNoteInput.value; });
 }
 
 async function buildWorkout(){
@@ -344,6 +347,7 @@ async function buildWorkout(){
       muscleGroup: item.exercises.muscle_group,
       isCardio,
       rest: item.rest_seconds,
+      note: '',
       sets: []
     };
 
@@ -388,8 +392,7 @@ async function completeSet(ei, setNumber){
   if(row.classList.contains('completed')) return;
 
   const ex = exercisesData[ei];
-  const noteRow = document.getElementById(`note-${ei}-${setNumber}`);
-  const noteValue = noteRow?.querySelector('.set-note-input')?.value.trim() || null;
+  const noteValue = ex.note?.trim() || null;
 
   let payload;
   let kg = 0, reps = 0;

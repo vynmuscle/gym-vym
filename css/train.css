@@ -240,23 +240,11 @@ main{
   transition:transform .08s ease,background .15s,border-color .15s,color .15s;
 }
 
-.note-btn{
-  min-height:24px;
-  width:100%;
-  border:1px solid var(--border);
-  border-radius:8px;
-  background:var(--surface-2);
-  color:var(--muted);
-  font-size:12px;
-  cursor:pointer;
-  padding:0;
+.ex-note-row{
+  padding:0 14px 12px;
 }
 
-.set-note-row{
-  padding:0 10px 10px;
-}
-
-.set-note-input{
+.ex-note-input{
   width:100%;
   min-height:38px;
   background:var(--surface-2);
@@ -519,69 +507,31 @@ main{
   border-bottom:none;
 }
 
-.wheel-overlay{
+.wheel-popover{
   position:fixed;
-  inset:0;
   z-index:90;
-  background:rgba(0,0,0,.6);
-  display:flex;
-  align-items:flex-end;
-}
-
-.wheel-sheet{
-  width:100%;
+  width:110px;
   background:var(--surface);
-  border-top:1px solid var(--border);
-  border-radius:18px 18px 0 0;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-
-.wheel-sheet-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 16px;
-  border-bottom:1px solid var(--border);
-}
-
-.wheel-sheet-header button{
-  background:none;
-  border:none;
-  color:var(--muted);
-  font-size:15px;
-  cursor:pointer;
-  padding:4px 6px;
-}
-
-#wheelConfirm{
-  color:var(--yellow);
-  font-weight:700;
-}
-
-.wheel-sheet-title{
-  font-weight:700;
-  font-size:15px;
-}
-
-.wheel-track{
-  position:relative;
-  height:200px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  overflow:hidden;
 }
 
 .wheel-selection-box{
   position:absolute;
-  left:16px;
-  right:16px;
-  top:80px;
+  left:6px;
+  right:6px;
+  top:60px;
   height:40px;
   border-top:1px solid var(--border);
   border-bottom:1px solid var(--border);
-  background:rgba(255,255,255,.03);
+  background:rgba(255,255,255,.05);
   pointer-events:none;
 }
 
 .wheel-col{
-  height:200px;
+  height:160px;
   overflow-y:scroll;
   scroll-snap-type:y mandatory;
   -webkit-overflow-scrolling:touch;
@@ -594,8 +544,13 @@ main{
   align-items:center;
   justify-content:center;
   font-family:'Anton',sans-serif;
-  font-size:20px;
+  font-size:18px;
   color:var(--muted);
+  cursor:pointer;
+}
+
+.wheel-item:active{
+  color:var(--yellow);
 }
 
 .ex-info-overlay{
