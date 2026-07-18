@@ -275,7 +275,7 @@ export async function getExerciseProgress(exerciseId) {
     if (!date) continue;
 
     if (!bySession.has(row.session_id)) {
-      bySession.set(row.session_id, { date, maxWeight: 0, topReps: 0, volume: 0 });
+      bySession.set(row.session_id, { session_id: row.session_id, date, maxWeight: 0, topReps: 0, volume: 0 });
     }
 
     const s = bySession.get(row.session_id);

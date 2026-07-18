@@ -6,7 +6,8 @@ import { queueSet, flushQueue, onSetSynced } from './services/offlineQueue.js';
 import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession,
-  getLastSets, recordSet, swapWorkoutExerciseExercise
+  getLastSets, recordSet, swapWorkoutExerciseExercise,
+  getExerciseProgress
 } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
@@ -381,6 +382,7 @@ function renderExerciseCard(ei){
   ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set, ex.isCardio));
 
   const restLabel = ex.isCardio ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
+  const uplevelLabel = ex.suggestUp ? `<div class="ex-uplevel">🔼 Hora de subir a carga</div>` : '';
   const headerLabels = ex.isCardio
     ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div></div><div>✓</div>`
     : `<div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>✓</div>`;
@@ -396,6 +398,7 @@ function renderExerciseCard(ei){
     <div class="ex-note-row" id="exnote-${ei}" style="display:none">
       <input type="text" class="ex-note-input" placeholder="Observação sobre este exercício (opcional)" value="${ex.note || ''}">
     </div>
+    ${uplevelLabel}
     ${restLabel}
     <div class="sets-header">${headerLabels}</div>
     <div class="sets-body" id="sets-${ei}">${rows}</div>
@@ -418,6 +421,26 @@ function renderExerciseCard(ei){
   exNoteInput.addEventListener('input', () => { ex.note = exNoteInput.value; });
 }
 
+// Extrai o topo da faixa de reps da meta (texto livre: "8-12", "10", "até a
+// falha"). Retorna null quando não há número pra comparar.
+function parseTargetRepsMax(targetReps){
+  const numbers = (targetReps || '').match(/\d+/g);
+  if(!numbers) return null;
+  return Math.max(...numbers.map(Number));
+}
+
+// Sugere subir a carga quando o topo da meta de reps foi batido/superado nas
+// últimas sessões seguidas desse exercício (excluindo a sessão atual, ainda
+// em andamento). Exige pelo menos 2 sessões de histórico pra não avisar cedo demais.
+async function shouldSuggestWeightIncrease(exerciseId, targetRepsMax){
+  if(targetRepsMax === null) return false;
+  const progress = await getExerciseProgress(exerciseId);
+  const pastSessions = progress.filter(s => s.session_id !== session?.id);
+  const lastSessions = pastSessions.slice(-3);
+  if(lastSessions.length < 2) return false;
+  return lastSessions.every(s => s.topReps >= targetRepsMax);
+}
+
 async function buildWorkout(){
   const items = await listWorkoutExercises(workoutId);
   exercisesData = [];
@@ -437,6 +460,7 @@ async function buildWorkout(){
       isCardio,
       rest: item.rest_seconds,
       note: '',
+      suggestUp: isCardio ? false : await shouldSuggestWeightIncrease(item.exercise_id, parseTargetRepsMax(item.target_reps)),
       sets: []
     };
 
