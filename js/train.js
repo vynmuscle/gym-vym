@@ -12,6 +12,8 @@ import {
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
 import { getLeagueForXP } from './leagues.js';
+import { listMeasurements } from './services/bodyService.js';
+import { estimateWorkoutKcal, findWeightAtDate } from './utils.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -55,6 +57,7 @@ const sumSets = document.getElementById('sumSets');
 const sumVolume = document.getElementById('sumVolume');
 const summaryPRs = document.getElementById('summaryPRs');
 const summaryXP = document.getElementById('summaryXP');
+const summaryKcal = document.getElementById('summaryKcal');
 
 let doneSets = 0;
 let totalSets = 0;
@@ -683,10 +686,20 @@ finishBtn.addEventListener('click', async () => {
   await finishWorkoutSession(session.id);
 
   const t = Math.floor((Date.now() - startTime) / 1000);
+  const durationMinutes = t / 60;
   summarySub.textContent = workoutNameEl.textContent;
   sumTime.textContent = Math.floor(t / 60) + 'min';
   sumSets.textContent = doneSets;
   sumVolume.textContent = totalVolume.toLocaleString('pt-BR');
+
+  const measurements = await listMeasurements();
+  const weightKg = findWeightAtDate(measurements, new Date().toISOString());
+  if(weightKg){
+    const kcal = estimateWorkoutKcal({ weightKg, totalSets: doneSets, durationMinutes });
+    summaryKcal.innerHTML = `~ ${kcal} kcal`;
+  } else {
+    summaryKcal.innerHTML = '— <a href="./body.html" class="kcal-link">Cadastre seu peso em Medidas para estimar calorias</a>';
+  }
 
   if(prsByExercise.size > 0){
     summaryPRs.innerHTML = '<h3>Recordes de hoje</h3>' + [...prsByExercise.values()]

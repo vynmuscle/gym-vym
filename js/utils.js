@@ -22,3 +22,34 @@ export function formatDuration(startIso, endIso){
   const m = totalMin % 60;
   return `${h}h ${String(m).padStart(2, '0')}min`;
 }
+
+// MET (Metabolic Equivalent of Task) graduado pela densidade da sessão
+// (séries ÷ minutos) — fonte: Compendium of Physical Activities, códigos
+// 02050 (resistance training, effort leve/moderado) e 02052 (vigoroso).
+export const MET_TABLE = {
+  leve: 3.5,
+  moderado: 5.0,
+  intenso: 6.0
+};
+
+// kcal = MET × 3,5 × peso_kg ÷ 200 × duração_minutos.
+export function estimateWorkoutKcal({ weightKg, totalSets, durationMinutes }){
+  if(!weightKg || durationMinutes <= 0) return null;
+
+  const density = totalSets / durationMinutes;
+  const met = density > 0.7 ? MET_TABLE.intenso : density >= 0.4 ? MET_TABLE.moderado : MET_TABLE.leve;
+
+  return Math.round(met * 3.5 * weightKg / 200 * durationMinutes);
+}
+
+// Acha o peso mais recente registrado na data ou anterior. `measurements`
+// precisa vir ordenado ascendente por measured_at (ver bodyService.listMeasurements).
+export function findWeightAtDate(measurements, dateIso){
+  const target = new Date(dateIso).getTime();
+  let found = null;
+  for(const m of measurements){
+    if(new Date(m.measured_at).getTime() > target) break;
+    found = m.weight_kg;
+  }
+  return found;
+}

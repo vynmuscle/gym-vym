@@ -496,6 +496,26 @@ main{
   margin-bottom:16px;
 }
 
+.summary-kcal{
+  font-size:22px;
+  color:var(--text);
+  text-align:center;
+}
+
+.kcal-link{
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  color:var(--yellow);
+}
+
+.kcal-note{
+  font-size:11px;
+  color:var(--muted);
+  text-align:center;
+  margin-top:6px;
+  margin-bottom:16px;
+}
+
 .summary-prs{
   background:var(--surface);
   border:1px solid var(--yellow);

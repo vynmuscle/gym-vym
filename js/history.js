@@ -6,6 +6,8 @@ import {
   listCompletedSessions, listIncompleteSessions,
   getSessionSetsSummary, getSessionDetails, deleteSession
 } from './services/workoutService.js';
+import { listMeasurements } from './services/bodyService.js';
+import { estimateWorkoutKcal, findWeightAtDate } from './utils.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -74,10 +76,18 @@ async function loadSessions(){
 
   emptyState.style.display = 'none';
 
-  const summary = await getSessionSetsSummary(sessions.map(s => s.id));
+  const [summary, measurements] = await Promise.all([
+    getSessionSetsSummary(sessions.map(s => s.id)),
+    listMeasurements()
+  ]);
 
   sessionsList.innerHTML = sessions.map(s => {
     const stats = summary[s.id] || { sets: 0, volume: 0 };
+    const durationMinutes = (new Date(s.finished_at) - new Date(s.started_at)) / 60000;
+    const weightKg = findWeightAtDate(measurements, s.started_at);
+    const kcal = estimateWorkoutKcal({ weightKg, totalSets: stats.sets, durationMinutes });
+    const kcalLabel = kcal !== null ? `~ ${kcal} kcal` : '—';
+
     return `
     <div class="panel session-card" style="margin-bottom:12px;overflow:hidden">
       <div class="list-item session-toggle" data-session="${s.id}" style="cursor:pointer">
@@ -87,12 +97,23 @@ async function loadSessions(){
         </div>
         <div class="list-item-info" style="align-items:flex-end">
           <span class="list-item-title">${stats.sets} séries</span>
-          <span class="list-item-sub">${stats.volume.toLocaleString('pt-BR')}kg</span>
+          <span class="list-item-sub">${stats.volume.toLocaleString('pt-BR')}kg · ${kcalLabel}</span>
         </div>
       </div>
       <div class="session-details" id="details-${s.id}" style="display:none;padding:0 14px 14px"></div>
     </div>`;
   }).join('');
+
+  if(measurements.length === 0){
+    sessionsList.insertAdjacentHTML('beforeend', `
+      <div class="panel" style="padding:16px;text-align:center;margin-top:12px">
+        <p class="muted" style="margin-bottom:8px">Cadastre seu peso em Medidas pra ver a estimativa de calorias dos treinos.</p>
+        <a href="./body.html" class="kcal-link">Ir para Medidas</a>
+      </div>`);
+  } else {
+    sessionsList.insertAdjacentHTML('beforeend', `
+      <div class="kcal-note" style="margin-top:8px">Calorias estimadas pelo método METs. O gasto real varia por pessoa e intensidade.</div>`);
+  }
 
   sessionsList.querySelectorAll('.session-toggle').forEach(el => {
     el.addEventListener('click', () => toggleDetails(el.dataset.session));
