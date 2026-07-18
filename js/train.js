@@ -7,10 +7,11 @@ import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession,
   getLastSets, recordSet, swapWorkoutExerciseExercise,
-  getExerciseProgress, getPersonalRecordsMap
+  getExerciseProgress, getPersonalRecordsMap, getUserXP
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
+import { getLeagueForXP } from './leagues.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -53,6 +54,7 @@ const sumTime = document.getElementById('sumTime');
 const sumSets = document.getElementById('sumSets');
 const sumVolume = document.getElementById('sumVolume');
 const summaryPRs = document.getElementById('summaryPRs');
+const summaryXP = document.getElementById('summaryXP');
 
 let doneSets = 0;
 let totalSets = 0;
@@ -698,7 +700,18 @@ finishBtn.addEventListener('click', async () => {
   if(wakeLock) wakeLock.release().catch(() => {});
   summaryOverlay.classList.add('open');
 
-  checkAchievements(user.id, { hadPRThisSession: prsByExercise.size > 0 }).catch(() => {});
+  try {
+    const [xpBefore, xpAfter] = await Promise.all([getUserXP(session.id), getUserXP()]);
+    summaryXP.textContent = `+${xpAfter - xpBefore} XP`;
+
+    await checkAchievements(user.id, { hadPRThisSession: prsByExercise.size > 0 });
+
+    const leagueBefore = getLeagueForXP(xpBefore);
+    const leagueAfter = getLeagueForXP(xpAfter);
+    if(leagueAfter.key !== leagueBefore.key){
+      showToast(`Você subiu para a ${leagueAfter.name}! ${leagueAfter.emoji}`);
+    }
+  } catch(err) {}
 });
 
 document.getElementById('btnBackToWorkouts').addEventListener('click', () => navigate('./workouts.html'));

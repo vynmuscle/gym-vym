@@ -1,3 +1,58 @@
+.league-avatar-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.league-avatar{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  border:3px solid var(--green);
+  background:var(--surface-2);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Anton',sans-serif;
+  font-size:22px;
+  flex-shrink:0;
+}
+
+.league-name{
+  font-family:'Anton',sans-serif;
+  font-size:16px;
+}
+
+.league-xp{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.league-progress-track{
+  height:8px;
+  border-radius:4px;
+  background:var(--surface-2);
+  margin-top:16px;
+  overflow:hidden;
+}
+
+.league-progress-fill{
+  height:100%;
+  border-radius:4px;
+  background:var(--yellow);
+  width:0%;
+  transition:width .3s ease;
+}
+
+.league-progress-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:8px;
+  text-align:center;
+}
+
 .stepper{
   display:flex;
   align-items:center;

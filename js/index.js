@@ -4,10 +4,11 @@ import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import {
   getMuscleRecovery, getSuggestedWorkout, getTodaysCompletedSessions,
-  getSessionDatesInRange, getRecentCompletedSessionDates
+  getSessionDatesInRange, getRecentCompletedSessionDates, getUserXP
 } from './services/workoutService.js';
 import { getUserSettings } from './services/profileService.js';
 import { computeStreak } from './utils.js';
+import { getLeagueForXP } from './leagues.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('./login.html');
@@ -25,6 +26,7 @@ const WEEKDAY_LABELS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
 const RING_CIRCUMFERENCE = 245;
 
 const greetingName = document.getElementById('greetingName');
+const leagueDot = document.getElementById('leagueDot');
 const greetingDate = document.getElementById('greetingDate');
 const weekRow = document.getElementById('weekRow');
 const heroSection = document.getElementById('heroSection');
@@ -161,14 +163,16 @@ const weekStart = mondayOf(new Date());
 const weekEnd = new Date(weekStart);
 weekEnd.setDate(weekEnd.getDate() + 7);
 
-const [sessionDates, recovery, recentDates] = await Promise.all([
+const [sessionDates, recovery, recentDates, xp] = await Promise.all([
   getSessionDatesInRange(weekStart.toISOString(), weekEnd.toISOString()),
   getMuscleRecovery(),
-  getRecentCompletedSessionDates(60)
+  getRecentCompletedSessionDates(60),
+  getUserXP()
 ]);
 
 renderWeek(weekStart, sessionDates);
 renderRing(sessionDates.length, weeklyGoal);
 streakValue.textContent = computeStreak(recentDates);
+leagueDot.style.background = getLeagueForXP(xp).color;
 renderRecovery(recovery);
 await renderHero();

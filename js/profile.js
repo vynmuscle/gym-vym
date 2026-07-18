@@ -3,8 +3,10 @@ import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { getUserSettings, upsertUserSettings } from './services/profileService.js';
+import { getUserXP } from './services/workoutService.js';
 import { listUnlockedAchievements } from './services/achievementsService.js';
 import { ACHIEVEMENTS } from './achievements.js';
+import { getLeagueForXP, getNextLeague } from './leagues.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -22,6 +24,11 @@ const btnSave = document.getElementById('btnSave');
 const btnLogout = document.getElementById('btnLogout');
 const mensagem = document.getElementById('mensagem');
 const achievementsGrid = document.getElementById('achievementsGrid');
+const leagueAvatar = document.getElementById('leagueAvatar');
+const leagueName = document.getElementById('leagueName');
+const leagueXP = document.getElementById('leagueXP');
+const leagueProgressFill = document.getElementById('leagueProgressFill');
+const leagueProgressLabel = document.getElementById('leagueProgressLabel');
 
 let weeklyGoal = 4;
 
@@ -61,12 +68,37 @@ btnSave.addEventListener('click', async () => {
     weekly_goal: weeklyGoal
   });
   showMessage('Perfil atualizado.', 'success');
+  renderLeague();
 });
 
 btnLogout.addEventListener('click', async () => {
   await supabase.auth.signOut();
   navigate('../login.html');
 });
+
+async function renderLeague(){
+  const name = displayNameInput.value.trim() || user.email.split('@')[0];
+  const xp = await getUserXP();
+  const league = getLeagueForXP(xp);
+  const next = getNextLeague(league);
+
+  leagueAvatar.textContent = name.charAt(0).toUpperCase();
+  leagueAvatar.style.borderColor = league.border || league.color;
+  leagueName.textContent = `Liga ${league.name}`;
+  leagueName.style.color = league.color;
+  leagueXP.textContent = `${xp.toLocaleString('pt-BR')} XP`;
+
+  if(next){
+    const pct = Math.min(100, ((xp - league.minXP) / (next.minXP - league.minXP)) * 100);
+    leagueProgressFill.style.width = pct + '%';
+    leagueProgressFill.style.background = next.color;
+    leagueProgressLabel.textContent = `Faltam ${(next.minXP - xp).toLocaleString('pt-BR')} XP para a ${next.name}`;
+  } else {
+    leagueProgressFill.style.width = '100%';
+    leagueProgressFill.style.background = league.color;
+    leagueProgressLabel.textContent = 'Liga máxima alcançada!';
+  }
+}
 
 async function renderAchievements(){
   const unlocked = await listUnlockedAchievements();
@@ -93,4 +125,5 @@ async function renderAchievements(){
   }).join('');
 }
 
+renderLeague();
 renderAchievements();

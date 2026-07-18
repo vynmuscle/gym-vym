@@ -489,6 +489,13 @@ main{
   color:var(--green);
 }
 
+.summary-xp{
+  font-size:20px;
+  color:var(--yellow);
+  text-align:center;
+  margin-bottom:16px;
+}
+
 .summary-prs{
   background:var(--surface);
   border:1px solid var(--yellow);

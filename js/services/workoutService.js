@@ -344,6 +344,25 @@ export async function hasTrainedAllGroupsInAMonth() {
   return Object.values(byMonth).some(set => set.size >= MUSCLE_GROUPS.length);
 }
 
+// XP total do usuário: (nº de séries concluídas × 10) + (nº de sessões
+// finalizadas × 50), calculado direto de session_sets/workout_sessions —
+// sem tabela própria, retroativo automático pro histórico existente.
+// excludeSessionId permite calcular o XP "antes" de uma sessão específica
+// (usado pra detectar subida de liga ao finalizar o treino).
+export async function getUserXP(excludeSessionId = null) {
+  let setsQuery = supabase.from('session_sets').select('id', { count: 'exact', head: true });
+  if (excludeSessionId) setsQuery = setsQuery.neq('session_id', excludeSessionId);
+  const { count: setsCount, error: setsError } = await setsQuery;
+  if (setsError) throw setsError;
+
+  let sessionsQuery = supabase.from('workout_sessions').select('id', { count: 'exact', head: true }).not('finished_at', 'is', null);
+  if (excludeSessionId) sessionsQuery = sessionsQuery.neq('id', excludeSessionId);
+  const { count: sessionsCount, error: sessionsError } = await sessionsQuery;
+  if (sessionsError) throw sessionsError;
+
+  return setsCount * 10 + sessionsCount * 50;
+}
+
 export async function getSessionsByMonth(year, month) {
   const start = new Date(year, month - 1, 1).toISOString();
   const end = new Date(year, month, 1).toISOString();
