@@ -533,7 +533,7 @@ main{
 .wheel-col{
   height:160px;
   overflow-y:scroll;
-  scroll-snap-type:y mandatory;
+  scroll-snap-type:y proximity;
   -webkit-overflow-scrolling:touch;
 }
 
@@ -545,7 +545,7 @@ main{
   justify-content:center;
   font-family:'Anton',sans-serif;
   font-size:18px;
-  color:var(--muted);
+  color:#a8b0bd;
   cursor:pointer;
 }
 

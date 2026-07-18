@@ -80,15 +80,18 @@ function playRestSound(){
   if(!audioCtx) return;
   try {
     if(audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.5);
+    [0, 0.35].forEach(delay => {
+      const startAt = audioCtx.currentTime + delay;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.7, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.001, startAt + 0.9);
+      osc.start(startAt);
+      osc.stop(startAt + 0.9);
+    });
   } catch(err) {}
 }
 
@@ -277,7 +280,6 @@ function wireRow(ei, setNumber){
 
   row.querySelector('.check-btn').addEventListener('click', () => {
     unlockAudio();
-    startKeepAlive();
     ensureNotificationPermission();
     requestWakeLock();
     completeSet(ei, setNumber);
@@ -566,6 +568,7 @@ function startRest(seconds, exName, done, total){
   updateRestDisplay();
   clearInterval(restInterval);
   restInterval = setInterval(updateRestDisplay, 1000);
+  startKeepAlive();
 }
 
 function updateRestDisplay(){
@@ -584,6 +587,7 @@ function closeRest(){
   clearInterval(restInterval);
   restSheet.classList.remove('open');
   localStorage.removeItem(REST_STORAGE_KEY);
+  stopKeepAlive();
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -615,6 +619,7 @@ document.getElementById('btnSkipRest').addEventListener('click', closeRest);
       updateRestDisplay();
       clearInterval(restInterval);
       restInterval = setInterval(updateRestDisplay, 1000);
+      startKeepAlive();
     } else {
       localStorage.removeItem(REST_STORAGE_KEY);
     }

@@ -56,7 +56,7 @@ async function main() {
   const rows = list.map(ex => ({
     name: ex.name,
     name_pt: null,
-    muscle_group: MUSCLE_MAP[ex.primaryMuscles?.[0]] || 'peito',
+    muscle_group: ex.category === 'cardio' ? 'cardio' : (MUSCLE_MAP[ex.primaryMuscles?.[0]] || 'peito'),
     equipment: EQUIPMENT_MAP[ex.equipment] || null,
     level: ex.level || null,
     instructions: Array.isArray(ex.instructions) ? ex.instructions.join('\n') : null,
