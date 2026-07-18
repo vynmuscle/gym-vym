@@ -7,8 +7,9 @@ import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession,
   getLastSets, recordSet, swapWorkoutExerciseExercise,
-  getExerciseProgress
+  getExerciseProgress, getPersonalRecordsMap
 } from './services/workoutService.js';
+import { showToast } from './toast.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -50,6 +51,7 @@ const summarySub = document.getElementById('summarySub');
 const sumTime = document.getElementById('sumTime');
 const sumSets = document.getElementById('sumSets');
 const sumVolume = document.getElementById('sumVolume');
+const summaryPRs = document.getElementById('summaryPRs');
 
 let doneSets = 0;
 let totalSets = 0;
@@ -62,6 +64,8 @@ let restDone = 0;
 let restTotal = 0;
 let session = null;
 let exercisesData = [];
+let recordsMap = {};
+const prsByExercise = new Map();
 
 const REST_STORAGE_KEY = 'gymvym_rest_end';
 
@@ -444,6 +448,7 @@ async function shouldSuggestWeightIncrease(exerciseId, targetRepsMax){
 async function buildWorkout(){
   const items = await listWorkoutExercises(workoutId);
   exercisesData = [];
+  recordsMap = await getPersonalRecordsMap(session.id);
 
   for(const item of items){
     const lastSets = await getLastSets(item.exercise_id);
@@ -500,6 +505,21 @@ onSetSynced((item) => {
   if(checkBtn) checkBtn.textContent = '✓';
 });
 
+// Marca recorde pessoal: exige pelo menos 2 sessões anteriores com esse
+// exercício (evita "PR" na primeira vez que ele é feito). Atualiza o mapa em
+// memória pra permitir novo PR na mesma sessão (ex: pirâmide de cargas).
+function checkPersonalRecord(ex, kg, row){
+  const rec = recordsMap[ex.exerciseId];
+  if(!rec || rec.sessionCount < 2 || kg <= rec.maxWeight) return;
+
+  rec.maxWeight = kg;
+  prsByExercise.set(ex.exerciseId, { name: ex.name, weight: kg });
+
+  if(navigator.vibrate) navigator.vibrate([100, 50, 200]);
+  showToast(`🏆 NOVO RECORDE — ${ex.name}: ${formatWheelValue(kg)}kg`);
+  row.querySelector('.set-num').insertAdjacentHTML('beforeend', '<span class="pr-badge">🏆</span>');
+}
+
 async function completeSet(ei, setNumber){
   const row = document.getElementById(`set-${ei}-${setNumber}`);
   if(row.classList.contains('completed')) return;
@@ -545,7 +565,10 @@ async function completeSet(ei, setNumber){
     row.classList.add('pending');
     row.querySelector('.check-btn').textContent = '⏳';
   }
-  if(!ex.isCardio) totalVolume += kg * reps;
+  if(!ex.isCardio){
+    totalVolume += kg * reps;
+    checkPersonalRecord(ex, kg, row);
+  }
   doneSets++;
   doneCountEl.textContent = doneSets;
   progressFill.style.width = (doneSets / totalSets * 100) + '%';
@@ -661,6 +684,14 @@ finishBtn.addEventListener('click', async () => {
   sumTime.textContent = Math.floor(t / 60) + 'min';
   sumSets.textContent = doneSets;
   sumVolume.textContent = totalVolume.toLocaleString('pt-BR');
+
+  if(prsByExercise.size > 0){
+    summaryPRs.innerHTML = '<h3>Recordes de hoje</h3>' + [...prsByExercise.values()]
+      .map(pr => `<div class="summary-pr-item">🏆 ${pr.name}: ${formatWheelValue(pr.weight)}kg</div>`)
+      .join('');
+    summaryPRs.style.display = 'block';
+  }
+
   closeRest();
   stopKeepAlive();
   if(wakeLock) wakeLock.release().catch(() => {});

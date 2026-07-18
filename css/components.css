@@ -1,3 +1,43 @@
+.app-toast{
+  position:fixed;
+  top:16px;
+  left:50%;
+  transform:translateX(-50%) scale(.9);
+  z-index:200;
+  background:var(--surface);
+  border:1px solid var(--yellow);
+  border-radius:var(--radius);
+  padding:14px 20px;
+  font-family:'Anton',sans-serif;
+  font-weight:400;
+  letter-spacing:.5px;
+  color:var(--yellow);
+  font-size:15px;
+  text-align:center;
+  max-width:90vw;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  animation:toast-in .25s ease-out forwards;
+}
+
+.app-toast.out{
+  animation:toast-out .25s ease-in forwards;
+}
+
+.app-toast.no-motion{
+  animation:none;
+  transform:translateX(-50%) scale(1);
+}
+
+@keyframes toast-in{
+  from{ opacity:0; transform:translateX(-50%) scale(.9); }
+  to{ opacity:1; transform:translateX(-50%) scale(1); }
+}
+
+@keyframes toast-out{
+  from{ opacity:1; transform:translateX(-50%) scale(1); }
+  to{ opacity:0; transform:translateX(-50%) scale(.9); }
+}
+
 .auth-page{
   min-height:100vh;
   display:flex;

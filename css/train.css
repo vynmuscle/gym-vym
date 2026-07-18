@@ -201,6 +201,11 @@ main{
   color:var(--text);
 }
 
+.pr-badge{
+  font-size:12px;
+  margin-left:2px;
+}
+
 .set-prev{
   font-size:14px;
   color:var(--muted);
@@ -482,6 +487,27 @@ main{
 
 .stat:nth-child(3) .v{
   color:var(--green);
+}
+
+.summary-prs{
+  background:var(--surface);
+  border:1px solid var(--yellow);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin-bottom:20px;
+  text-align:left;
+}
+
+.summary-prs h3{
+  font-size:14px;
+  color:var(--yellow);
+  margin:0 0 8px;
+}
+
+.summary-pr-item{
+  font-size:14px;
+  color:var(--text);
+  padding:4px 0;
 }
 
 .summary-card button{

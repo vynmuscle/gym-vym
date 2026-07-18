@@ -291,6 +291,31 @@ export async function getExerciseProgress(exerciseId) {
   return [...bySession.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
+// Recorde de carga por exercício (todas as sessões do usuário, exceto a
+// atual — RLS já restringe ao dono). Uma query só, buscada uma vez ao montar
+// o treino, não a cada série.
+export async function getPersonalRecordsMap(excludeSessionId) {
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('exercise_id, weight, session_id')
+    .neq('session_id', excludeSessionId);
+  if (error) throw error;
+
+  const byExercise = {};
+  for (const row of data) {
+    if (!byExercise[row.exercise_id]) byExercise[row.exercise_id] = { maxWeight: 0, sessionIds: new Set() };
+    const rec = byExercise[row.exercise_id];
+    if ((row.weight || 0) > rec.maxWeight) rec.maxWeight = row.weight || 0;
+    rec.sessionIds.add(row.session_id);
+  }
+
+  const result = {};
+  for (const [exerciseId, rec] of Object.entries(byExercise)) {
+    result[exerciseId] = { maxWeight: rec.maxWeight, sessionCount: rec.sessionIds.size };
+  }
+  return result;
+}
+
 export async function getSessionsByMonth(year, month) {
   const start = new Date(year, month - 1, 1).toISOString();
   const end = new Date(year, month, 1).toISOString();
