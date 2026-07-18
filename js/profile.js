@@ -3,6 +3,8 @@ import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { getUserSettings, upsertUserSettings } from './services/profileService.js';
+import { listUnlockedAchievements } from './services/achievementsService.js';
+import { ACHIEVEMENTS } from './achievements.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -19,6 +21,7 @@ const btnGoalPlus = document.getElementById('btnGoalPlus');
 const btnSave = document.getElementById('btnSave');
 const btnLogout = document.getElementById('btnLogout');
 const mensagem = document.getElementById('mensagem');
+const achievementsGrid = document.getElementById('achievementsGrid');
 
 let weeklyGoal = 4;
 
@@ -64,3 +67,30 @@ btnLogout.addEventListener('click', async () => {
   await supabase.auth.signOut();
   navigate('../login.html');
 });
+
+async function renderAchievements(){
+  const unlocked = await listUnlockedAchievements();
+  const unlockedByKey = {};
+  unlocked.forEach(u => { unlockedByKey[u.achievement_key] = u.unlocked_at; });
+
+  achievementsGrid.innerHTML = ACHIEVEMENTS.map(a => {
+    const unlockedAt = unlockedByKey[a.key];
+    if(unlockedAt){
+      const date = new Date(unlockedAt).toLocaleDateString('pt-BR');
+      return `
+        <div class="achievement-badge unlocked">
+          <div class="achievement-icon">${a.icon}</div>
+          <div class="achievement-name">${a.name}</div>
+          <div class="achievement-date">${date}</div>
+        </div>`;
+    }
+    return `
+      <div class="achievement-badge locked">
+        <div class="achievement-icon">${a.icon}</div>
+        <div class="achievement-name">${a.name}</div>
+        <div class="achievement-desc">${a.desc}</div>
+      </div>`;
+  }).join('');
+}
+
+renderAchievements();

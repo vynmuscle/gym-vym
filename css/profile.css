@@ -34,3 +34,52 @@
   font-size:12px;
   margin-top:8px;
 }
+
+.achievements-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+
+.achievement-badge{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 8px;
+  text-align:center;
+}
+
+.achievement-badge.unlocked{
+  border-color:var(--yellow);
+}
+
+.achievement-badge.locked{
+  opacity:.45;
+}
+
+.achievement-icon{
+  font-size:26px;
+}
+
+.achievement-name{
+  font-size:12px;
+  font-weight:600;
+  margin-top:6px;
+}
+
+.achievement-badge.locked .achievement-name{
+  color:var(--muted);
+}
+
+.achievement-date{
+  font-size:10px;
+  color:var(--yellow);
+  margin-top:2px;
+}
+
+.achievement-desc{
+  font-size:10px;
+  color:var(--muted);
+  margin-top:2px;
+}

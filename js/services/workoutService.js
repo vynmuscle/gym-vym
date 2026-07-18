@@ -316,6 +316,34 @@ export async function getPersonalRecordsMap(excludeSessionId) {
   return result;
 }
 
+// Volume total acumulado (kg) de todo o histórico do usuário — usado pra
+// conquistas de volume. Uma query só (weight/reps de todas as séries).
+export async function getTotalVolumeKg() {
+  const { data, error } = await supabase.from('session_sets').select('weight, reps');
+  if (error) throw error;
+  return data.reduce((sum, row) => sum + (row.weight || 0) * (row.reps || 0), 0);
+}
+
+// Verifica se algum mês do histórico já teve os 8 grupos musculares
+// treinados (cardio não conta) — usado pela conquista "todos_grupos".
+export async function hasTrainedAllGroupsInAMonth() {
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('completed_at, exercises(muscle_group)');
+  if (error) throw error;
+
+  const byMonth = {};
+  for (const row of data) {
+    const group = row.exercises?.muscle_group;
+    if (!group || group === 'cardio') continue;
+    const monthKey = row.completed_at.slice(0, 7);
+    if (!byMonth[monthKey]) byMonth[monthKey] = new Set();
+    byMonth[monthKey].add(group);
+  }
+
+  return Object.values(byMonth).some(set => set.size >= MUSCLE_GROUPS.length);
+}
+
 export async function getSessionsByMonth(year, month) {
   const start = new Date(year, month - 1, 1).toISOString();
   const end = new Date(year, month, 1).toISOString();

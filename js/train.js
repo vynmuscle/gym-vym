@@ -10,6 +10,7 @@ import {
   getExerciseProgress, getPersonalRecordsMap
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
+import { checkAchievements } from './achievements.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -696,6 +697,8 @@ finishBtn.addEventListener('click', async () => {
   stopKeepAlive();
   if(wakeLock) wakeLock.release().catch(() => {});
   summaryOverlay.classList.add('open');
+
+  checkAchievements(user.id, { hadPRThisSession: prsByExercise.size > 0 }).catch(() => {});
 });
 
 document.getElementById('btnBackToWorkouts').addEventListener('click', () => navigate('./workouts.html'));

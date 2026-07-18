@@ -3,6 +3,7 @@ import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { listPhotos, uploadPhoto, createPhoto, deletePhoto, getSignedUrls } from './services/photosService.js';
+import { checkAchievements } from './achievements.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -144,6 +145,8 @@ btnSavePhoto.addEventListener('click', async () => {
   pendingBlob = null;
   await reload();
   showMessage('Foto salva.', 'success');
+
+  checkAchievements(user.id, {}).catch(() => {});
 });
 
 function updateCompareBar(){
