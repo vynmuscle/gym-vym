@@ -1,6 +1,6 @@
 // Service worker clássico (não module) — Firefox ainda não suporta SW do tipo module.
 // Bumpar CACHE_VERSION junto com APP_VERSION (js/config.js) sempre que JS/CSS/HTML mudar.
-const CACHE_VERSION = 19;
+const CACHE_VERSION = 21;
 const CACHE_NAME = `gymvym-v${CACHE_VERSION}`;
 
 const CACHE_FIRST_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'raw.githubusercontent.com'];

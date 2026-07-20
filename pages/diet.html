@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dieta - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/diet.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#0b0d10">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <h2>Dieta</h2>
+
+    <!-- Aviso: sem peso/altura registrados -->
+    <div id="noWeightPanel" class="panel diet-warning" style="display:none">
+      <p>Pra calcular sua meta calórica, primeiro registre seu peso e altura em Medidas.</p>
+      <a href="./body.html" class="btn btn-primary full">Registrar peso e altura</a>
+    </div>
+
+    <!-- Formulário de perfil (primeira vez ou edição) -->
+    <div id="profileForm" class="panel" style="padding:20px;display:none">
+      <h2 id="profileFormTitle">Seu perfil</h2>
+      <p class="muted" style="margin:-8px 0 16px;font-size:13px">Usado só pra calcular sua meta calórica. Não é diagnóstico médico. Peso e altura são os que você já registra em Medidas.</p>
+
+      <div class="form-group">
+        <label for="birthDate">Data de nascimento</label>
+        <input type="date" id="birthDate">
+      </div>
+
+      <div class="form-group">
+        <label for="sex">Sexo biológico</label>
+        <select id="sex">
+          <option value="F">Feminino</option>
+          <option value="M">Masculino</option>
+        </select>
+        <p class="muted" style="font-size:11px;margin-top:6px">Usado apenas na fórmula de cálculo metabólico.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="activityLevel">Nível de atividade física</label>
+        <select id="activityLevel">
+          <option value="sedentary">Sedentário (pouco ou nenhum exercício)</option>
+          <option value="light">Leve (exercício leve 1-3x/semana)</option>
+          <option value="moderate">Moderado (exercício moderado 3-5x/semana)</option>
+          <option value="intense">Intenso (exercício pesado 6-7x/semana)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="goal">Objetivo</label>
+        <select id="goal">
+          <option value="lose">Emagrecer</option>
+          <option value="maintain">Manter peso</option>
+          <option value="gain">Ganhar massa</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="goalRateGroup">
+        <label for="goalRate">Ritmo desejado (kg por semana)</label>
+        <input type="number" id="goalRate" inputmode="decimal" step="0.1" min="0" max="1" value="0.5">
+        <p class="muted" style="font-size:11px;margin-top:6px">Recomendado: 0,25 a 0,5 kg/semana pra um ritmo saudável.</p>
+      </div>
+
+      <button type="button" class="btn btn-primary full" id="btnSaveProfile">Salvar perfil</button>
+      <button type="button" class="btn btn-secondary full" id="btnCancelProfile" style="display:none">Cancelar</button>
+      <div id="profileMessage" class="message"></div>
+    </div>
+
+    <!-- Resumo do dia -->
+    <div id="summarySection" style="display:none">
+      <div class="progress-card" style="margin-top:14px">
+        <div class="ring">
+          <svg width="92" height="92" viewBox="0 0 92 92">
+            <circle cx="46" cy="46" r="39" stroke="#1b1f26" stroke-width="9" fill="none"/>
+            <circle id="ringProgress" cx="46" cy="46" r="39" stroke="#e9b93b" stroke-width="9" fill="none"
+                    stroke-linecap="round" stroke-dasharray="245" stroke-dashoffset="245"/>
+          </svg>
+          <div class="pct" id="ringPct">0%</div>
+        </div>
+        <div class="progress-info">
+          <div class="big" id="caloriesConsumed">0 kcal</div>
+          <div class="sub" id="caloriesTarget">meta: — kcal</div>
+          <div class="sub" id="caloriesRemaining" style="margin-top:2px">—</div>
+        </div>
+      </div>
+
+      <div class="panel diet-macros" style="margin-top:14px">
+        <div class="macro-row">
+          <div class="macro-item">
+            <span class="macro-label">Proteína</span>
+            <span class="macro-value" id="proteinValue">0 / 0g</span>
+            <div class="macro-bar"><i id="proteinBar" style="background:var(--red)"></i></div>
+          </div>
+          <div class="macro-item">
+            <span class="macro-label">Carboidrato</span>
+            <span class="macro-value" id="carbsValue">0 / 0g</span>
+            <div class="macro-bar"><i id="carbsBar" style="background:var(--yellow)"></i></div>
+          </div>
+          <div class="macro-item">
+            <span class="macro-label">Gordura</span>
+            <span class="macro-value" id="fatValue">0 / 0g</span>
+            <div class="macro-bar"><i id="fatBar" style="background:var(--green)"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel diet-info" style="margin-top:14px">
+        <div class="diet-info-row"><span>TMB (metabolismo basal)</span><b id="bmrValue">—</b></div>
+        <div class="diet-info-row"><span>Gasto total estimado (TDEE)</span><b id="tdeeValue">—</b></div>
+        <div class="diet-info-row"><span>Ritmo estimado</span><b id="rateValue">—</b></div>
+        <p id="clampWarning" class="message warning" style="display:none">A meta foi ajustada para um mínimo seguro de calorias — o ritmo escolhido era agressivo demais.</p>
+        <button type="button" class="btn btn-secondary full" id="btnEditProfile" style="margin-top:8px">Editar perfil</button>
+      </div>
+    </div>
+
+    <!-- Diário alimentar de hoje -->
+    <div id="foodLogSection" style="display:none">
+      <div class="panel" style="padding:20px;margin-top:16px">
+        <h2 id="foodFormTitle">Registrar alimento</h2>
+
+        <div class="form-group">
+          <label for="mealType">Refeição</label>
+          <select id="mealType">
+            <option value="cafe">Café da manhã</option>
+            <option value="almoco">Almoço</option>
+            <option value="lanche">Lanche</option>
+            <option value="jantar">Jantar</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="foodName">Alimento / refeição</label>
+          <input type="text" id="foodName" placeholder="Ex: Frango grelhado com arroz">
+        </div>
+
+        <div class="form-group">
+          <label for="foodCalories">Calorias (kcal)</label>
+          <input type="number" id="foodCalories" inputmode="decimal" step="1" placeholder="Ex: 450">
+        </div>
+
+        <div class="measure-grid">
+          <div class="form-group">
+            <label for="foodProtein">Proteína (g)</label>
+            <input type="number" id="foodProtein" inputmode="decimal" step="1" placeholder="Opcional">
+          </div>
+          <div class="form-group">
+            <label for="foodCarbs">Carboidrato (g)</label>
+            <input type="number" id="foodCarbs" inputmode="decimal" step="1" placeholder="Opcional">
+          </div>
+          <div class="form-group">
+            <label for="foodFat">Gordura (g)</label>
+            <input type="number" id="foodFat" inputmode="decimal" step="1" placeholder="Opcional">
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary full" id="btnSaveFood">Adicionar</button>
+        <div id="foodMessage" class="message"></div>
+      </div>
+
+      <div class="panel" id="foodListPanel" style="margin-top:16px"></div>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="../js/diet.js"></script>
+</body>
+</html>
