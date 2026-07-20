@@ -59,7 +59,7 @@ export async function deleteWorkout(id) {
 export async function listWorkoutExercises(workoutId) {
   const { data, error } = await supabase
     .from('workout_exercises')
-    .select('*, exercises(name, muscle_group, equipment, image_url, instructions)')
+    .select('*, exercises(name, muscle_group, equipment, image_url, instructions, tracking_type)')
     .eq('workout_id', workoutId)
     .order('sort_order');
   if (error) throw error;
@@ -117,6 +117,17 @@ export async function getLastSets(exerciseId) {
   if (data.length === 0) return [];
   const lastSessionId = data[0].session_id;
   return data.filter(s => s.session_id === lastSessionId).sort((a, b) => a.set_number - b.set_number);
+}
+
+// Séries já gravadas para uma sessão específica — usado ao reabrir uma ficha
+// já finalizada, pra marcar como concluído o que já foi feito e não duplicar.
+export async function getSessionSets(sessionId) {
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('exercise_id, set_number, weight, reps, duration_seconds')
+    .eq('session_id', sessionId);
+  if (error) throw error;
+  return data;
 }
 
 export async function recordSet(userId, payload) {
@@ -237,7 +248,8 @@ export async function addExerciseFromLibrary(userId, libEx) {
       muscle_group: libEx.muscle_group,
       equipment: libEx.equipment,
       image_url: libEx.image_urls?.[0] || null,
-      instructions: libEx.instructions_pt || libEx.instructions || null
+      instructions: libEx.instructions_pt || libEx.instructions || null,
+      tracking_type: libEx.tracking_type || 'reps'
     })
     .select()
     .single();

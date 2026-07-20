@@ -54,7 +54,7 @@ function showAddMode(){
 
 function showEditMode(item){
   editingId = item.id;
-  editingIsCardio = item.exercises.muscle_group === 'cardio';
+  editingIsCardio = item.exercises.tracking_type === 'duration';
   targetSetsInput.value = item.target_sets;
   targetRepsInput.value = item.target_reps;
   targetWeightInput.value = item.target_weight || '';
@@ -80,9 +80,9 @@ async function loadList(){
   }
 
   listPanel.innerHTML = items.map(item => {
-    const isCardio = item.exercises.muscle_group === 'cardio';
+    const isCardio = item.exercises.tracking_type === 'duration';
     const sub = isCardio
-      ? `${Math.round((item.target_duration_seconds || 0) / 60)}min de cardio`
+      ? `${Math.round((item.target_duration_seconds || 0) / 60)}min`
       : `${item.target_sets}x${item.target_reps}${item.target_weight ? ' · ' + item.target_weight + 'kg' : ''} · descanso ${item.rest_seconds}s`;
     return `
     <div class="list-item">
@@ -130,7 +130,7 @@ btnOpenPicker.addEventListener('click', () => {
   openExercisePicker({
     userId: user.id,
     onPick: async (ex) => {
-      const isCardio = ex.muscle_group === 'cardio';
+      const isCardio = ex.tracking_type === 'duration';
       await addWorkoutExercise(user.id, {
         workout_id: workoutId,
         exercise_id: ex.id,

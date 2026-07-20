@@ -6,7 +6,7 @@ import { queueSet, flushQueue, onSetSynced } from './services/offlineQueue.js';
 import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession,
-  getLastSets, recordSet, swapWorkoutExerciseExercise,
+  getLastSets, getSessionSets, recordSet, swapWorkoutExerciseExercise,
   getExerciseProgress, getPersonalRecordsMap, getUserXP
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
@@ -258,15 +258,16 @@ function openWheelPicker(field, currentValue, anchorEl){
   });
 }
 
-function setRowHTML(ei, setNumber, set, isCardio){
+function setRowHTML(ei, setNumber, set, isDuration){
+  const rowClass = `set-row${set.completed ? ' completed' : ''}`;
   const checkCol = `
     <div class="check-col">
       <button type="button" class="check-btn" data-exercise="${ei}" data-set="${setNumber}" aria-label="Concluir série ${setNumber}">✓</button>
     </div>`;
 
-  if(isCardio){
+  if(isDuration){
     return `
-      <div class="set-row" id="set-${ei}-${setNumber}">
+      <div class="${rowClass}" id="set-${ei}-${setNumber}">
         <div class="set-num">${setNumber}</div>
         <div class="set-prev">${set.prev || '—'}</div>
         <button type="button" class="value-btn" data-field="durationMin" data-value="${set.durationMin ?? 0}">${formatWheelValue(set.durationMin ?? 0)}</button>
@@ -276,7 +277,7 @@ function setRowHTML(ei, setNumber, set, isCardio){
   }
 
   return `
-    <div class="set-row" id="set-${ei}-${setNumber}">
+    <div class="${rowClass}" id="set-${ei}-${setNumber}">
       <div class="set-num">${setNumber}</div>
       <div class="set-prev">${set.prev || '—'}</div>
       <button type="button" class="value-btn" data-field="kg" data-value="${set.kg ?? 0}">${formatWheelValue(set.kg ?? 0)}</button>
@@ -343,7 +344,7 @@ async function refreshExerciseCard(ei, newEx){
   doneSets = Math.max(0, doneSets - doneInCard);
   doneCountEl.textContent = doneSets;
 
-  const isCardio = newEx.muscle_group === 'cardio';
+  const isDuration = newEx.tracking_type === 'duration';
   const lastSets = await getLastSets(newEx.id);
   const setCount = ex.sets.length;
 
@@ -353,12 +354,12 @@ async function refreshExerciseCard(ei, newEx){
   ex.imageUrl = newEx.image_url;
   ex.instructions = newEx.instructions;
   ex.muscleGroup = newEx.muscle_group;
-  ex.isCardio = isCardio;
+  ex.isDuration = isDuration;
   ex.sets = [];
 
   for(let i = 0; i < setCount; i++){
     const prev = lastSets[i];
-    if(isCardio){
+    if(isDuration){
       ex.sets.push({
         prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min` : null,
         durationMin: prev ? Math.round((prev.duration_seconds || 0) / 60) : 20
@@ -389,11 +390,11 @@ function renderExerciseCard(ei){
   card.classList.remove('done');
 
   let rows = '';
-  ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set, ex.isCardio));
+  ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set, ex.isDuration));
 
-  const restLabel = ex.isCardio ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
+  const restLabel = ex.isDuration ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
   const uplevelLabel = ex.suggestUp ? `<div class="ex-uplevel">🔼 Hora de subir a carga</div>` : '';
-  const headerLabels = ex.isCardio
+  const headerLabels = ex.isDuration
     ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div></div><div>✓</div>`
     : `<div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>✓</div>`;
 
@@ -415,6 +416,7 @@ function renderExerciseCard(ei){
     <button type="button" class="add-set-btn" data-exercise="${ei}">+ Adicionar série</button>`;
 
   ex.sets.forEach((_, i) => wireRow(ei, i + 1));
+  if(ex.sets.length > 0 && ex.sets.every(s => s.completed)) card.classList.add('done');
 
   card.querySelector('.add-set-btn').addEventListener('click', () => addSet(ei));
   const [infoBtn, swapBtn, noteBtn] = card.querySelectorAll('.ex-action-btn');
@@ -456,9 +458,19 @@ async function buildWorkout(){
   exercisesData = [];
   recordsMap = await getPersonalRecordsMap(session.id);
 
+  // Ao reabrir uma ficha já finalizada, recupera o que já foi gravado nessa
+  // sessão pra marcar como concluído em vez de deixar em branco de novo.
+  const existingSets = existingSessionId ? await getSessionSets(session.id) : [];
+  const existingByExercise = new Map();
+  existingSets.forEach(s => {
+    if(!existingByExercise.has(s.exercise_id)) existingByExercise.set(s.exercise_id, new Map());
+    existingByExercise.get(s.exercise_id).set(s.set_number, s);
+  });
+
   for(const item of items){
     const lastSets = await getLastSets(item.exercise_id);
-    const isCardio = item.exercises.muscle_group === 'cardio';
+    const isDuration = item.exercises.tracking_type === 'duration';
+    const doneForExercise = existingByExercise.get(item.exercise_id);
 
     const ex = {
       workoutExerciseId: item.id,
@@ -468,26 +480,30 @@ async function buildWorkout(){
       imageUrl: item.exercises.image_url,
       instructions: item.exercises.instructions,
       muscleGroup: item.exercises.muscle_group,
-      isCardio,
+      isDuration,
       rest: item.rest_seconds,
       note: '',
-      suggestUp: isCardio ? false : await shouldSuggestWeightIncrease(item.exercise_id, parseTargetRepsMax(item.target_reps)),
+      suggestUp: isDuration ? false : await shouldSuggestWeightIncrease(item.exercise_id, parseTargetRepsMax(item.target_reps)),
       sets: []
     };
 
-    const setCount = isCardio ? 1 : item.target_sets;
+    const maxDoneSetNumber = doneForExercise ? Math.max(...doneForExercise.keys()) : 0;
+    const setCount = Math.max(isDuration ? 1 : item.target_sets, maxDoneSetNumber);
     for(let i = 0; i < setCount; i++){
+      const done = doneForExercise?.get(i + 1) || null;
       const prev = lastSets[i];
-      if(isCardio){
+      if(isDuration){
         ex.sets.push({
           prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min` : null,
-          durationMin: prev ? Math.round((prev.duration_seconds || 0) / 60) : Math.round((item.target_duration_seconds || 1200) / 60)
+          durationMin: done ? Math.round((done.duration_seconds || 0) / 60) : (prev ? Math.round((prev.duration_seconds || 0) / 60) : Math.round((item.target_duration_seconds || 1200) / 60)),
+          completed: !!done
         });
       } else {
         ex.sets.push({
           prev: prev ? `${prev.weight ?? 0}kg x ${prev.reps ?? 0}` : null,
-          kg: prev ? prev.weight : (item.target_weight || 0),
-          reps: prev ? prev.reps : (parseInt(item.target_reps) || 0)
+          kg: done ? done.weight : (prev ? prev.weight : (item.target_weight || 0)),
+          reps: done ? done.reps : (prev ? prev.reps : (parseInt(item.target_reps) || 0)),
+          completed: !!done
         });
       }
     }
@@ -500,6 +516,16 @@ async function buildWorkout(){
 
   workoutMain.innerHTML = '';
   exercisesData.forEach((ex, ei) => renderExerciseCard(ei));
+
+  // Contabiliza o que já veio pronto da sessão reaberta.
+  doneSets = exercisesData.reduce((sum, ex) => sum + ex.sets.filter(s => s.completed).length, 0);
+  totalVolume = exercisesData.reduce((sum, ex) => {
+    if(ex.isDuration) return sum;
+    return sum + ex.sets.filter(s => s.completed).reduce((s2, set) => s2 + (set.kg || 0) * (set.reps || 0), 0);
+  }, 0);
+  doneCountEl.textContent = doneSets;
+  progressFill.style.width = (totalSets > 0 ? (doneSets / totalSets * 100) : 0) + '%';
+  if(doneSets >= totalSets && totalSets > 0) finishBtn.classList.add('ready');
 }
 
 onSetSynced((item) => {
@@ -536,7 +562,7 @@ async function completeSet(ei, setNumber){
   let payload;
   let kg = 0, reps = 0;
 
-  if(ex.isCardio){
+  if(ex.isDuration){
     const minutes = parseFloat(row.querySelector('[data-field="durationMin"]').dataset.value) || 0;
     payload = {
       session_id: session.id,
@@ -571,7 +597,7 @@ async function completeSet(ei, setNumber){
     row.classList.add('pending');
     row.querySelector('.check-btn').textContent = '⏳';
   }
-  if(!ex.isCardio){
+  if(!ex.isDuration){
     totalVolume += kg * reps;
     checkPersonalRecord(ex, kg, row);
   }
@@ -598,9 +624,9 @@ function addSet(ei){
   const body = document.getElementById('sets-' + ei);
   const setNumber = body.querySelectorAll('.set-row').length + 1;
   const last = ex.sets[ex.sets.length - 1];
-  const newSet = ex.isCardio ? { prev: null, durationMin: last.durationMin } : { prev: null, kg: last.kg, reps: last.reps };
+  const newSet = ex.isDuration ? { prev: null, durationMin: last.durationMin } : { prev: null, kg: last.kg, reps: last.reps };
   ex.sets.push(newSet);
-  body.insertAdjacentHTML('beforeend', setRowHTML(ei, setNumber, newSet, ex.isCardio));
+  body.insertAdjacentHTML('beforeend', setRowHTML(ei, setNumber, newSet, ex.isDuration));
   wireRow(ei, setNumber);
 
   totalSets++;

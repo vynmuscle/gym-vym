@@ -88,6 +88,10 @@ async function loadSessions(){
     const kcal = estimateWorkoutKcal({ weightKg, totalSets: stats.sets, durationMinutes });
     const kcalLabel = kcal !== null ? `~ ${kcal} kcal` : '—';
 
+    const continueBtn = s.workout_id
+      ? `<button type="button" class="btn btn-secondary" data-continue="${s.id}" data-workout="${s.workout_id}" style="margin:0 14px 14px">↺ Continuar</button>`
+      : '';
+
     return `
     <div class="panel session-card" style="margin-bottom:12px;overflow:hidden">
       <div class="list-item session-toggle" data-session="${s.id}" style="cursor:pointer">
@@ -101,6 +105,7 @@ async function loadSessions(){
         </div>
       </div>
       <div class="session-details" id="details-${s.id}" style="display:none;padding:0 14px 14px"></div>
+      ${continueBtn}
     </div>`;
   }).join('');
 
@@ -117,6 +122,12 @@ async function loadSessions(){
 
   sessionsList.querySelectorAll('.session-toggle').forEach(el => {
     el.addEventListener('click', () => toggleDetails(el.dataset.session));
+  });
+
+  sessionsList.querySelectorAll('[data-continue]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigate(`./train.html?id=${btn.dataset.workout}&session=${btn.dataset.continue}`);
+    });
   });
 }
 
