@@ -94,6 +94,23 @@ export async function removeWorkoutExercise(id) {
   if (error) throw error;
 }
 
+// Sessão iniciada e nunca finalizada dessa ficha — usada pra retomar
+// automaticamente em vez de criar uma sessão nova (duplicada) toda vez que
+// o usuário reabre a mesma ficha sem ter clicado em "Finalizar treino".
+export async function findIncompleteSessionForWorkout(userId, workoutId) {
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('workout_id', workoutId)
+    .is('finished_at', null)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function createWorkoutSession(userId, workoutId) {
   const { data, error } = await supabase.from('workout_sessions').insert({ user_id: userId, workout_id: workoutId }).select().single();
   if (error) throw error;

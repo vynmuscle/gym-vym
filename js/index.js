@@ -100,10 +100,6 @@ async function renderHero(){
     const totalMinutes = todaysSessions.reduce((sum, s) =>
       sum + Math.round((new Date(s.finished_at) - new Date(s.started_at)) / 60000), 0);
     const names = [...new Set(todaysSessions.map(s => s.workouts ? s.workouts.name : 'Treino avulso'))].join(', ');
-    const lastSession = todaysSessions[0];
-    const continueLink = lastSession.workout_id
-      ? `<a href="./pages/train.html?id=${lastSession.workout_id}&session=${lastSession.id}" class="btn btn-primary full" style="text-decoration:none;display:flex;align-items:center;justify-content:center;margin-bottom:8px">↺ Continuar treino</a>`
-      : '';
 
     heroSection.innerHTML = `
       <div class="hero hero-done">
@@ -114,7 +110,6 @@ async function renderHero(){
           <div class="stat"><div class="v num">${totalSets}</div><div class="k">Séries</div></div>
           <div class="stat"><div class="v num">${Math.round(totalVolume).toLocaleString('pt-BR')}</div><div class="k">Volume kg</div></div>
         </div>
-        ${continueLink}
         <a href="./pages/history.html" class="btn btn-secondary full" style="text-decoration:none;display:flex;align-items:center;justify-content:center">Ver histórico</a>
         <a href="./pages/ai-workout.html" class="hero-ai-link">Renovar treinos com IA</a>
       </div>`;
