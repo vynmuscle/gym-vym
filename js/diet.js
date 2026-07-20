@@ -8,11 +8,14 @@ import {
   upsertDietProfile,
   getLatestWeight,
   getLatestHeight,
-  listFoodLogs,
+  listFoodLogsRange,
   createFoodLog,
   deleteFoodLog,
   calculateDietTargets,
+  calculateIMC,
+  classifyIMC,
   MEAL_TYPE_LABELS,
+  MEAL_TYPE_BUDGET_PCT,
 } from './services/dietService.js';
 import { searchFood } from './services/openFoodFactsService.js';
 
@@ -23,10 +26,29 @@ initPWA();
 
 await renderNav('evolution');
 
-function todayStr() {
-  const d = new Date();
+const DAY_LABELS = ['do', 'se', 'te', 'qu', 'qu', 'se', 'sá'];
+const MEAL_TYPES = ['cafe', 'almoco', 'jantar', 'lanche', 'outro'];
+
+function toDateStr(d) {
   const off = d.getTimezoneOffset();
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+}
+
+function todayStr() {
+  return toDateStr(new Date());
+}
+
+// Domingo a sábado da semana em que `dateStr` cai.
+function getWeekDates(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const base = new Date(y, m - 1, d);
+  const sunday = new Date(base);
+  sunday.setDate(base.getDate() - base.getDay());
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(sunday);
+    day.setDate(sunday.getDate() + i);
+    return toDateStr(day);
+  });
 }
 
 // Elementos
@@ -50,7 +72,7 @@ const btnEditProfile = document.getElementById('btnEditProfile');
 const ringProgress = document.getElementById('ringProgress');
 const ringPct = document.getElementById('ringPct');
 const caloriesConsumed = document.getElementById('caloriesConsumed');
-const caloriesTarget = document.getElementById('caloriesTarget');
+const caloriesTargetValue = document.getElementById('caloriesTargetValue');
 const caloriesRemaining = document.getElementById('caloriesRemaining');
 const proteinValue = document.getElementById('proteinValue');
 const carbsValue = document.getElementById('carbsValue');
@@ -62,7 +84,17 @@ const bmrValue = document.getElementById('bmrValue');
 const tdeeValue = document.getElementById('tdeeValue');
 const rateValue = document.getElementById('rateValue');
 const clampWarning = document.getElementById('clampWarning');
+const imcValue = document.getElementById('imcValue');
+const imcBadge = document.getElementById('imcBadge');
+const chartCalories = document.getElementById('chartCalories');
+const chartProtein = document.getElementById('chartProtein');
+const chartCarbs = document.getElementById('chartCarbs');
 
+const daysStrip = document.getElementById('daysStrip');
+const mealCardsContainer = document.getElementById('mealCardsContainer');
+const foodFormPanel = document.getElementById('foodFormPanel');
+const foodFormTitle = document.getElementById('foodFormTitle');
+const btnCloseFoodForm = document.getElementById('btnCloseFoodForm');
 const mealTypeSelect = document.getElementById('mealType');
 const foodSearchInput = document.getElementById('foodSearch');
 const foodSearchResults = document.getElementById('foodSearchResults');
@@ -76,10 +108,11 @@ const foodCarbsInput = document.getElementById('foodCarbs');
 const foodFatInput = document.getElementById('foodFat');
 const btnSaveFood = document.getElementById('btnSaveFood');
 const foodMessage = document.getElementById('foodMessage');
-const foodListPanel = document.getElementById('foodListPanel');
 
 let currentProfile = null;
 let currentTargets = null;
+let selectedDate = todayStr();
+let weekLogs = [];
 
 goalSelect.addEventListener('change', () => {
   goalRateGroup.style.display = goalSelect.value === 'maintain' ? 'none' : '';
@@ -97,6 +130,12 @@ function hideSearchResults() {
 function showSearchStatus(text) {
   foodSearchStatus.textContent = text;
   foodSearchStatus.style.display = text ? '' : 'none';
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 function renderSearchResults(products) {
@@ -173,6 +212,7 @@ foodSearchInput.addEventListener('input', () => {
 
 foodQuantityInput.addEventListener('input', recomputeFromProduct);
 
+// --- Perfil ---
 function fillProfileForm(profile) {
   birthDateInput.value = profile?.birth_date || '';
   sexSelect.value = profile?.sex || 'F';
@@ -226,6 +266,15 @@ btnSaveProfile.addEventListener('click', async () => {
   }
 });
 
+// --- Resumo (gauge, macros, TMB/TDEE, IMC) ---
+function renderIMC(weightKg, heightCm) {
+  const imc = calculateIMC(weightKg, heightCm);
+  const info = classifyIMC(imc);
+  imcValue.textContent = imc.toFixed(1);
+  imcBadge.textContent = info.label;
+  imcBadge.className = `imc-badge ${info.cls}`;
+}
+
 function renderSummary(weightKg, heightCm) {
   currentTargets = calculateDietTargets(currentProfile, weightKg, heightCm);
 
@@ -241,8 +290,9 @@ function renderSummary(weightKg, heightCm) {
   }
 
   clampWarning.style.display = currentTargets.wasClamped ? '' : 'none';
+  caloriesTargetValue.textContent = currentTargets.targetCalories;
 
-  caloriesTarget.textContent = `meta: ${currentTargets.targetCalories} kcal`;
+  renderIMC(weightKg, heightCm);
 }
 
 function renderRing(consumedCalories) {
@@ -251,13 +301,11 @@ function renderRing(consumedCalories) {
   const circumference = 245;
   ringProgress.style.strokeDashoffset = String(circumference - (circumference * pct) / 100);
   ringPct.textContent = `${pct}%`;
-  caloriesConsumed.textContent = `${Math.round(consumedCalories)} kcal`;
+  caloriesConsumed.textContent = Math.round(consumedCalories);
 
   const remaining = Math.round(target - consumedCalories);
-  caloriesRemaining.textContent = remaining >= 0
-    ? `Faltam ${remaining} kcal`
-    : `${Math.abs(remaining)} kcal acima da meta`;
-  caloriesRemaining.style.color = remaining >= 0 ? 'var(--muted)' : 'var(--yellow)';
+  caloriesRemaining.textContent = remaining >= 0 ? remaining : `+${Math.abs(remaining)}`;
+  caloriesRemaining.style.color = remaining >= 0 ? '' : 'var(--red)';
 }
 
 function renderMacros(sums) {
@@ -272,54 +320,116 @@ function renderMacros(sums) {
   fatBar.style.width = `${macros.fat_g > 0 ? Math.min(100, (sums.fat / macros.fat_g) * 100) : 0}%`;
 }
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function renderFoodList(items) {
-  if (!items.length) {
-    foodListPanel.innerHTML = '<div class="food-empty">Nenhum alimento registrado hoje ainda.</div>';
-    return;
-  }
-
-  foodListPanel.innerHTML = items.map(item => `
-    <div class="food-item" data-id="${item.id}">
-      <div class="food-item-main">
-        <div class="food-item-meal">${MEAL_TYPE_LABELS[item.meal_type] || item.meal_type}</div>
-        <div class="food-item-name">${escapeHtml(item.name)}</div>
-        <div class="food-item-macros">P: ${item.protein_g ?? 0}g · C: ${item.carbs_g ?? 0}g · G: ${item.fat_g ?? 0}g</div>
-      </div>
-      <div class="food-item-cal">${Math.round(item.calories)} kcal</div>
-      <button type="button" class="btn-icon danger btn-delete-food" data-id="${item.id}" aria-label="Remover">✕</button>
-    </div>
-  `).join('');
-
-  foodListPanel.querySelectorAll('.btn-delete-food').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!window.confirm('Remover este item?')) return;
-      await deleteFoodLog(btn.dataset.id);
-      await refreshFoodLog();
-    });
-  });
-}
-
-async function refreshFoodLog() {
-  const items = await listFoodLogs(user.id, todayStr());
-
-  const sums = items.reduce((acc, i) => {
+function sumItems(items) {
+  return items.reduce((acc, i) => {
     acc.calories += Number(i.calories) || 0;
     acc.protein += Number(i.protein_g) || 0;
     acc.carbs += Number(i.carbs_g) || 0;
     acc.fat += Number(i.fat_g) || 0;
     return acc;
   }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-  renderRing(sums.calories);
-  renderMacros(sums);
-  renderFoodList(items);
 }
+
+// --- Tira de dias da semana ---
+function renderDayStrip() {
+  const weekDates = getWeekDates(selectedDate);
+  const today = todayStr();
+  const loggedDates = new Set(weekLogs.map(i => i.logged_at));
+
+  daysStrip.innerHTML = weekDates.map((dateStr, i) => {
+    const day = Number(dateStr.split('-')[2]);
+    const classes = ['diet-day-pill'];
+    if (dateStr === selectedDate) classes.push('selected');
+    if (dateStr === today) classes.push('is-today');
+    if (loggedDates.has(dateStr)) classes.push('has-log');
+    return `
+      <button type="button" class="${classes.join(' ')}" data-date="${dateStr}">
+        <span class="lbl">${DAY_LABELS[i]}</span>
+        <span class="num">${day}</span>
+        <span class="dot"></span>
+      </button>
+    `;
+  }).join('');
+
+  daysStrip.querySelectorAll('.diet-day-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedDate = btn.dataset.date;
+      renderDayStrip();
+      renderDayData();
+    });
+  });
+}
+
+// --- Cards por refeição ---
+function renderFoodItemHtml(item) {
+  return `
+    <div class="food-item" data-id="${item.id}">
+      <div class="food-item-main">
+        <div class="food-item-name">${escapeHtml(item.name)}</div>
+        <div class="food-item-macros">P: ${item.protein_g ?? 0}g · C: ${item.carbs_g ?? 0}g · G: ${item.fat_g ?? 0}g</div>
+      </div>
+      <div class="food-item-cal">${Math.round(item.calories)} kcal</div>
+      <button type="button" class="btn-icon danger btn-delete-food" data-id="${item.id}" aria-label="Remover">✕</button>
+    </div>
+  `;
+}
+
+function renderMealCards(dayItems) {
+  mealCardsContainer.innerHTML = MEAL_TYPES.map(mt => {
+    const items = dayItems.filter(i => i.meal_type === mt);
+    const consumed = items.reduce((sum, i) => sum + (Number(i.calories) || 0), 0);
+    const budget = currentTargets ? Math.round(currentTargets.targetCalories * MEAL_TYPE_BUDGET_PCT[mt]) : null;
+    const pct = budget ? Math.min(100, Math.round((consumed / budget) * 100)) : 0;
+
+    return `
+      <div class="diet-meal-card">
+        <div class="diet-meal-card-header">
+          <div class="diet-meal-card-info">
+            <div class="diet-meal-card-name">${MEAL_TYPE_LABELS[mt]}</div>
+            <div class="diet-meal-card-cal">${Math.round(consumed)}${budget ? ` / ${budget}` : ''} kcal</div>
+          </div>
+          <button type="button" class="diet-meal-card-add" data-meal="${mt}" aria-label="Adicionar em ${MEAL_TYPE_LABELS[mt]}">+</button>
+        </div>
+        ${budget ? `<div class="diet-meal-card-bar"><i style="width:${pct}%"></i></div>` : ''}
+        ${items.length ? `<div class="diet-meal-card-items">${items.map(renderFoodItemHtml).join('')}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  mealCardsContainer.querySelectorAll('.diet-meal-card-add').forEach(btn => {
+    btn.addEventListener('click', () => openFoodForm(btn.dataset.meal));
+  });
+
+  mealCardsContainer.querySelectorAll('.btn-delete-food').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!window.confirm('Remover este item?')) return;
+      await deleteFoodLog(btn.dataset.id);
+      await refreshDiet();
+    });
+  });
+}
+
+// --- Formulário de adicionar alimento (flutuante, aberto pelo + de cada refeição) ---
+function openFoodForm(mealType) {
+  mealTypeSelect.value = mealType;
+  foodFormTitle.textContent = `Adicionar a ${MEAL_TYPE_LABELS[mealType]}`;
+  foodFormPanel.style.display = '';
+  foodFormPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  foodNameInput.focus();
+}
+
+function closeFoodForm() {
+  foodFormPanel.style.display = 'none';
+  foodNameInput.value = '';
+  foodCaloriesInput.value = '';
+  foodProteinInput.value = '';
+  foodCarbsInput.value = '';
+  foodFatInput.value = '';
+  foodMessage.textContent = '';
+  resetFoodSearch();
+}
+
+btnCloseFoodForm.addEventListener('click', closeFoodForm);
 
 btnSaveFood.addEventListener('click', async () => {
   const name = foodNameInput.value.trim();
@@ -333,7 +443,7 @@ btnSaveFood.addEventListener('click', async () => {
 
   try {
     await createFoodLog(user.id, {
-      logged_at: todayStr(),
+      logged_at: selectedDate,
       meal_type: mealTypeSelect.value,
       name,
       calories,
@@ -342,22 +452,59 @@ btnSaveFood.addEventListener('click', async () => {
       fat_g: parseFloat(foodFatInput.value) || null,
     });
 
-    foodNameInput.value = '';
-    foodCaloriesInput.value = '';
-    foodProteinInput.value = '';
-    foodCarbsInput.value = '';
-    foodFatInput.value = '';
-    resetFoodSearch();
-    foodMessage.className = 'message success';
-    foodMessage.textContent = 'Adicionado!';
     showToast('Registrado ✓');
-
-    await refreshFoodLog();
+    closeFoodForm();
+    await refreshDiet();
   } catch (err) {
     foodMessage.className = 'message danger';
     foodMessage.textContent = 'Erro ao salvar. Tente novamente.';
   }
 });
+
+// --- Gráficos semanais (barras simples, sem biblioteca) ---
+function renderBarChart(container, weekDates, values, target) {
+  const max = Math.max(target || 0, ...values, 1);
+  const today = todayStr();
+
+  container.innerHTML = weekDates.map((dateStr, i) => {
+    const value = values[i];
+    const heightPct = Math.min(100, Math.round((value / max) * 100));
+    const classes = ['diet-bar'];
+    if (dateStr === today) classes.push('today');
+    if (target && value > target) classes.push('over');
+    return `
+      <div class="${classes.join(' ')}" title="${Math.round(value)}">
+        <div class="diet-bar-fill" style="height:${heightPct}%"></div>
+        <div class="diet-bar-day">${DAY_LABELS[i]}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWeeklyCharts(weekDates) {
+  const perDay = weekDates.map(dateStr => sumItems(weekLogs.filter(i => i.logged_at === dateStr)));
+
+  renderBarChart(chartCalories, weekDates, perDay.map(d => d.calories), currentTargets?.targetCalories);
+  renderBarChart(chartProtein, weekDates, perDay.map(d => d.protein), currentTargets?.macros?.protein_g);
+  renderBarChart(chartCarbs, weekDates, perDay.map(d => d.carbs), currentTargets?.macros?.carbs_g);
+}
+
+// --- Orquestração do dia/semana ---
+function renderDayData() {
+  const dayItems = weekLogs.filter(i => i.logged_at === selectedDate);
+  const sums = sumItems(dayItems);
+  renderRing(sums.calories);
+  renderMacros(sums);
+  renderMealCards(dayItems);
+}
+
+async function refreshDiet() {
+  const weekDates = getWeekDates(selectedDate);
+  weekLogs = await listFoodLogsRange(user.id, weekDates[0], weekDates[6]);
+  renderDayStrip();
+  renderWeeklyCharts(weekDates);
+  renderDayData();
+}
 
 async function refreshAll() {
   currentProfile = await getDietProfile(user.id);
@@ -380,7 +527,7 @@ async function refreshAll() {
     summarySection.style.display = 'none';
     foodLogSection.style.display = '';
     noWeightPanel.style.display = '';
-    await refreshFoodLog();
+    await refreshDiet();
     return;
   }
 
@@ -390,7 +537,7 @@ async function refreshAll() {
   foodLogSection.style.display = '';
 
   renderSummary(latestWeight.weight_kg, latestHeight);
-  await refreshFoodLog();
+  await refreshDiet();
 }
 
 await refreshAll();

@@ -31,6 +31,32 @@ export const MEAL_TYPE_LABELS = {
   outro: 'Outro',
 };
 
+// Fatia sugerida da meta diária por refeição — só um ponto de partida visual,
+// não é regra: o total do dia continua sendo o que importa.
+export const MEAL_TYPE_BUDGET_PCT = {
+  cafe: 0.25,
+  almoco: 0.35,
+  jantar: 0.30,
+  lanche: 0.07,
+  outro: 0.03,
+};
+
+export const IMC_BANDS = [
+  { max: 18.5, label: 'Abaixo do peso', cls: 'abaixo' },
+  { max: 25, label: 'Peso normal', cls: 'normal' },
+  { max: 30, label: 'Sobrepeso', cls: 'sobrepeso' },
+  { max: Infinity, label: 'Obesidade', cls: 'obesidade' },
+];
+
+export function calculateIMC(weightKg, heightCm) {
+  const heightM = heightCm / 100;
+  return weightKg / (heightM * heightM);
+}
+
+export function classifyIMC(imc) {
+  return IMC_BANDS.find(band => imc < band.max) || IMC_BANDS[IMC_BANDS.length - 1];
+}
+
 // Piso de segurança pra não sugerir uma meta perigosamente baixa em déficit agressivo.
 const MIN_SAFE_CALORIES = { M: 1500, F: 1200 };
 
@@ -79,13 +105,16 @@ export async function getLatestHeight(userId) {
   return data?.height_cm ?? null;
 }
 
-export async function listFoodLogs(userId, date) {
+// Usado pra tira de dias da semana (dots de "tem registro") e gráficos semanais;
+// os itens do dia selecionado são filtrados no cliente a partir desse range.
+export async function listFoodLogsRange(userId, startDate, endDate) {
   const { data, error } = await supabase
     .from('food_logs')
     .select('*')
     .eq('user_id', userId)
-    .eq('logged_at', date)
-    .order('created_at', { ascending: true });
+    .gte('logged_at', startDate)
+    .lte('logged_at', endDate)
+    .order('logged_at', { ascending: true });
   if (error) throw error;
   return data;
 }
