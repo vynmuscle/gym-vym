@@ -14,6 +14,7 @@ import {
   calculateDietTargets,
   MEAL_TYPE_LABELS,
 } from './services/dietService.js';
+import { searchFood } from './services/openFoodFactsService.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if (!sd.session) navigate('../login.html');
@@ -63,6 +64,11 @@ const rateValue = document.getElementById('rateValue');
 const clampWarning = document.getElementById('clampWarning');
 
 const mealTypeSelect = document.getElementById('mealType');
+const foodSearchInput = document.getElementById('foodSearch');
+const foodSearchResults = document.getElementById('foodSearchResults');
+const foodSearchStatus = document.getElementById('foodSearchStatus');
+const foodQuantityGroup = document.getElementById('foodQuantityGroup');
+const foodQuantityInput = document.getElementById('foodQuantity');
 const foodNameInput = document.getElementById('foodName');
 const foodCaloriesInput = document.getElementById('foodCalories');
 const foodProteinInput = document.getElementById('foodProtein');
@@ -78,6 +84,94 @@ let currentTargets = null;
 goalSelect.addEventListener('change', () => {
   goalRateGroup.style.display = goalSelect.value === 'maintain' ? 'none' : '';
 });
+
+// --- Busca de alimentos (Open Food Facts) — atalho opcional; cadastro manual sempre funciona ---
+let selectedProduct = null;
+let searchDebounceTimer = null;
+
+function hideSearchResults() {
+  foodSearchResults.style.display = 'none';
+  foodSearchResults.innerHTML = '';
+}
+
+function showSearchStatus(text) {
+  foodSearchStatus.textContent = text;
+  foodSearchStatus.style.display = text ? '' : 'none';
+}
+
+function renderSearchResults(products) {
+  if (!products.length) {
+    hideSearchResults();
+    showSearchStatus('Nenhum resultado. Você pode preencher manualmente abaixo.');
+    return;
+  }
+
+  showSearchStatus('');
+  foodSearchResults.innerHTML = products.map((p, i) => `
+    <button type="button" class="diet-search-result" data-index="${i}">
+      <div class="diet-search-result-name">${escapeHtml(p.name)}</div>
+      <div class="diet-search-result-kcal">${Math.round(p.kcal100)} kcal / 100g</div>
+    </button>
+  `).join('');
+  foodSearchResults.style.display = '';
+
+  foodSearchResults.querySelectorAll('.diet-search-result').forEach(btn => {
+    btn.addEventListener('click', () => selectProduct(products[Number(btn.dataset.index)]));
+  });
+}
+
+function recomputeFromProduct() {
+  if (!selectedProduct) return;
+  const grams = parseFloat(foodQuantityInput.value) || 0;
+  const factor = grams / 100;
+  foodCaloriesInput.value = Math.round(selectedProduct.kcal100 * factor);
+  foodProteinInput.value = Math.round(selectedProduct.protein100 * factor);
+  foodCarbsInput.value = Math.round(selectedProduct.carbs100 * factor);
+  foodFatInput.value = Math.round(selectedProduct.fat100 * factor);
+}
+
+function selectProduct(product) {
+  selectedProduct = product;
+  foodNameInput.value = product.name;
+  foodQuantityInput.value = 100;
+  foodQuantityGroup.style.display = '';
+  recomputeFromProduct();
+  hideSearchResults();
+  showSearchStatus('');
+  foodSearchInput.value = '';
+}
+
+function resetFoodSearch() {
+  selectedProduct = null;
+  foodSearchInput.value = '';
+  foodQuantityGroup.style.display = 'none';
+  hideSearchResults();
+  showSearchStatus('');
+}
+
+foodSearchInput.addEventListener('input', () => {
+  clearTimeout(searchDebounceTimer);
+  const query = foodSearchInput.value.trim();
+
+  if (query.length < 3) {
+    hideSearchResults();
+    showSearchStatus('');
+    return;
+  }
+
+  showSearchStatus('Buscando...');
+  searchDebounceTimer = setTimeout(async () => {
+    try {
+      const products = await searchFood(query);
+      renderSearchResults(products);
+    } catch (err) {
+      hideSearchResults();
+      showSearchStatus('Busca indisponível agora — preencha manualmente abaixo.');
+    }
+  }, 400);
+});
+
+foodQuantityInput.addEventListener('input', recomputeFromProduct);
 
 function fillProfileForm(profile) {
   birthDateInput.value = profile?.birth_date || '';
@@ -253,6 +347,7 @@ btnSaveFood.addEventListener('click', async () => {
     foodProteinInput.value = '';
     foodCarbsInput.value = '';
     foodFatInput.value = '';
+    resetFoodSearch();
     foodMessage.className = 'message success';
     foodMessage.textContent = 'Adicionado!';
     showToast('Registrado ✓');
