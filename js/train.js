@@ -5,7 +5,7 @@ import { openExercisePicker } from './exercisePicker.js';
 import { queueSet, flushQueue, onSetSynced } from './services/offlineQueue.js';
 import {
   getWorkout, listWorkoutExercises,
-  createWorkoutSession, finishWorkoutSession,
+  createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout,
   getLastSets, getSessionSets, recordSet, swapWorkoutExerciseExercise,
   getExerciseProgress, getPersonalRecordsMap, getUserXP
 } from './services/workoutService.js';
@@ -69,6 +69,7 @@ let restExName = '';
 let restDone = 0;
 let restTotal = 0;
 let session = null;
+let isResumedSession = false;
 let exercisesData = [];
 let recordsMap = {};
 const prsByExercise = new Map();
@@ -460,7 +461,7 @@ async function buildWorkout(){
 
   // Ao reabrir uma ficha já finalizada, recupera o que já foi gravado nessa
   // sessão pra marcar como concluído em vez de deixar em branco de novo.
-  const existingSets = existingSessionId ? await getSessionSets(session.id) : [];
+  const existingSets = isResumedSession ? await getSessionSets(session.id) : [];
   const existingByExercise = new Map();
   existingSets.forEach(s => {
     if(!existingByExercise.has(s.exercise_id)) existingByExercise.set(s.exercise_id, new Map());
@@ -777,7 +778,21 @@ if(!workoutIdValid){
       showTrainError('Essa ficha ainda não tem exercícios.', `./workout-edit.html?id=${workoutId}`, 'Montar exercícios');
     } else {
       workoutNameEl.textContent = workout.name;
-      session = existingSessionId ? { id: existingSessionId } : await createWorkoutSession(user.id, workoutId);
+      if(existingSessionId){
+        session = { id: existingSessionId };
+        isResumedSession = true;
+      } else {
+        // Continua automaticamente uma sessão dessa ficha que ficou em
+        // aberto (sem ter clicado em "Finalizar treino"), em vez de criar
+        // uma sessão nova e duplicada.
+        const incomplete = await findIncompleteSessionForWorkout(user.id, workoutId);
+        if(incomplete){
+          session = incomplete;
+          isResumedSession = true;
+        } else {
+          session = await createWorkoutSession(user.id, workoutId);
+        }
+      }
       await buildWorkout();
       flushQueue();
     }
