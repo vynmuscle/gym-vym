@@ -14,6 +14,34 @@
   padding:16px;
 }
 
+/* ===== Abas Refeições / Estatísticas ===== */
+.diet-tabs{
+  display:flex;
+  gap:8px;
+  margin-top:14px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:4px;
+}
+
+.diet-tab{
+  flex:1;
+  min-height:44px;
+  border:0;
+  border-radius:calc(var(--radius) - 4px);
+  background:transparent;
+  color:var(--muted);
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.diet-tab.active{
+  background:var(--surface-2);
+  color:var(--text);
+}
+
 .diet-search-group{
   position:relative;
 }
