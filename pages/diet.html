@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/mobile.css">
 <link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/body.css">
 <link rel="stylesheet" href="../css/diet.css">
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#0b0d10">
@@ -79,7 +80,7 @@
 
     <!-- Resumo do dia -->
     <div id="summarySection" style="display:none">
-      <div class="progress-card" style="margin-top:14px">
+      <div class="panel diet-gauge-card" style="margin-top:14px">
         <div class="ring">
           <svg width="92" height="92" viewBox="0 0 92 92">
             <circle cx="46" cy="46" r="39" stroke="#1b1f26" stroke-width="9" fill="none"/>
@@ -88,10 +89,19 @@
           </svg>
           <div class="pct" id="ringPct">0%</div>
         </div>
-        <div class="progress-info">
-          <div class="big" id="caloriesConsumed">0 kcal</div>
-          <div class="sub" id="caloriesTarget">meta: — kcal</div>
-          <div class="sub" id="caloriesRemaining" style="margin-top:2px">—</div>
+        <div class="diet-gauge-stats">
+          <div class="diet-gauge-stat">
+            <div class="diet-gauge-stat-value" id="caloriesConsumed">0</div>
+            <div class="diet-gauge-stat-label">Consumido</div>
+          </div>
+          <div class="diet-gauge-stat diet-gauge-stat-main">
+            <div class="diet-gauge-stat-value" id="caloriesRemaining">—</div>
+            <div class="diet-gauge-stat-label">Restante</div>
+          </div>
+          <div class="diet-gauge-stat">
+            <div class="diet-gauge-stat-value" id="caloriesTargetValue">0</div>
+            <div class="diet-gauge-stat-label">Meta</div>
+          </div>
         </div>
       </div>
 
@@ -122,12 +132,46 @@
         <p id="clampWarning" class="message warning" style="display:none">A meta foi ajustada para um mínimo seguro de calorias — o ritmo escolhido era agressivo demais.</p>
         <button type="button" class="btn btn-secondary full" id="btnEditProfile" style="margin-top:8px">Editar perfil</button>
       </div>
+
+      <div class="panel diet-imc-card" style="margin-top:14px">
+        <div class="section-title">IMC</div>
+        <div class="diet-imc-row">
+          <span class="diet-imc-value num" id="imcValue">—</span>
+          <span class="imc-badge" id="imcBadge">—</span>
+        </div>
+        <div class="imc-disclaimer">IMC é uma referência geral e não considera composição corporal (massa muscular).</div>
+      </div>
+
+      <div class="panel diet-charts-card" style="margin-top:14px">
+        <div class="section-title">Semana</div>
+        <div class="diet-chart-block">
+          <div class="diet-chart-label">Calorias</div>
+          <div class="diet-bar-chart" id="chartCalories"></div>
+        </div>
+        <div class="diet-chart-block">
+          <div class="diet-chart-label">Proteína</div>
+          <div class="diet-bar-chart" id="chartProtein"></div>
+        </div>
+        <div class="diet-chart-block">
+          <div class="diet-chart-label">Carboidrato</div>
+          <div class="diet-bar-chart" id="chartCarbs"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Diário alimentar de hoje -->
+    <!-- Diário alimentar -->
     <div id="foodLogSection" style="display:none">
-      <div class="panel" style="padding:20px;margin-top:16px">
-        <h2 id="foodFormTitle">Registrar alimento</h2>
+      <div class="panel diet-day-strip-panel" style="margin-top:16px">
+        <div class="diet-day-strip" id="daysStrip"></div>
+      </div>
+
+      <div class="diet-meal-cards" id="mealCardsContainer" style="margin-top:14px"></div>
+
+      <div class="panel" id="foodFormPanel" style="padding:20px;margin-top:16px;display:none">
+        <div class="diet-form-header">
+          <h2 id="foodFormTitle">Registrar alimento</h2>
+          <button type="button" class="btn-icon" id="btnCloseFoodForm" aria-label="Fechar">✕</button>
+        </div>
 
         <div class="form-group">
           <label for="mealType">Refeição</label>
@@ -181,8 +225,6 @@
         <button type="button" class="btn btn-primary full" id="btnSaveFood">Adicionar</button>
         <div id="foodMessage" class="message"></div>
       </div>
-
-      <div class="panel" id="foodListPanel" style="margin-top:16px"></div>
     </div>
   </div>
 </main>

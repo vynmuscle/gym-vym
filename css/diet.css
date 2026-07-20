@@ -175,3 +175,261 @@
   color:var(--muted);
   font-size:13px;
 }
+
+/* ===== Gauge de calorias ===== */
+.diet-gauge-card{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:16px 14px;
+}
+
+.diet-gauge-stats{
+  flex:1;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.diet-gauge-stat{
+  text-align:center;
+}
+
+.diet-gauge-stat-value{
+  font-size:16px;
+  font-weight:700;
+}
+
+.diet-gauge-stat-main .diet-gauge-stat-value{
+  font-family:'Anton', sans-serif;
+  font-size:22px;
+  color:var(--yellow);
+}
+
+.diet-gauge-stat-label{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+/* ===== IMC ===== */
+.diet-imc-card{
+  padding:16px;
+}
+
+.diet-imc-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:8px;
+}
+
+.diet-imc-value{
+  font-size:20px;
+}
+
+/* ===== Gráficos semanais (barras simples em CSS) ===== */
+.diet-charts-card{
+  padding:16px;
+}
+
+.diet-chart-block{
+  margin-top:14px;
+}
+
+.diet-chart-block:first-of-type{
+  margin-top:8px;
+}
+
+.diet-chart-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+
+.diet-bar-chart{
+  display:flex;
+  align-items:flex-end;
+  gap:6px;
+  height:64px;
+}
+
+.diet-bar{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  height:100%;
+}
+
+.diet-bar-fill{
+  width:100%;
+  max-width:28px;
+  border-radius:4px 4px 0 0;
+  background:var(--surface-2);
+  min-height:2px;
+}
+
+.diet-bar.over .diet-bar-fill{
+  background:var(--yellow);
+}
+
+.diet-bar.today .diet-bar-fill{
+  background:var(--red);
+}
+
+.diet-bar-day{
+  font-size:10px;
+  color:var(--muted);
+  margin-top:6px;
+  text-transform:uppercase;
+}
+
+/* ===== Tira de dias ===== */
+.diet-day-strip-panel{
+  padding:12px 10px;
+}
+
+.diet-day-strip{
+  display:grid;
+  grid-template-columns:repeat(7, 1fr);
+  gap:4px;
+}
+
+.diet-day-pill{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  padding:8px 0;
+  min-height:52px;
+  background:transparent;
+  border:0;
+  border-radius:10px;
+  color:var(--muted);
+  cursor:pointer;
+}
+
+.diet-day-pill .lbl{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.diet-day-pill .num{
+  font-size:14px;
+  font-weight:700;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+}
+
+.diet-day-pill .dot{
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:transparent;
+}
+
+.diet-day-pill.has-log .dot{
+  background:var(--yellow);
+}
+
+.diet-day-pill.selected .num{
+  background:var(--red);
+  color:#fff;
+}
+
+.diet-day-pill.is-today .lbl{
+  color:var(--red);
+}
+
+/* ===== Cards por refeição ===== */
+.diet-meal-cards{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.diet-meal-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+
+.diet-meal-card-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px 16px;
+}
+
+.diet-meal-card-info{
+  flex:1;
+  min-width:0;
+}
+
+.diet-meal-card-name{
+  font-size:14px;
+  font-weight:700;
+}
+
+.diet-meal-card-cal{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.diet-meal-card-bar{
+  height:4px;
+  border-radius:99px;
+  background:var(--surface-2);
+  overflow:hidden;
+  margin:0 16px 14px;
+}
+
+.diet-meal-card-bar i{
+  display:block;
+  height:100%;
+  border-radius:99px;
+  background:var(--yellow);
+  width:0%;
+}
+
+.diet-meal-card-add{
+  flex-shrink:0;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:0;
+  background:var(--surface-2);
+  color:var(--yellow);
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.diet-meal-card-items .food-item{
+  padding:10px 16px;
+  border-top:1px solid var(--border);
+}
+
+/* ===== Cabeçalho do formulário flutuante ===== */
+.diet-form-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.diet-form-header h2{
+  margin:0;
+}
