@@ -18,6 +18,7 @@ import {
   MEAL_TYPE_LABELS,
   MEAL_TYPE_BUDGET_PCT,
   searchTacoFoods,
+  searchHomeDishes,
 } from './services/dietService.js';
 import { searchFood } from './services/openFoodFactsService.js';
 
@@ -219,15 +220,18 @@ foodSearchInput.addEventListener('input', () => {
 
   showSearchStatus('Buscando...');
   searchDebounceTimer = setTimeout(async () => {
-    const [tacoResult, offResult] = await Promise.allSettled([
+    const [tacoResult, homeResult, offResult] = await Promise.allSettled([
       searchTacoFoods(query),
+      searchHomeDishes(query),
       searchFood(query),
     ]);
     const tacoProducts = tacoResult.status === 'fulfilled' ? tacoResult.value : [];
+    const homeProducts = homeResult.status === 'fulfilled' ? homeResult.value : [];
     const offProducts = offResult.status === 'fulfilled' ? offResult.value : [];
-    const products = [...tacoProducts, ...offProducts];
+    const products = [...tacoProducts, ...homeProducts, ...offProducts];
 
-    if (!products.length && tacoResult.status === 'rejected' && offResult.status === 'rejected') {
+    const allFailed = [tacoResult, homeResult, offResult].every(r => r.status === 'rejected');
+    if (!products.length && allFailed) {
       hideSearchResults();
       showSearchStatus('Busca indisponível agora — preencha manualmente abaixo.');
       return;

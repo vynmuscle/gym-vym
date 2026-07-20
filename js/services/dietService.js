@@ -164,6 +164,26 @@ export async function searchTacoFoods(query) {
   }));
 }
 
+// Pratos caseiros comuns que não constam na TACO — valores estimados a partir
+// de proporções típicas de receita, não medição de laboratório (por isso o
+// selo "(Caseiro)", diferente do "(TACO)").
+export async function searchHomeDishes(query) {
+  const { data, error } = await supabase
+    .from('home_dishes')
+    .select('name, calories, protein_g, fat_g, carbs_g')
+    .ilike('name', `%${query}%`)
+    .order('name', { ascending: true })
+    .limit(8);
+  if (error) throw error;
+  return (data || []).map(f => ({
+    name: `${f.name} (Caseiro)`,
+    kcal100: Number(f.calories) || 0,
+    protein100: Number(f.protein_g) || 0,
+    carbs100: Number(f.carbs_g) || 0,
+    fat100: Number(f.fat_g) || 0,
+  }));
+}
+
 export function calculateAge(birthDateStr) {
   const birthDate = new Date(birthDateStr);
   const today = new Date();
