@@ -25,8 +25,8 @@
 
     <!-- Aviso: sem peso/altura registrados -->
     <div id="noWeightPanel" class="panel diet-warning" style="display:none">
-      <p>Pra calcular sua meta calórica, primeiro registre seu peso e altura em Medidas.</p>
-      <a href="./body.html" class="btn btn-primary full">Registrar peso e altura</a>
+      <p id="noWeightMessage">Pra calcular sua meta calórica, primeiro registre seu peso e altura em Medidas.</p>
+      <a href="./body.html" class="btn btn-primary full">Registrar em Medidas</a>
     </div>
 
     <!-- Formulário de perfil (primeira vez ou edição) -->
@@ -76,6 +76,12 @@
       <button type="button" class="btn btn-primary full" id="btnSaveProfile">Salvar perfil</button>
       <button type="button" class="btn btn-secondary full" id="btnCancelProfile" style="display:none">Cancelar</button>
       <div id="profileMessage" class="message"></div>
+    </div>
+
+    <!-- Abas: Refeições x Estatísticas -->
+    <div id="dietTabs" class="diet-tabs" style="display:none">
+      <button type="button" class="diet-tab active" data-tab="log">Refeições</button>
+      <button type="button" class="diet-tab" data-tab="stats">Estatísticas</button>
     </div>
 
     <!-- Resumo do dia -->

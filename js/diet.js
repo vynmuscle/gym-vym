@@ -53,8 +53,10 @@ function getWeekDates(dateStr) {
 
 // Elementos
 const noWeightPanel = document.getElementById('noWeightPanel');
+const noWeightMessage = document.getElementById('noWeightMessage');
 const profileForm = document.getElementById('profileForm');
 const profileFormTitle = document.getElementById('profileFormTitle');
+const dietTabs = document.getElementById('dietTabs');
 const summarySection = document.getElementById('summarySection');
 const foodLogSection = document.getElementById('foodLogSection');
 
@@ -113,9 +115,24 @@ let currentProfile = null;
 let currentTargets = null;
 let selectedDate = todayStr();
 let weekLogs = [];
+let activeTab = 'log';
 
 goalSelect.addEventListener('change', () => {
   goalRateGroup.style.display = goalSelect.value === 'maintain' ? 'none' : '';
+});
+
+// --- Abas Refeições / Estatísticas ---
+function applyTabVisibility() {
+  summarySection.style.display = activeTab === 'stats' ? '' : 'none';
+  foodLogSection.style.display = activeTab === 'log' ? '' : 'none';
+}
+
+dietTabs.querySelectorAll('.diet-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeTab = btn.dataset.tab;
+    dietTabs.querySelectorAll('.diet-tab').forEach(b => b.classList.toggle('active', b === btn));
+    applyTabVisibility();
+  });
 });
 
 // --- Busca de alimentos (Open Food Facts) — atalho opcional; cadastro manual sempre funciona ---
@@ -227,14 +244,17 @@ function showProfileForm() {
   profileFormTitle.textContent = currentProfile ? 'Editar perfil' : 'Seu perfil';
   btnCancelProfile.style.display = currentProfile ? '' : 'none';
   profileForm.style.display = '';
+  dietTabs.style.display = 'none';
   summarySection.style.display = 'none';
+  foodLogSection.style.display = 'none';
 }
 
 btnEditProfile.addEventListener('click', showProfileForm);
 
 btnCancelProfile.addEventListener('click', () => {
   profileForm.style.display = 'none';
-  summarySection.style.display = '';
+  dietTabs.style.display = '';
+  applyTabVisibility();
 });
 
 btnSaveProfile.addEventListener('click', async () => {
@@ -511,6 +531,7 @@ async function refreshAll() {
 
   if (!currentProfile) {
     noWeightPanel.style.display = 'none';
+    dietTabs.style.display = 'none';
     foodLogSection.style.display = 'none';
     summarySection.style.display = 'none';
     showProfileForm();
@@ -523,7 +544,11 @@ async function refreshAll() {
   ]);
 
   if (!latestWeight || !latestHeight) {
+    const missing = !latestWeight && !latestHeight ? 'peso e altura' : !latestWeight ? 'peso' : 'altura';
+    noWeightMessage.textContent = `Pra calcular sua meta calórica, falta registrar seu(a) ${missing} em Medidas.`;
+
     profileForm.style.display = 'none';
+    dietTabs.style.display = 'none';
     summarySection.style.display = 'none';
     foodLogSection.style.display = '';
     noWeightPanel.style.display = '';
@@ -533,8 +558,8 @@ async function refreshAll() {
 
   noWeightPanel.style.display = 'none';
   profileForm.style.display = 'none';
-  summarySection.style.display = '';
-  foodLogSection.style.display = '';
+  dietTabs.style.display = '';
+  applyTabVisibility();
 
   renderSummary(latestWeight.weight_kg, latestHeight);
   await refreshDiet();
