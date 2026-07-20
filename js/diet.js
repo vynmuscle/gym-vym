@@ -17,6 +17,7 @@ import {
   classifyIMC,
   MEAL_TYPE_LABELS,
   MEAL_TYPE_BUDGET_PCT,
+  searchTacoFoods,
 } from './services/dietService.js';
 import { searchFood } from './services/openFoodFactsService.js';
 
@@ -218,13 +219,20 @@ foodSearchInput.addEventListener('input', () => {
 
   showSearchStatus('Buscando...');
   searchDebounceTimer = setTimeout(async () => {
-    try {
-      const products = await searchFood(query);
-      renderSearchResults(products);
-    } catch (err) {
+    const [tacoResult, offResult] = await Promise.allSettled([
+      searchTacoFoods(query),
+      searchFood(query),
+    ]);
+    const tacoProducts = tacoResult.status === 'fulfilled' ? tacoResult.value : [];
+    const offProducts = offResult.status === 'fulfilled' ? offResult.value : [];
+    const products = [...tacoProducts, ...offProducts];
+
+    if (!products.length && tacoResult.status === 'rejected' && offResult.status === 'rejected') {
       hideSearchResults();
       showSearchStatus('Busca indisponível agora — preencha manualmente abaixo.');
+      return;
     }
+    renderSearchResults(products);
   }, 400);
 });
 

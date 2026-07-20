@@ -2,7 +2,7 @@
 // Usada só como atalho pra preencher calorias/macros — cadastro manual continua
 // sempre disponível caso a busca não ache o alimento ou fique indisponível.
 
-const SEARCH_URL = 'https://br.openfoodfacts.org/cgi/search.pl';
+const SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 
 export async function searchFood(query) {
   const params = new URLSearchParams({
