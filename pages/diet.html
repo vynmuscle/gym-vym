@@ -140,9 +140,22 @@
           </select>
         </div>
 
+        <div class="form-group diet-search-group">
+          <label for="foodSearch">Buscar alimento (opcional)</label>
+          <input type="text" id="foodSearch" placeholder="Ex: arroz, iogurte, pão..." autocomplete="off">
+          <div id="foodSearchResults" class="diet-search-results" style="display:none"></div>
+          <p id="foodSearchStatus" class="muted" style="font-size:11px;margin-top:6px;display:none"></p>
+        </div>
+
         <div class="form-group">
           <label for="foodName">Alimento / refeição</label>
           <input type="text" id="foodName" placeholder="Ex: Frango grelhado com arroz">
+        </div>
+
+        <div class="form-group" id="foodQuantityGroup" style="display:none">
+          <label for="foodQuantity">Quantidade (g)</label>
+          <input type="number" id="foodQuantity" inputmode="decimal" step="1" min="1" value="100">
+          <p class="muted" style="font-size:11px;margin-top:6px">Calorias e macros recalculados automaticamente pela quantidade. Fonte: Open Food Facts.</p>
         </div>
 
         <div class="form-group">
