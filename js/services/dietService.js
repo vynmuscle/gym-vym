@@ -145,6 +145,25 @@ export async function deleteFoodLog(id) {
   if (error) throw error;
 }
 
+// Busca na tabela TACO (alimentos brasileiros, base local) — resultado no mesmo
+// formato usado pelo openFoodFactsService, pra poder combinar as duas listas.
+export async function searchTacoFoods(query) {
+  const { data, error } = await supabase
+    .from('taco_foods')
+    .select('name, calories, protein_g, fat_g, carbs_g')
+    .ilike('name', `%${query}%`)
+    .order('name', { ascending: true })
+    .limit(8);
+  if (error) throw error;
+  return (data || []).map(f => ({
+    name: `${f.name} (TACO)`,
+    kcal100: Number(f.calories) || 0,
+    protein100: Number(f.protein_g) || 0,
+    carbs100: Number(f.carbs_g) || 0,
+    fat100: Number(f.fat_g) || 0,
+  }));
+}
+
 export function calculateAge(birthDateStr) {
   const birthDate = new Date(birthDateStr);
   const today = new Date();
