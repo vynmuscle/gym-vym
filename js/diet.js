@@ -20,7 +20,7 @@ import {
   searchTacoFoods,
   searchHomeDishes,
 } from './services/dietService.js';
-import { searchFood } from './services/openFoodFactsService.js';
+import { searchFood, searchFoodByBarcode } from './services/openFoodFactsService.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if (!sd.session) navigate('../login.html');
@@ -113,6 +113,10 @@ const foodCarbsInput = document.getElementById('foodCarbs');
 const foodFatInput = document.getElementById('foodFat');
 const btnSaveFood = document.getElementById('btnSaveFood');
 const foodMessage = document.getElementById('foodMessage');
+const btnScanBarcode = document.getElementById('btnScanBarcode');
+const barcodeScannerOverlay = document.getElementById('barcodeScannerOverlay');
+const btnCloseScanner = document.getElementById('btnCloseScanner');
+const barcodeScannerStatus = document.getElementById('barcodeScannerStatus');
 
 let currentProfile = null;
 let currentTargets = null;
@@ -241,6 +245,61 @@ foodSearchInput.addEventListener('input', () => {
 });
 
 foodQuantityInput.addEventListener('input', recomputeFromProduct);
+
+// --- Leitor de código de barras (Open Food Facts) ---
+let barcodeScanner = null;
+
+async function stopBarcodeScanner() {
+  if (barcodeScanner) {
+    try {
+      await barcodeScanner.stop();
+    } catch (err) {
+      // câmera já pode ter sido parada — ignora
+    }
+    barcodeScanner = null;
+  }
+  barcodeScannerOverlay.style.display = 'none';
+}
+
+async function handleBarcodeDetected(barcode) {
+  barcodeScannerStatus.textContent = 'Código lido! Buscando produto...';
+  await stopBarcodeScanner();
+
+  try {
+    const product = await searchFoodByBarcode(barcode);
+    if (!product) {
+      showSearchStatus('Produto não encontrado pra esse código — preencha manualmente abaixo.');
+      return;
+    }
+    selectProduct(product);
+  } catch (err) {
+    showSearchStatus('Busca indisponível agora — preencha manualmente abaixo.');
+  }
+}
+
+btnScanBarcode.addEventListener('click', async () => {
+  if (typeof Html5Qrcode === 'undefined') {
+    showSearchStatus('Leitor de código de barras indisponível agora.');
+    return;
+  }
+
+  barcodeScannerOverlay.style.display = '';
+  barcodeScannerStatus.textContent = 'Aponte a câmera para o código de barras...';
+  barcodeScanner = new Html5Qrcode('barcodeReader');
+
+  try {
+    await barcodeScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 250, height: 120 } },
+      (decodedText) => handleBarcodeDetected(decodedText),
+      () => {} // erros de frame sem leitura — ignora, é esperado durante a busca
+    );
+  } catch (err) {
+    barcodeScannerStatus.textContent = 'Não foi possível acessar a câmera. Verifique a permissão.';
+  }
+});
+
+btnCloseScanner.addEventListener('click', stopBarcodeScanner);
 
 // --- Perfil ---
 function fillProfileForm(profile) {
@@ -487,6 +546,7 @@ function closeFoodForm() {
   foodFatInput.value = '';
   foodMessage.textContent = '';
   resetFoodSearch();
+  stopBarcodeScanner();
 }
 
 btnCloseFoodForm.addEventListener('click', closeFoodForm);

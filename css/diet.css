@@ -46,6 +46,23 @@
   position:relative;
 }
 
+.diet-search-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.diet-search-row input{
+  flex:1;
+}
+
+.diet-search-row .btn-icon{
+  flex-shrink:0;
+  width:52px;
+  height:52px;
+  font-size:20px;
+}
+
 .diet-search-results{
   margin-top:8px;
   border:1px solid var(--border);
@@ -460,4 +477,30 @@
 
 .diet-form-header h2{
   margin:0;
+}
+
+/* ===== Leitor de código de barras ===== */
+.barcode-scanner-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.barcode-scanner-box{
+  background:var(--surface);
+  border-radius:12px;
+  padding:20px;
+  width:100%;
+  max-width:400px;
+}
+
+#barcodeReader{
+  margin-top:12px;
+  border-radius:8px;
+  overflow:hidden;
 }

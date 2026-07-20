@@ -192,7 +192,10 @@
 
         <div class="form-group diet-search-group">
           <label for="foodSearch">Buscar alimento (opcional)</label>
-          <input type="text" id="foodSearch" placeholder="Ex: arroz, iogurte, pão..." autocomplete="off">
+          <div class="diet-search-row">
+            <input type="text" id="foodSearch" placeholder="Ex: arroz, iogurte, pão..." autocomplete="off">
+            <button type="button" class="btn-icon" id="btnScanBarcode" aria-label="Ler código de barras">📷</button>
+          </div>
           <div id="foodSearchResults" class="diet-search-results" style="display:none"></div>
           <p id="foodSearchStatus" class="muted" style="font-size:11px;margin-top:6px;display:none"></p>
         </div>
@@ -235,6 +238,18 @@
   </div>
 </main>
 
+<div id="barcodeScannerOverlay" class="barcode-scanner-overlay" style="display:none">
+  <div class="barcode-scanner-box">
+    <div class="diet-form-header">
+      <h2>Ler código de barras</h2>
+      <button type="button" class="btn-icon" id="btnCloseScanner" aria-label="Fechar">✕</button>
+    </div>
+    <div id="barcodeReader"></div>
+    <p id="barcodeScannerStatus" class="muted" style="font-size:12px;margin-top:8px;text-align:center"></p>
+  </div>
+</div>
+
+<script src="../js/vendor/html5-qrcode.min.js"></script>
 <script type="module" src="../js/diet.js"></script>
 </body>
 </html>
