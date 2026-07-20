@@ -18,6 +18,7 @@ const nameInput = document.getElementById('name');
 const muscleGroupInput = document.getElementById('muscleGroup');
 const equipmentInput = document.getElementById('equipment');
 const notesInput = document.getElementById('notes');
+const trackingTypeInput = document.getElementById('trackingType');
 const btnSave = document.getElementById('btnSave');
 const btnCancel = document.getElementById('btnCancel');
 const formTitle = document.getElementById('formTitle');
@@ -37,6 +38,7 @@ function resetForm(){
   muscleGroupInput.value = 'peito';
   equipmentInput.value = '';
   notesInput.value = '';
+  trackingTypeInput.checked = false;
   formTitle.innerText = 'Novo exercício';
   btnCancel.style.display = 'none';
 }
@@ -76,6 +78,7 @@ function startEdit(ex){
   muscleGroupInput.value = ex.muscle_group;
   equipmentInput.value = ex.equipment || '';
   notesInput.value = ex.notes || '';
+  trackingTypeInput.checked = ex.tracking_type === 'duration';
   formTitle.innerText = 'Editar exercício';
   btnCancel.style.display = 'inline-block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -99,7 +102,8 @@ btnSave.addEventListener('click', async () => {
     name,
     muscle_group: muscleGroupInput.value,
     equipment: equipmentInput.value || null,
-    notes: notesInput.value.trim() || null
+    notes: notesInput.value.trim() || null,
+    tracking_type: trackingTypeInput.checked ? 'duration' : 'reps'
   };
 
   if(editingId){
