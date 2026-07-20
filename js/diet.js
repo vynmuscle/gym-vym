@@ -10,6 +10,7 @@ import {
   getLatestHeight,
   listFoodLogsRange,
   createFoodLog,
+  updateFoodLog,
   deleteFoodLog,
   calculateDietTargets,
   calculateIMC,
@@ -389,7 +390,10 @@ function renderFoodItemHtml(item) {
         <div class="food-item-macros">P: ${item.protein_g ?? 0}g · C: ${item.carbs_g ?? 0}g · G: ${item.fat_g ?? 0}g</div>
       </div>
       <div class="food-item-cal">${Math.round(item.calories)} kcal</div>
-      <button type="button" class="btn-icon danger btn-delete-food" data-id="${item.id}" aria-label="Remover">✕</button>
+      <div class="list-item-actions">
+        <button type="button" class="btn-icon btn-edit-food" data-id="${item.id}" aria-label="Editar">✎</button>
+        <button type="button" class="btn-icon danger btn-delete-food" data-id="${item.id}" aria-label="Remover">✕</button>
+      </div>
     </div>
   `;
 }
@@ -420,6 +424,13 @@ function renderMealCards(dayItems) {
     btn.addEventListener('click', () => openFoodForm(btn.dataset.meal));
   });
 
+  mealCardsContainer.querySelectorAll('.btn-edit-food').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = weekLogs.find(i => i.id === btn.dataset.id);
+      if (item) openFoodForm(item.meal_type, item);
+    });
+  });
+
   mealCardsContainer.querySelectorAll('.btn-delete-food').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (!window.confirm('Remover este item?')) return;
@@ -429,16 +440,33 @@ function renderMealCards(dayItems) {
   });
 }
 
-// --- Formulário de adicionar alimento (flutuante, aberto pelo + de cada refeição) ---
-function openFoodForm(mealType) {
-  mealTypeSelect.value = mealType;
-  foodFormTitle.textContent = `Adicionar a ${MEAL_TYPE_LABELS[mealType]}`;
+// --- Formulário de alimento (flutuante) — aberto pelo + de cada refeição (novo) ou pelo ✎ de um item (edição) ---
+let editingFoodId = null;
+
+function openFoodForm(mealType, editItem = null) {
+  editingFoodId = editItem ? editItem.id : null;
+  mealTypeSelect.value = editItem ? editItem.meal_type : mealType;
+
+  if (editItem) {
+    foodNameInput.value = editItem.name;
+    foodCaloriesInput.value = editItem.calories;
+    foodProteinInput.value = editItem.protein_g ?? '';
+    foodCarbsInput.value = editItem.carbs_g ?? '';
+    foodFatInput.value = editItem.fat_g ?? '';
+    foodFormTitle.textContent = `Editar em ${MEAL_TYPE_LABELS[editItem.meal_type]}`;
+    btnSaveFood.textContent = 'Salvar alteração';
+  } else {
+    foodFormTitle.textContent = `Adicionar a ${MEAL_TYPE_LABELS[mealType]}`;
+    btnSaveFood.textContent = 'Adicionar';
+  }
+
   foodFormPanel.style.display = '';
   foodFormPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   foodNameInput.focus();
 }
 
 function closeFoodForm() {
+  editingFoodId = null;
   foodFormPanel.style.display = 'none';
   foodNameInput.value = '';
   foodCaloriesInput.value = '';
@@ -461,18 +489,24 @@ btnSaveFood.addEventListener('click', async () => {
     return;
   }
 
-  try {
-    await createFoodLog(user.id, {
-      logged_at: selectedDate,
-      meal_type: mealTypeSelect.value,
-      name,
-      calories,
-      protein_g: parseFloat(foodProteinInput.value) || null,
-      carbs_g: parseFloat(foodCarbsInput.value) || null,
-      fat_g: parseFloat(foodFatInput.value) || null,
-    });
+  const payload = {
+    meal_type: mealTypeSelect.value,
+    name,
+    calories,
+    protein_g: parseFloat(foodProteinInput.value) || null,
+    carbs_g: parseFloat(foodCarbsInput.value) || null,
+    fat_g: parseFloat(foodFatInput.value) || null,
+  };
 
-    showToast('Registrado ✓');
+  try {
+    if (editingFoodId) {
+      await updateFoodLog(editingFoodId, payload);
+      showToast('Alteração salva ✓');
+    } else {
+      await createFoodLog(user.id, { ...payload, logged_at: selectedDate });
+      showToast('Registrado ✓');
+    }
+
     closeFoodForm();
     await refreshDiet();
   } catch (err) {
