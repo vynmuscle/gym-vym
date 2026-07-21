@@ -212,12 +212,6 @@ main{
   padding-left:4px;
 }
 
-.set-cardio-unit{
-  font-size:11px;
-  color:var(--muted);
-  text-align:center;
-}
-
 .value-btn{
   width:100%;
   min-height:46px;

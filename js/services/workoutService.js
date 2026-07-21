@@ -141,7 +141,7 @@ export async function getLastSets(exerciseId) {
 export async function getSessionSets(sessionId) {
   const { data, error } = await supabase
     .from('session_sets')
-    .select('exercise_id, set_number, weight, reps, duration_seconds')
+    .select('exercise_id, set_number, weight, reps, duration_seconds, distance_km')
     .eq('session_id', sessionId);
   if (error) throw error;
   return data;

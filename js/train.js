@@ -209,7 +209,8 @@ const WHEEL_VISIBLE_HEIGHT = 160;
 const WHEEL_FIELD_CONFIG = {
   kg: { min: 0, max: 300, step: 0.5, unit: 'kg' },
   reps: { min: 0, max: 50, step: 1, unit: '' },
-  durationMin: { min: 0, max: 180, step: 1, unit: 'min' }
+  durationMin: { min: 0, max: 180, step: 1, unit: 'min' },
+  distanceKm: { min: 0, max: 100, step: 0.1, unit: 'km' }
 };
 
 function formatWheelValue(v){
@@ -281,7 +282,7 @@ function setRowHTML(ei, setNumber, set, isDuration){
         <div class="set-num">${setNumber}</div>
         <div class="set-prev">${set.prev || '—'}</div>
         <button type="button" class="value-btn" data-field="durationMin" data-value="${set.durationMin ?? 0}">${formatWheelValue(set.durationMin ?? 0)}</button>
-        <div class="set-cardio-unit">min</div>
+        <button type="button" class="value-btn" data-field="distanceKm" data-value="${set.distanceKm ?? 0}">${formatWheelValue(set.distanceKm ?? 0)}</button>
         ${checkCol}
       </div>`;
   }
@@ -371,8 +372,9 @@ async function refreshExerciseCard(ei, newEx){
     const prev = lastSets[i];
     if(isDuration){
       ex.sets.push({
-        prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min` : null,
-        durationMin: prev ? Math.round((prev.duration_seconds || 0) / 60) : 20
+        prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min${prev.distance_km ? ' · ' + prev.distance_km + 'km' : ''}` : null,
+        durationMin: prev ? Math.round((prev.duration_seconds || 0) / 60) : 20,
+        distanceKm: prev ? (prev.distance_km || 0) : 0
       });
     } else {
       ex.sets.push({
@@ -405,7 +407,7 @@ function renderExerciseCard(ei){
   const restLabel = ex.isDuration ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
   const uplevelLabel = ex.suggestUp ? `<div class="ex-uplevel">🔼 Hora de subir a carga</div>` : '';
   const headerLabels = ex.isDuration
-    ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div></div><div>✓</div>`
+    ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div>Km</div><div>✓</div>`
     : `<div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>✓</div>`;
 
   card.innerHTML = `
@@ -504,8 +506,9 @@ async function buildWorkout(){
       const prev = lastSets[i];
       if(isDuration){
         ex.sets.push({
-          prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min` : null,
+          prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min${prev.distance_km ? ' · ' + prev.distance_km + 'km' : ''}` : null,
           durationMin: done ? Math.round((done.duration_seconds || 0) / 60) : (prev ? Math.round((prev.duration_seconds || 0) / 60) : Math.round((item.target_duration_seconds || 1200) / 60)),
+          distanceKm: done ? (done.distance_km || 0) : (prev ? (prev.distance_km || 0) : 0),
           completed: !!done
         });
       } else {
@@ -574,11 +577,13 @@ async function completeSet(ei, setNumber){
 
   if(ex.isDuration){
     const minutes = parseFloat(row.querySelector('[data-field="durationMin"]').dataset.value) || 0;
+    const distanceKm = parseFloat(row.querySelector('[data-field="distanceKm"]').dataset.value) || 0;
     payload = {
       session_id: session.id,
       exercise_id: ex.exerciseId,
       set_number: setNumber,
       duration_seconds: Math.round(minutes * 60),
+      distance_km: distanceKm || null,
       notes: noteValue
     };
   } else {
@@ -634,7 +639,7 @@ function addSet(ei){
   const body = document.getElementById('sets-' + ei);
   const setNumber = body.querySelectorAll('.set-row').length + 1;
   const last = ex.sets[ex.sets.length - 1];
-  const newSet = ex.isDuration ? { prev: null, durationMin: last.durationMin } : { prev: null, kg: last.kg, reps: last.reps };
+  const newSet = ex.isDuration ? { prev: null, durationMin: last.durationMin, distanceKm: last.distanceKm } : { prev: null, kg: last.kg, reps: last.reps };
   ex.sets.push(newSet);
   body.insertAdjacentHTML('beforeend', setRowHTML(ei, setNumber, newSet, ex.isDuration));
   wireRow(ei, setNumber);
@@ -718,6 +723,7 @@ document.getElementById('btnSkipRest').addEventListener('click', closeRest);
 })();
 
 finishBtn.addEventListener('click', async () => {
+  if(!confirm('Finalizar o treino?')) return;
   await flushQueue();
   await finishWorkoutSession(session.id);
 
