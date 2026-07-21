@@ -76,6 +76,15 @@ const prsByExercise = new Map();
 
 const REST_STORAGE_KEY = 'gymvym_rest_end';
 
+// Avisa o sistema (iOS Safari 16.4+) que nosso áudio é "ambiente" — pra ele
+// tocar junto com o que já estiver rodando (YouTube, Spotify etc.) em vez de
+// pausar o outro app. Sem isso, o beep do descanso e o loop silencioso que
+// mantém o cronômetro vivo em segundo plano tomam o controle exclusivo do
+// áudio do aparelho.
+if('audioSession' in navigator){
+  try { navigator.audioSession.type = 'ambient'; } catch(err) {}
+}
+
 // Áudio precisa ser criado/desbloqueado dentro de um gesto real do usuário
 // (toque no ✓), senão o navegador mantém o AudioContext suspenso e o som
 // não toca. Reaproveitamos o mesmo contexto depois, no setInterval do
