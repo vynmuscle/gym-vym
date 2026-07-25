@@ -1,4 +1,5 @@
 import { navigate } from './router.js';
+import { supabase } from './supabaseClient.js';
 import { getActiveSessionToday, getSuggestedWorkout } from './services/workoutService.js';
 
 const NAV_ITEMS = [
@@ -29,7 +30,8 @@ export async function handleTrainClick(){
       return;
     }
 
-    const suggestion = await getSuggestedWorkout();
+    const { data: sd } = await supabase.auth.getSession();
+    const suggestion = await getSuggestedWorkout(sd.session?.user?.id);
     if(suggestion){
       navigate('/pages/train.html?id=' + suggestion.workout.id);
       return;

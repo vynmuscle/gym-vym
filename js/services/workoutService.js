@@ -120,6 +120,13 @@ export async function createWorkoutSession(userId, workoutId) {
 export async function finishWorkoutSession(id) {
   const { data, error } = await supabase.from('workout_sessions').update({ finished_at: new Date().toISOString() }).eq('id', id).select().single();
   if (error) throw error;
+
+  // Concluiu um treino: libera a trava da sugestão pendente pra recalcular
+  // do zero na próxima vez.
+  await supabase.from('user_settings')
+    .update({ pending_suggested_workout_id: null, updated_at: new Date().toISOString() })
+    .eq('user_id', data.user_id);
+
   return data;
 }
 
@@ -523,8 +530,14 @@ export async function getActiveSessionToday() {
 // Ficha sugerida do dia: maior média de recuperação entre os grupos da ficha;
 // se nenhuma ficha está 100% recuperada, sugere a que foi treinada há mais
 // tempo (com warn=true pro chamador avisar o usuário).
-export async function getSuggestedWorkout() {
-  const [workouts, recovery] = await Promise.all([listWorkouts(), getMuscleRecovery()]);
+export async function getSuggestedWorkout(userId) {
+  const [workouts, recovery, settings] = await Promise.all([
+    listWorkouts(),
+    getMuscleRecovery(),
+    userId
+      ? supabase.from('user_settings').select('pending_suggested_workout_id').eq('user_id', userId).maybeSingle().then(r => r.data)
+      : Promise.resolve(null)
+  ]);
   const activeWorkouts = workouts.filter(w => w.is_active);
   if (activeWorkouts.length === 0) return null;
 
@@ -551,15 +564,28 @@ export async function getSuggestedWorkout() {
 
   if (candidates.length === 0) return null;
 
-  const fullyRecovered = candidates.filter(c => c.allRecovered);
+  // Trava: se já existe uma sugestão pendente (feita e ainda não treinada),
+  // mantém ela em vez de recalcular — evita pular pra outro treino só porque
+  // o usuário faltou um dia.
+  const pending = settings?.pending_suggested_workout_id
+    ? candidates.find(c => c.workout.id === settings.pending_suggested_workout_id)
+    : null;
+  if (pending) return { ...pending, warn: !pending.allRecovered };
 
-  if (fullyRecovered.length > 0) {
-    const chosen = fullyRecovered.reduce((a, b) => b.avgPct > a.avgPct ? b : a);
-    return { ...chosen, warn: false };
+  const fullyRecovered = candidates.filter(c => c.allRecovered);
+  const chosen = fullyRecovered.length > 0
+    ? fullyRecovered.reduce((a, b) => b.avgPct > a.avgPct ? b : a)
+    : candidates.reduce((a, b) => b.recencyScore < a.recencyScore ? b : a);
+  const warn = fullyRecovered.length === 0;
+
+  if (userId) {
+    await supabase.from('user_settings').upsert(
+      { user_id: userId, pending_suggested_workout_id: chosen.workout.id, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
   }
 
-  const chosen = candidates.reduce((a, b) => b.recencyScore < a.recencyScore ? b : a);
-  return { ...chosen, warn: true };
+  return { ...chosen, warn };
 }
 
 // Sessões finalizadas num intervalo [startISO, endISO) — usada pra semana

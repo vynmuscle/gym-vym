@@ -116,7 +116,7 @@ async function renderHero(){
     return;
   }
 
-  const suggestion = await getSuggestedWorkout();
+  const suggestion = await getSuggestedWorkout(user.id);
   if(!suggestion){
     heroSection.innerHTML = '';
     return;
