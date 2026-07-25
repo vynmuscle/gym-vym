@@ -237,7 +237,7 @@ main{
 }
 
 .check-btn{
-  min-height:46px;
+  min-height:34px;
   width:100%;
   border:2px solid var(--border);
   border-radius:10px;
@@ -247,6 +247,22 @@ main{
   font-weight:700;
   cursor:pointer;
   transition:transform .08s ease,background .15s,border-color .15s,color .15s;
+}
+
+.del-btn{
+  min-height:20px;
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:transparent;
+  color:var(--muted);
+  font-size:11px;
+  cursor:pointer;
+}
+
+.del-btn:active{
+  border-color:#ef4444;
+  color:#ef4444;
 }
 
 .ex-note-row{

@@ -153,6 +153,28 @@ export async function recordSet(userId, payload) {
   return data;
 }
 
+export async function deleteSessionSet(sessionId, exerciseId, setNumber) {
+  const { error } = await supabase
+    .from('session_sets')
+    .delete()
+    .eq('session_id', sessionId)
+    .eq('exercise_id', exerciseId)
+    .eq('set_number', setNumber);
+  if (error) throw error;
+}
+
+// Usado ao remover uma série no meio da lista — as séries seguintes já
+// gravadas precisam ter o número ajustado pra não ficar buraco/duplicidade.
+export async function updateSessionSetNumber(sessionId, exerciseId, oldSetNumber, newSetNumber) {
+  const { error } = await supabase
+    .from('session_sets')
+    .update({ set_number: newSetNumber })
+    .eq('session_id', sessionId)
+    .eq('exercise_id', exerciseId)
+    .eq('set_number', oldSetNumber);
+  if (error) throw error;
+}
+
 export async function listCompletedSessions() {
   const { data, error } = await supabase
     .from('workout_sessions')

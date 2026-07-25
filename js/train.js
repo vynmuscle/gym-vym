@@ -2,11 +2,11 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { initPWA } from './pwa.js';
 import { openExercisePicker } from './exercisePicker.js';
-import { queueSet, flushQueue, onSetSynced } from './services/offlineQueue.js';
+import { queueSet, flushQueue, onSetSynced, removeQueuedSet, renumberQueuedSet } from './services/offlineQueue.js';
 import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout,
-  getLastSets, getSessionSets, recordSet, swapWorkoutExerciseExercise,
+  getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
   getExerciseProgress, getPersonalRecordsMap, getUserXP
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
@@ -274,6 +274,7 @@ function setRowHTML(ei, setNumber, set, isDuration){
   const checkCol = `
     <div class="check-col">
       <button type="button" class="check-btn" data-exercise="${ei}" data-set="${setNumber}" aria-label="Concluir série ${setNumber}">✓</button>
+      <button type="button" class="del-btn" data-exercise="${ei}" data-set="${setNumber}" aria-label="Remover série ${setNumber}">✕</button>
     </div>`;
 
   if(isDuration){
@@ -305,8 +306,10 @@ function wireRow(ei, setNumber){
     unlockAudio();
     ensureNotificationPermission();
     requestWakeLock();
-    completeSet(ei, setNumber);
+    toggleSet(ei, setNumber);
   });
+
+  row.querySelector('.del-btn').addEventListener('click', () => deleteSet(ei, setNumber));
 
   row.querySelectorAll('.value-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -565,8 +568,105 @@ function checkPersonalRecord(ex, kg, row){
   row.querySelector('.set-num').insertAdjacentHTML('beforeend', '<span class="pr-badge">🏆</span>');
 }
 
-async function completeSet(ei, setNumber){
+function toggleSet(ei, setNumber){
   const row = document.getElementById(`set-${ei}-${setNumber}`);
+  if(row.classList.contains('completed')) return uncompleteSet(ei, setNumber, row);
+  return completeSet(ei, setNumber, row);
+}
+
+async function uncompleteSet(ei, setNumber, row){
+  const ex = exercisesData[ei];
+  const wasPending = row.classList.contains('pending');
+
+  try {
+    if(wasPending) removeQueuedSet(session.id, ex.exerciseId, setNumber);
+    else await deleteSessionSet(session.id, ex.exerciseId, setNumber);
+  } catch(err) {
+    showToast('Não foi possível desmarcar. Tente de novo.');
+    return;
+  }
+
+  if(!ex.isDuration){
+    const kg = parseFloat(row.querySelector('[data-field="kg"]').dataset.value) || 0;
+    const reps = parseInt(row.querySelector('[data-field="reps"]').dataset.value) || 0;
+    totalVolume = Math.max(0, totalVolume - kg * reps);
+  }
+
+  ex.sets[setNumber - 1].completed = false;
+  row.classList.remove('completed', 'pending');
+  row.querySelector('.check-btn').textContent = '✓';
+  row.querySelector('.pr-badge')?.remove();
+
+  doneSets = Math.max(0, doneSets - 1);
+  doneCountEl.textContent = doneSets;
+  progressFill.style.width = (totalSets > 0 ? (doneSets / totalSets * 100) : 0) + '%';
+  finishBtn.classList.remove('ready');
+  document.getElementById('ex-' + ei).classList.remove('done');
+}
+
+// Sincroniza os valores atuais da linha (editados via seletor) de volta pro
+// objeto em memória — necessário antes de recriar a lista de séries (delete).
+function syncSetFromDOM(ei, setNumber){
+  const ex = exercisesData[ei];
+  const row = document.getElementById(`set-${ei}-${setNumber}`);
+  const set = ex.sets[setNumber - 1];
+  if(!row || !set) return;
+  set.completed = row.classList.contains('completed');
+  if(ex.isDuration){
+    set.durationMin = parseFloat(row.querySelector('[data-field="durationMin"]').dataset.value) || 0;
+    set.distanceKm = parseFloat(row.querySelector('[data-field="distanceKm"]').dataset.value) || 0;
+  } else {
+    set.kg = parseFloat(row.querySelector('[data-field="kg"]').dataset.value) || 0;
+    set.reps = parseInt(row.querySelector('[data-field="reps"]').dataset.value) || 0;
+  }
+}
+
+async function deleteSet(ei, setNumber){
+  if(!confirm('Remover esta série?')) return;
+
+  const ex = exercisesData[ei];
+  ex.sets.forEach((_, idx) => syncSetFromDOM(ei, idx + 1));
+
+  const row = document.getElementById(`set-${ei}-${setNumber}`);
+  const wasCompleted = row.classList.contains('completed');
+  const wasPending = row.classList.contains('pending');
+
+  if(wasCompleted){
+    try {
+      if(wasPending) removeQueuedSet(session.id, ex.exerciseId, setNumber);
+      else await deleteSessionSet(session.id, ex.exerciseId, setNumber);
+    } catch(err) {
+      showToast('Não foi possível remover. Tente de novo.');
+      return;
+    }
+    doneSets = Math.max(0, doneSets - 1);
+    if(!ex.isDuration){
+      const set = ex.sets[setNumber - 1];
+      totalVolume = Math.max(0, totalVolume - (set.kg || 0) * (set.reps || 0));
+    }
+  }
+
+  for(let n = setNumber + 1; n <= ex.sets.length; n++){
+    const laterSet = ex.sets[n - 1];
+    if(!laterSet.completed) continue;
+    const laterRow = document.getElementById(`set-${ei}-${n}`);
+    try {
+      if(laterRow?.classList.contains('pending')) renumberQueuedSet(session.id, ex.exerciseId, n, n - 1);
+      else await updateSessionSetNumber(session.id, ex.exerciseId, n, n - 1);
+    } catch(err) {}
+  }
+
+  ex.sets.splice(setNumber - 1, 1);
+  totalSets--;
+  totalCountEl.textContent = totalSets;
+
+  renderExerciseCard(ei);
+  doneCountEl.textContent = doneSets;
+  progressFill.style.width = (totalSets > 0 ? (doneSets / totalSets * 100) : 0) + '%';
+  finishBtn.classList.toggle('ready', totalSets > 0 && doneSets >= totalSets);
+}
+
+async function completeSet(ei, setNumber, row){
   if(row.classList.contains('completed')) return;
 
   const ex = exercisesData[ei];
@@ -607,6 +707,7 @@ async function completeSet(ei, setNumber){
     pending = true;
   }
 
+  ex.sets[setNumber - 1].completed = true;
   row.classList.add('completed');
   if(pending){
     row.classList.add('pending');

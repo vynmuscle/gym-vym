@@ -38,6 +38,30 @@ export function onSetSynced(callback) {
   return () => listeners.delete(callback);
 }
 
+// Remove da fila local uma série ainda não sincronizada (ex: usuário desmarcou
+// ou excluiu a série antes de a conexão voltar).
+export function removeQueuedSet(sessionId, exerciseId, setNumber) {
+  const queue = readQueue().filter(q => !(
+    q.payload.session_id === sessionId &&
+    q.payload.exercise_id === exerciseId &&
+    q.payload.set_number === setNumber
+  ));
+  writeQueue(queue);
+}
+
+// Ajusta o número de uma série ainda na fila — usado quando uma série
+// anterior é excluída e as seguintes precisam ser renumeradas.
+export function renumberQueuedSet(sessionId, exerciseId, oldSetNumber, newSetNumber) {
+  const queue = readQueue();
+  queue.forEach(q => {
+    if(q.payload.session_id === sessionId && q.payload.exercise_id === exerciseId && q.payload.set_number === oldSetNumber){
+      q.payload.set_number = newSetNumber;
+      if(q.meta) q.meta.setNumber = newSetNumber;
+    }
+  });
+  writeQueue(queue);
+}
+
 export async function flushQueue() {
   if (isFlushing) return;
   isFlushing = true;
