@@ -12,6 +12,7 @@ import { computeStreak } from './utils.js';
 import { getLeagueForXP } from './leagues.js';
 import { createProgressRing } from './design-system/progressRing.js';
 import { getDietProfile, getLatestWeight, getLatestHeight, listFoodLogsRange, calculateDietTargets } from './services/dietService.js';
+import { showToast } from './toast.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('./login.html');
@@ -285,3 +286,7 @@ await renderHero();
 renderNutrition().catch(() => { nutritionBody.innerHTML = '<div style="color:var(--muted);font-size:13px">Configure sua meta calórica →</div>'; });
 renderBody().catch(() => { bodyBody.innerHTML = '<div style="color:var(--muted);font-size:13px">Registre sua primeira medida →</div>'; });
 renderRecentActivity();
+
+document.getElementById('btnAskAI').addEventListener('click', () => {
+  showToast('✨ Assistente de IA conversacional — em breve');
+});

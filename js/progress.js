@@ -3,6 +3,7 @@ import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { listExercisesWithProgress, getExerciseProgress } from './services/workoutService.js';
+import { showToast } from './toast.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -21,6 +22,10 @@ const metricVolume = document.getElementById('metricVolume');
 const periodSelect = document.getElementById('periodSelect');
 const chartContainer = document.getElementById('chartContainer');
 const chartTooltip = document.getElementById('chartTooltip');
+
+document.getElementById('btnAskAI').addEventListener('click', () => {
+  showToast('✨ Assistente de IA conversacional — em breve');
+});
 
 let allSessions = [];
 let currentMetric = 'maxWeight';

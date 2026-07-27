@@ -135,6 +135,10 @@ goalSelect.addEventListener('change', () => {
   goalRateGroup.style.display = goalSelect.value === 'maintain' ? 'none' : '';
 });
 
+document.getElementById('btnAskAI').addEventListener('click', () => {
+  showToast('✨ Assistente de IA conversacional — em breve');
+});
+
 // --- Abas Refeições / Estatísticas ---
 function applyTabVisibility() {
   summarySection.style.display = activeTab === 'stats' ? '' : 'none';
