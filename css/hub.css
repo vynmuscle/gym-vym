@@ -60,6 +60,11 @@
   text-align:center;
   min-height:64px;
   justify-content:center;
+  transition:transform var(--gv-duration-fast, .12s) var(--gv-ease-standard, ease);
+}
+
+.shortcut-chip:active{
+  transform:scale(.95);
 }
 
 .shortcut-chip svg{

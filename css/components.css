@@ -211,6 +211,11 @@ body.has-bottom-nav{
   min-height:52px;
   justify-content:center;
   border-radius:10px;
+  transition:transform var(--gv-duration-fast, .12s) var(--gv-ease-standard, ease);
+}
+
+.nav-item:active{
+  transform:scale(.92);
 }
 
 .nav-item svg{
@@ -331,6 +336,11 @@ body.has-bottom-nav{
   text-decoration:none;
   font-size:16px;
   cursor:pointer;
+  transition:transform var(--gv-duration-fast, .12s) var(--gv-ease-standard, ease);
+}
+
+.btn-icon:active{
+  transform:scale(.92);
 }
 
 .btn-icon.danger{
@@ -432,6 +442,11 @@ body.has-bottom-nav{
   font-weight:700;
   font-size:14px;
   cursor:pointer;
+  transition:transform var(--gv-duration-fast, .12s) var(--gv-ease-standard, ease);
+}
+
+.tab-btn:active{
+  transform:scale(.96);
 }
 
 .tab-btn.active{
@@ -453,6 +468,11 @@ body.has-bottom-nav{
   padding:12px;
   text-align:center;
   cursor:pointer;
+  transition:transform var(--gv-duration-fast, .12s) var(--gv-ease-standard, ease);
+}
+
+.lib-card:active{
+  transform:scale(.96);
 }
 
 .lib-thumb{
