@@ -143,8 +143,25 @@ function renderChart(){
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'chart-svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = `${gridLines}<path d="${pathD}" fill="none" stroke="var(--yellow)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />${circles}${xLabels}`;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="chartLineGradient" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" style="stop-color:var(--gv-red, var(--red))" />
+        <stop offset="100%" style="stop-color:var(--gv-yellow, var(--yellow))" />
+      </linearGradient>
+    </defs>
+    ${gridLines}<path class="chart-line" d="${pathD}" fill="none" stroke="url(#chartLineGradient)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />${circles}${xLabels}`;
   chartContainer.appendChild(svg);
+
+  const pathEl = svg.querySelector('.chart-line');
+  if(pathEl && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const length = pathEl.getTotalLength();
+    pathEl.style.strokeDasharray = String(length);
+    pathEl.animate(
+      [{ strokeDashoffset: length }, { strokeDashoffset: 0 }],
+      { duration: 500, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }
+    );
+  }
 
   svg.querySelectorAll('.chart-point').forEach(circle => {
     circle.addEventListener('click', () => {
