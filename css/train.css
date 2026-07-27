@@ -59,8 +59,8 @@ header h1{
 
 .progress-track{
   height:5px;
-  background:var(--surface-2);
-  border-radius:99px;
+  background:var(--gv-surface-2, var(--surface-2));
+  border-radius:var(--gv-radius-pill, 99px);
   margin-top:10px;
   overflow:hidden;
 }
@@ -68,9 +68,9 @@ header h1{
 .progress-fill{
   height:100%;
   width:0%;
-  background:var(--red);
-  border-radius:99px;
-  transition:width .35s ease;
+  background:var(--gv-red, var(--red));
+  border-radius:var(--gv-radius-pill, 99px);
+  transition:width var(--gv-duration-slow, .35s) var(--gv-ease-standard, ease);
 }
 
 .progress-label{
@@ -261,8 +261,8 @@ main{
 }
 
 .del-btn:active{
-  border-color:#ef4444;
-  color:#ef4444;
+  border-color:var(--gv-red, var(--red));
+  color:var(--gv-red, var(--red));
 }
 
 .ex-note-row{
@@ -331,13 +331,13 @@ main{
   right:0;
   bottom:0;
   z-index:40;
-  background:var(--surface-2);
-  border-top:3px solid var(--red);
-  border-radius:22px 22px 0 0;
+  background:var(--gv-surface-2, var(--surface-2));
+  border-top:3px solid var(--gv-red, var(--red));
+  border-radius:var(--gv-radius-xl, 22px) var(--gv-radius-xl, 22px) 0 0;
   padding:18px 20px calc(20px + env(safe-area-inset-bottom));
   transform:translateY(110%);
-  transition:transform .3s cubic-bezier(.3,1.1,.4,1);
-  box-shadow:0 -12px 40px rgba(0,0,0,.55);
+  transition:transform var(--gv-duration-slow, .3s) var(--gv-ease-spring, cubic-bezier(.3,1.1,.4,1));
+  box-shadow:var(--gv-shadow-lg, 0 -12px 40px rgba(0,0,0,.55));
 }
 
 .rest-sheet.open{
@@ -379,7 +379,7 @@ main{
 .rest-actions button{
   flex:1;
   min-height:56px;
-  border-radius:14px;
+  border-radius:var(--gv-radius-md, 14px);
   border:none;
   font-size:16px;
   font-weight:700;
@@ -388,13 +388,13 @@ main{
 }
 
 .btn-add{
-  background:var(--surface);
-  color:var(--text);
-  border:1px solid var(--border) !important;
+  background:var(--gv-surface, var(--surface));
+  color:var(--gv-text, var(--text));
+  border:1px solid var(--gv-border, var(--border)) !important;
 }
 
 .btn-skip{
-  background:var(--red);
+  background:var(--gv-red, var(--red));
   color:#fff;
 }
 
@@ -412,20 +412,20 @@ main{
   width:100%;
   min-height:58px;
   border-radius:16px;
-  background:var(--surface-2);
-  color:var(--muted);
+  background:var(--gv-surface-2, var(--surface-2));
+  color:var(--gv-muted, var(--muted));
   font-size:17px;
   font-weight:700;
   cursor:pointer;
   font-family:'Inter',sans-serif;
-  border:1px solid var(--border);
-  transition:background .2s,color .2s;
+  border:1px solid var(--gv-border, var(--border));
+  transition:background var(--gv-duration-normal, .2s),color var(--gv-duration-normal, .2s);
 }
 
 .finish-btn.ready{
-  background:var(--red);
+  background:var(--gv-red, var(--red));
   color:#fff;
-  border-color:var(--red);
+  border-color:var(--gv-red, var(--red));
 }
 
 .summary-overlay{
@@ -527,9 +527,9 @@ main{
 }
 
 .summary-prs{
-  background:var(--surface);
-  border:1px solid var(--yellow);
-  border-radius:var(--radius);
+  background:var(--gv-surface, var(--surface));
+  border:1px solid var(--gv-yellow, var(--yellow));
+  border-radius:var(--gv-radius-md, var(--radius));
   padding:14px 16px;
   margin-bottom:20px;
   text-align:left;
@@ -618,12 +618,12 @@ main{
   justify-content:center;
   font-family:'Anton',sans-serif;
   font-size:18px;
-  color:#a8b0bd;
+  color:var(--gv-muted, var(--muted));
   cursor:pointer;
 }
 
 .wheel-item:active{
-  color:var(--yellow);
+  color:var(--gv-yellow, var(--yellow));
 }
 
 .ex-info-overlay{
