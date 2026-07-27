@@ -150,12 +150,12 @@ async function renderHero(){
 }
 
 function renderRecovery(recovery){
-  recoveryStrip.innerHTML = recovery.map((r, i) => {
+  recoveryStrip.innerHTML = recovery.map((r) => {
     const ready = r.status !== 'em_recuperacao';
     const label = ready ? 'Pronto' : `${r.hoursRemaining}h rest.`;
     const barStyle = ready ? 'width:100%' : `width:${r.pct}%`;
     return `
-      <div class="muscle-chip ${ready ? 'ok' : 'rec'} gv-anim-card" style="--gv-delay:${i * 40}ms">
+      <div class="muscle-chip ${ready ? 'ok' : 'rec'}">
         <div class="m">${MUSCLE_GROUP_LABELS[r.group]}</div>
         <div class="gv-progress gv-progress--thin"><div class="gv-progress__fill" style="${barStyle};background:${ready ? 'var(--gv-green)' : 'var(--gv-yellow)'}"></div></div>
         <div class="st">${label}</div>
