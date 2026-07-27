@@ -189,7 +189,7 @@ async function loadLibrary(reset){
     card.className = 'lib-card';
     card.dataset.libId = ex.id;
     card.innerHTML = `
-      <div class="lib-thumb">${ex.image_urls?.[0] ? `<img src="${ex.image_urls[0]}" alt="">` : '🏋️'}</div>
+      <div class="lib-thumb">${ex.image_urls?.[0] ? `<img src="${ex.image_urls[0]}" alt="" loading="lazy">` : '🏋️'}</div>
       <span class="lib-card-name">${ex.name_pt || ex.name}</span>
       <span class="lib-card-meta">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
     `;
@@ -216,7 +216,7 @@ function showLibDetail(ex){
       </div>
       <button type="button" class="btn-icon" id="btnCloseLibDetail">✕</button>
     </div>
-    ${ex.image_urls?.length ? `<div class="lib-detail-images">${ex.image_urls.map(url => `<img src="${url}" alt="">`).join('')}</div>` : ''}
+    ${ex.image_urls?.length ? `<div class="lib-detail-images">${ex.image_urls.map(url => `<img src="${url}" alt="" loading="lazy">`).join('')}</div>` : ''}
     <div class="lib-detail-instructions">${ex.instructions_pt || ex.instructions || 'Sem instruções disponíveis.'}</div>
     <button type="button" class="btn btn-primary full" id="btnAddFromLib">Adicionar aos meus exercícios</button>
   `;

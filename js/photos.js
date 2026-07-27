@@ -192,7 +192,7 @@ function renderGrid(){
 
   photoGrid.innerHTML = photos.map(p => `
     <div class="photo-thumb${selectedIds.includes(p.id) ? ' selected' : ''}" data-id="${p.id}">
-      <img src="${signedUrls[p.storage_path] || ''}" alt="Foto de ${formatDateBR(p.taken_at)}">
+      <img src="${signedUrls[p.storage_path] || ''}" alt="Foto de ${formatDateBR(p.taken_at)}" loading="lazy">
       <div class="date">${formatDateBR(p.taken_at)}</div>
     </div>
   `).join('');

@@ -125,7 +125,7 @@ export function openExercisePicker({ userId, onPick, initialGroup }){
     const name = isMine ? ex.name : (ex.name_pt || ex.name);
     return `
       <div class="picker-item" data-id="${ex.id}" data-mine="${isMine ? '1' : '0'}">
-        <div class="picker-item-thumb">${img ? `<img src="${img}" alt="">` : '🏋️'}</div>
+        <div class="picker-item-thumb">${img ? `<img src="${img}" alt="" loading="lazy">` : '🏋️'}</div>
         <div class="picker-item-info">
           <span class="picker-item-name">${name}</span>
           <span class="picker-item-meta">${ex.equipment || ''}</span>
