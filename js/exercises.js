@@ -188,12 +188,21 @@ async function loadLibrary(reset){
     const card = document.createElement('div');
     card.className = 'lib-card';
     card.dataset.libId = ex.id;
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `Ver detalhes de ${ex.name_pt || ex.name}`);
     card.innerHTML = `
-      <div class="lib-thumb">${ex.image_urls?.[0] ? `<img src="${ex.image_urls[0]}" alt="" loading="lazy">` : '🏋️'}</div>
+      <div class="lib-thumb">${ex.image_urls?.[0] ? `<img src="${ex.image_urls[0]}" alt="${ex.name_pt || ex.name}" loading="lazy">` : '🏋️'}</div>
       <span class="lib-card-name">${ex.name_pt || ex.name}</span>
       <span class="lib-card-meta">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
     `;
     card.addEventListener('click', () => showLibDetail(ex));
+    card.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        showLibDetail(ex);
+      }
+    });
     libGrid.appendChild(card);
   });
 

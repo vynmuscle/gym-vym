@@ -100,8 +100,9 @@ async function loadMonth(){
       }).join('') + (extra > 0 ? `<span class="cal-marker-more">+${extra}</span>` : '');
     }
 
+    const clickable = daySessions.length > 0;
     return `
-      <div class="cal-day${isToday ? ' today' : ''}" data-day="${d}">
+      <div class="cal-day${isToday ? ' today' : ''}" data-day="${d}"${clickable ? ' role="button" tabindex="0" aria-label="Ver treinos do dia ' + d + '"' : ''}>
         <span class="cal-day-num">${d}</span>
         <div class="cal-markers">${markersHtml}</div>
       </div>
@@ -113,6 +114,12 @@ async function loadMonth(){
     const daySessions = byDay.get(day) || [];
     if(daySessions.length === 0) return;
     el.addEventListener('click', () => openDaySheet(day, daySessions));
+    el.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        openDaySheet(day, daySessions);
+      }
+    });
   });
 
   footerTotal.textContent = sessions.filter(s => s.finished_at).length;

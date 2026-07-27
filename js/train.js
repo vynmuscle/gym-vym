@@ -332,7 +332,7 @@ function showExerciseInfo(ex){
     <div class="ex-info-card">
       <button type="button" class="ex-info-close" aria-label="Fechar">✕</button>
       <h3>${ex.name}</h3>
-      ${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="" class="ex-info-img" loading="lazy">` : ''}
+      ${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="${ex.name}" class="ex-info-img" loading="lazy">` : ''}
       <div class="ex-info-text">${ex.instructions || 'Sem instruções disponíveis para este exercício.'}</div>
     </div>`;
   document.body.appendChild(overlay);
@@ -416,7 +416,7 @@ function renderExerciseCard(ei){
 
   card.innerHTML = `
     <div class="ex-head">
-      <div class="ex-thumb">${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="" loading="lazy">` : '🏋️'}</div>
+      <div class="ex-thumb">${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="${ex.name}" loading="lazy">` : '🏋️'}</div>
       <div class="ex-name">${ex.name}${ex.equipment ? ' (' + ex.equipment + ')' : ''}</div>
       <button type="button" class="ex-action-btn" aria-label="Como executar">ℹ️</button>
       <button type="button" class="ex-action-btn" aria-label="Substituir exercício">🔁</button>

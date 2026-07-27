@@ -141,6 +141,11 @@ main{
   padding:6px;
   line-height:1;
   flex-shrink:0;
+  min-width:44px;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .ex-rest{
@@ -250,7 +255,7 @@ main{
 }
 
 .del-btn{
-  min-height:20px;
+  min-height:44px;
   width:100%;
   border:1px solid var(--border);
   border-radius:8px;

@@ -103,7 +103,7 @@ export function openExercisePicker({ userId, onPick, initialGroup }){
         ? `background-image:linear-gradient(to top, rgba(11,13,16,.88), rgba(11,13,16,.35)), url('${img}')`
         : '';
       return `
-        <div class="group-card" data-group="${g.key}" style="${bg}">
+        <div class="group-card" data-group="${g.key}" style="${bg}" role="button" tabindex="0" aria-label="Ver exercícios de ${g.label}">
           <div class="group-card-name">${g.label}</div>
           <div class="group-card-count">${count} exercício${count === 1 ? '' : 's'}</div>
         </div>`;
@@ -111,6 +111,12 @@ export function openExercisePicker({ userId, onPick, initialGroup }){
 
     epBody.querySelectorAll('[data-group]').forEach(el => {
       el.addEventListener('click', () => openGroup(el.dataset.group));
+      el.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          openGroup(el.dataset.group);
+        }
+      });
     });
   }
 
@@ -124,8 +130,8 @@ export function openExercisePicker({ userId, onPick, initialGroup }){
     const img = isMine ? ex.image_url : ex.image_urls?.[0];
     const name = isMine ? ex.name : (ex.name_pt || ex.name);
     return `
-      <div class="picker-item" data-id="${ex.id}" data-mine="${isMine ? '1' : '0'}">
-        <div class="picker-item-thumb">${img ? `<img src="${img}" alt="" loading="lazy">` : '🏋️'}</div>
+      <div class="picker-item" data-id="${ex.id}" data-mine="${isMine ? '1' : '0'}" role="button" tabindex="0" aria-label="Escolher ${name}">
+        <div class="picker-item-thumb">${img ? `<img src="${img}" alt="${name}" loading="lazy">` : '🏋️'}</div>
         <div class="picker-item-info">
           <span class="picker-item-name">${name}</span>
           <span class="picker-item-meta">${ex.equipment || ''}</span>
@@ -135,13 +141,20 @@ export function openExercisePicker({ userId, onPick, initialGroup }){
 
   function bindItemClicks(root, mineList, libList){
     root.querySelectorAll('.picker-item').forEach(el => {
-      el.addEventListener('click', async () => {
+      async function activate(){
         const isMine = el.dataset.mine === '1';
         const source = isMine
           ? mineList.find(e => e.id === el.dataset.id)
           : libList.find(e => e.id === el.dataset.id);
         if(!source) return;
         await pick(isMine ? { ...source, __mine: true } : source);
+      }
+      el.addEventListener('click', activate);
+      el.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          activate();
+        }
       });
     });
   }
