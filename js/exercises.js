@@ -47,7 +47,12 @@ async function loadList(){
   const exercises = await listExercises();
 
   if(exercises.length === 0){
-    listPanel.innerHTML = '<p class="muted" style="padding:20px">Nenhum exercício cadastrado ainda.</p>';
+    listPanel.innerHTML = `
+      <div class="gv-empty-state gv-anim-card">
+        <div class="gv-empty-state__icon">💪</div>
+        <div class="gv-empty-state__title">Nenhum exercício ainda</div>
+        <div class="gv-empty-state__desc">Cadastre no formulário acima ou pegue da Biblioteca.</div>
+      </div>`;
     return;
   }
 

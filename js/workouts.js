@@ -45,7 +45,12 @@ async function loadList(){
   const archived = workouts.filter(w => !w.is_active);
 
   if(active.length === 0){
-    listPanel.innerHTML = '<p class="muted" style="padding:20px">Nenhuma ficha ativa no momento.</p>';
+    listPanel.innerHTML = `
+      <div class="gv-empty-state gv-anim-card">
+        <div class="gv-empty-state__icon">🏋️</div>
+        <div class="gv-empty-state__title">Nenhuma ficha ainda</div>
+        <div class="gv-empty-state__desc">Monte sua primeira ficha de treino no formulário acima.</div>
+      </div>`;
   } else {
     listPanel.innerHTML = active.map(w => `
       <div class="list-item">
