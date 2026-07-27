@@ -1,0 +1,54 @@
+/* GV Identity — assinatura visual (Fase 3)
+   Três elementos de destaque, usados com moderação (hero, streak,
+   celebração) — nunca na UI toda, pra manter o minimalismo. */
+
+/* ---------- Texto em gradiente ---------- */
+.gv-text-gradient{
+  background:var(--gv-gradient-energy);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+/* ---------- Glow (brilho radial atrás de elemento de destaque) ---------- */
+.gv-glow{
+  position:relative;
+  isolation:isolate;
+}
+
+.gv-glow::before{
+  content:'';
+  position:absolute;
+  inset:-20%;
+  z-index:-1;
+  background:var(--gv-gradient-glow);
+  pointer-events:none;
+}
+
+/* ---------- Linha de energia (acento diagonal de movimento) ---------- */
+.gv-energy-line{
+  position:relative;
+  overflow:hidden;
+}
+
+.gv-energy-line::after{
+  content:'';
+  position:absolute;
+  top:0;
+  right:-10%;
+  width:40%;
+  height:100%;
+  background:var(--gv-gradient-energy);
+  opacity:.12;
+  transform:skewX(-15deg);
+  pointer-events:none;
+}
+
+/* ---------- Barra de progresso com gradiente de energia (variante) ---------- */
+.gv-progress--energy .gv-progress__fill{
+  background:var(--gv-gradient-energy);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .gv-glow::before{ transition:none; }
+}

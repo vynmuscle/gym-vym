@@ -64,4 +64,10 @@
   --gv-duration-slow: 320ms;
   --gv-ease-standard: cubic-bezier(.4,0,.2,1);
   --gv-ease-spring: cubic-bezier(.34,1.56,.64,1);
+
+  /* Identidade visual (Fase 3) — gradiente de energia e glow,
+     reservados para momentos de destaque (hero, streak, celebração). */
+  --gv-gradient-energy: linear-gradient(135deg, var(--gv-red), var(--gv-yellow));
+  --gv-gradient-glow: radial-gradient(circle, rgba(217,51,63,.35), transparent 70%);
+  --gv-glow-accent: 0 0 32px rgba(217,51,63,.35);
 }
