@@ -43,6 +43,11 @@
 
     <div id="heroSection" style="margin-top:14px"></div>
 
+    <div class="gv-card gv-anim-card" id="insightCard" style="margin-top:14px;padding:14px;display:none">
+      <div class="section-title">Insight do dia</div>
+      <div id="insightText" style="font-size:14px;line-height:1.4"></div>
+    </div>
+
     <div class="gv-card gv-anim-card" id="ringSection" style="margin-top:14px;padding:16px 14px;display:flex;align-items:center;gap:16px">
       <div class="ring" id="ringHost"></div>
       <div class="progress-info">
@@ -52,9 +57,25 @@
       </div>
     </div>
 
+    <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <a href="./pages/diet.html" class="gv-card gv-anim-card" id="nutritionCard" style="padding:14px;text-decoration:none;color:inherit;display:block">
+        <div class="section-title">Nutrição hoje</div>
+        <div id="nutritionBody">—</div>
+      </a>
+      <a href="./pages/body.html" class="gv-card gv-anim-card" id="bodyCard" style="padding:14px;text-decoration:none;color:inherit;display:block">
+        <div class="section-title">Corpo</div>
+        <div id="bodyBody">—</div>
+      </a>
+    </div>
+
     <div style="margin-top:14px">
       <div class="section-title">Recuperação</div>
       <div class="recovery-strip" id="recoveryStrip"></div>
+    </div>
+
+    <div style="margin-top:14px">
+      <div class="section-title">Atividade recente</div>
+      <div class="gv-card" id="recentActivityCard" style="padding:4px 14px"></div>
     </div>
   </div>
 </main>
