@@ -128,20 +128,8 @@
   margin-left:auto;
 }
 
-.macro-bar{
+.macro-item .gv-progress{
   flex-basis:100%;
-  height:6px;
-  border-radius:99px;
-  background:var(--surface-2);
-  overflow:hidden;
-}
-
-.macro-bar i{
-  display:block;
-  height:100%;
-  border-radius:99px;
-  width:0%;
-  transition:width .2s ease;
 }
 
 .diet-info{

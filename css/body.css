@@ -29,28 +29,28 @@
 
 .imc-badge{
   padding:4px 10px;
-  border-radius:20px;
+  border-radius:var(--gv-radius-pill, 20px);
   font-size:12px;
   font-weight:700;
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  color:var(--muted);
+  background:var(--gv-surface-2, var(--surface-2));
+  border:1px solid var(--gv-border, var(--border));
+  color:var(--gv-muted, var(--muted));
 }
 
 .imc-badge.normal{
-  color:var(--green);
-  border-color:var(--green);
+  color:var(--gv-green, var(--green));
+  border-color:var(--gv-green, var(--green));
 }
 
 .imc-badge.abaixo,
 .imc-badge.sobrepeso{
-  color:var(--yellow);
-  border-color:var(--yellow);
+  color:var(--gv-yellow, var(--yellow));
+  border-color:var(--gv-yellow, var(--yellow));
 }
 
 .imc-badge.obesidade{
-  color:var(--red);
-  border-color:var(--red);
+  color:var(--gv-red, var(--red));
+  border-color:var(--gv-red, var(--red));
 }
 
 .weight-delta{

@@ -21,6 +21,7 @@ import {
   searchHomeDishes,
 } from './services/dietService.js';
 import { searchFood, searchFoodByBarcode } from './services/openFoodFactsService.js';
+import { createProgressRing } from './design-system/progressRing.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if (!sd.session) navigate('../login.html');
@@ -74,8 +75,14 @@ const btnCancelProfile = document.getElementById('btnCancelProfile');
 const profileMessage = document.getElementById('profileMessage');
 const btnEditProfile = document.getElementById('btnEditProfile');
 
-const ringProgress = document.getElementById('ringProgress');
-const ringPct = document.getElementById('ringPct');
+const ringHost = document.getElementById('ringHost');
+const ring = createProgressRing({ size: 92, strokeWidth: 9, percent: 0 });
+const ringPct = document.createElement('div');
+ringPct.className = 'pct';
+ringPct.id = 'ringPct';
+ringPct.textContent = '0%';
+ringHost.appendChild(ring.svg);
+ringHost.appendChild(ringPct);
 const caloriesConsumed = document.getElementById('caloriesConsumed');
 const caloriesTargetValue = document.getElementById('caloriesTargetValue');
 const caloriesRemaining = document.getElementById('caloriesRemaining');
@@ -390,8 +397,7 @@ function renderSummary(weightKg, heightCm) {
 function renderRing(consumedCalories) {
   const target = currentTargets?.targetCalories || 0;
   const pct = target > 0 ? Math.min(100, Math.round((consumedCalories / target) * 100)) : 0;
-  const circumference = 245;
-  ringProgress.style.strokeDashoffset = String(circumference - (circumference * pct) / 100);
+  ring.setPercent(pct);
   ringPct.textContent = `${pct}%`;
   caloriesConsumed.textContent = Math.round(consumedCalories);
 

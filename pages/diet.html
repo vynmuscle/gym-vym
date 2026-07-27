@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="../css/layout.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/design-system/tokens.css">
+<link rel="stylesheet" href="../css/design-system/components.css">
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/body.css">
 <link rel="stylesheet" href="../css/diet.css">
@@ -87,14 +89,7 @@
     <!-- Resumo do dia -->
     <div id="summarySection" style="display:none">
       <div class="panel diet-gauge-card" style="margin-top:14px">
-        <div class="ring">
-          <svg width="92" height="92" viewBox="0 0 92 92">
-            <circle cx="46" cy="46" r="39" stroke="#1b1f26" stroke-width="9" fill="none"/>
-            <circle id="ringProgress" cx="46" cy="46" r="39" stroke="#e9b93b" stroke-width="9" fill="none"
-                    stroke-linecap="round" stroke-dasharray="245" stroke-dashoffset="245"/>
-          </svg>
-          <div class="pct" id="ringPct">0%</div>
-        </div>
+        <div class="ring" id="ringHost"></div>
         <div class="diet-gauge-stats">
           <div class="diet-gauge-stat">
             <div class="diet-gauge-stat-value" id="caloriesConsumed">0</div>
@@ -116,17 +111,17 @@
           <div class="macro-item">
             <span class="macro-label">Proteína</span>
             <span class="macro-value" id="proteinValue">0 / 0g</span>
-            <div class="macro-bar"><i id="proteinBar" style="background:var(--red)"></i></div>
+            <div class="gv-progress gv-progress--thin"><div class="gv-progress__fill" id="proteinBar" style="background:var(--gv-red)"></div></div>
           </div>
           <div class="macro-item">
             <span class="macro-label">Carboidrato</span>
             <span class="macro-value" id="carbsValue">0 / 0g</span>
-            <div class="macro-bar"><i id="carbsBar" style="background:var(--yellow)"></i></div>
+            <div class="gv-progress gv-progress--thin"><div class="gv-progress__fill" id="carbsBar" style="background:var(--gv-yellow)"></div></div>
           </div>
           <div class="macro-item">
             <span class="macro-label">Gordura</span>
             <span class="macro-value" id="fatValue">0 / 0g</span>
-            <div class="macro-bar"><i id="fatBar" style="background:var(--green)"></i></div>
+            <div class="gv-progress gv-progress--thin"><div class="gv-progress__fill" id="fatBar" style="background:var(--gv-green)"></div></div>
           </div>
         </div>
       </div>
