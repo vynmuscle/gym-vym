@@ -13,6 +13,7 @@ import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
 import { getLeagueForXP } from './leagues.js';
 import { listMeasurements } from './services/bodyService.js';
+import { celebrate } from './design-system/motion.js';
 import { estimateWorkoutKcal, findWeightAtDate } from './utils.js';
 
 const { data: sd } = await supabase.auth.getSession();
@@ -566,6 +567,7 @@ function checkPersonalRecord(ex, kg, row){
   if(navigator.vibrate) navigator.vibrate([100, 50, 200]);
   showToast(`🏆 NOVO RECORDE — ${ex.name}: ${formatWheelValue(kg)}kg`);
   row.querySelector('.set-num').insertAdjacentHTML('beforeend', '<span class="pr-badge">🏆</span>');
+  celebrate({ count: 16 });
 }
 
 function toggleSet(ei, setNumber){
@@ -866,6 +868,7 @@ finishBtn.addEventListener('click', async () => {
     const leagueAfter = getLeagueForXP(xpAfter);
     if(leagueAfter.key !== leagueBefore.key){
       showToast(`Você subiu para a ${leagueAfter.name}! ${leagueAfter.emoji}`);
+      celebrate({ count: 32 });
     }
   } catch(err) {}
 });

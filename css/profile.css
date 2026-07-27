@@ -8,9 +8,9 @@
   width:56px;
   height:56px;
   border-radius:50%;
-  border:3px solid var(--green);
-  background:var(--surface-2);
-  color:var(--text);
+  border:3px solid var(--gv-green, var(--green));
+  background:var(--gv-surface-2, var(--surface-2));
+  color:var(--gv-text, var(--text));
   display:flex;
   align-items:center;
   justify-content:center;
@@ -26,24 +26,24 @@
 
 .league-xp{
   font-size:13px;
-  color:var(--muted);
+  color:var(--gv-muted, var(--muted));
   margin-top:2px;
 }
 
 .league-progress-track{
   height:8px;
-  border-radius:4px;
-  background:var(--surface-2);
+  border-radius:var(--gv-radius-pill, 4px);
+  background:var(--gv-surface-2, var(--surface-2));
   margin-top:16px;
   overflow:hidden;
 }
 
 .league-progress-fill{
   height:100%;
-  border-radius:4px;
-  background:var(--yellow);
+  border-radius:var(--gv-radius-pill, 4px);
+  background:var(--gv-gradient-energy, var(--yellow));
   width:0%;
-  transition:width .3s ease;
+  transition:width var(--gv-duration-slow, .3s) var(--gv-ease-standard, ease);
 }
 
 .league-progress-label{
@@ -98,19 +98,21 @@
 }
 
 .achievement-badge{
-  background:var(--surface-2);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
+  background:var(--gv-surface-2, var(--surface-2));
+  border:1px solid var(--gv-border, var(--border));
+  border-radius:var(--gv-radius-md, var(--radius));
   padding:14px 8px;
   text-align:center;
+  transition:transform var(--gv-duration-fast, .12s) var(--gv-ease-spring, ease);
 }
 
 .achievement-badge.unlocked{
-  border-color:var(--yellow);
+  border-color:var(--gv-yellow, var(--yellow));
+  box-shadow:var(--gv-glow-accent, none);
 }
 
 .achievement-badge.locked{
-  opacity:.45;
+  opacity:var(--gv-opacity-disabled, .45);
 }
 
 .achievement-icon{
@@ -124,17 +126,17 @@
 }
 
 .achievement-badge.locked .achievement-name{
-  color:var(--muted);
+  color:var(--gv-muted, var(--muted));
 }
 
 .achievement-date{
   font-size:10px;
-  color:var(--yellow);
+  color:var(--gv-yellow, var(--yellow));
   margin-top:2px;
 }
 
 .achievement-desc{
   font-size:10px;
-  color:var(--muted);
+  color:var(--gv-muted, var(--muted));
   margin-top:2px;
 }
