@@ -13,15 +13,6 @@
   margin-top:2px;
 }
 
-.league-dot{
-  display:inline-block;
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  margin-left:8px;
-  vertical-align:middle;
-}
-
 .section-title{
   font-size:12px;
   color:var(--muted);
@@ -32,13 +23,6 @@
 }
 
 /* ===== Semana ===== */
-.week-card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:14px;
-}
-
 .week-row{
   display:grid;
   grid-template-columns:repeat(7, 1fr);
@@ -190,25 +174,11 @@
 }
 
 /* ===== Progresso da semana ===== */
-.progress-card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:16px 14px;
-  display:flex;
-  align-items:center;
-  gap:16px;
-}
-
 .ring{
   position:relative;
   width:92px;
   height:92px;
   flex-shrink:0;
-}
-
-.ring svg{
-  transform:rotate(-90deg);
 }
 
 .ring .pct{
@@ -270,31 +240,12 @@
   font-weight:600;
 }
 
-.muscle-chip .bar{
-  height:4px;
-  border-radius:99px;
-  background:var(--surface-2);
+.muscle-chip .gv-progress{
   margin-top:8px;
-  overflow:hidden;
-}
-
-.muscle-chip .bar i{
-  display:block;
-  height:100%;
-  border-radius:99px;
 }
 
 .muscle-chip .st{
   font-size:11px;
   color:var(--muted);
   margin-top:6px;
-}
-
-.muscle-chip.ok .bar i{
-  width:100%;
-  background:var(--green);
-}
-
-.muscle-chip.rec .bar i{
-  background:var(--yellow);
 }

@@ -9,6 +9,7 @@ import {
 import { getUserSettings } from './services/profileService.js';
 import { computeStreak } from './utils.js';
 import { getLeagueForXP } from './leagues.js';
+import { createProgressRing } from './design-system/progressRing.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('./login.html');
@@ -23,19 +24,26 @@ const MUSCLE_GROUP_LABELS = {
 };
 
 const WEEKDAY_LABELS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
-const RING_CIRCUMFERENCE = 245;
 
 const greetingName = document.getElementById('greetingName');
-const leagueDot = document.getElementById('leagueDot');
+const leagueEmoji = document.getElementById('leagueEmoji');
+const leagueLabel = document.getElementById('leagueLabel');
 const greetingDate = document.getElementById('greetingDate');
 const weekRow = document.getElementById('weekRow');
 const heroSection = document.getElementById('heroSection');
-const ringProgress = document.getElementById('ringProgress');
-const ringPct = document.getElementById('ringPct');
+const ringHost = document.getElementById('ringHost');
 const progressBig = document.getElementById('progressBig');
 const progressSub = document.getElementById('progressSub');
 const streakValue = document.getElementById('streakValue');
 const recoveryStrip = document.getElementById('recoveryStrip');
+
+const ring = createProgressRing({ size: 92, strokeWidth: 9, percent: 0 });
+const ringPct = document.createElement('div');
+ringPct.className = 'pct';
+ringPct.id = 'ringPct';
+ringPct.textContent = '0%';
+ringHost.appendChild(ring.svg);
+ringHost.appendChild(ringPct);
 
 function mondayOf(date){
   const d = new Date(date);
@@ -73,7 +81,7 @@ function renderRing(weekCount, weeklyGoal){
   const pct = weeklyGoal > 0 ? Math.round((weekCount / weeklyGoal) * 100) : 0;
   const visualPct = Math.min(pct, 100);
 
-  ringProgress.setAttribute('stroke-dashoffset', String(RING_CIRCUMFERENCE * (1 - visualPct / 100)));
+  ring.setPercent(visualPct);
   ringPct.textContent = `${pct}%`;
 
   progressBig.textContent = pct >= 100
@@ -102,7 +110,7 @@ async function renderHero(){
     const names = [...new Set(todaysSessions.map(s => s.workouts ? s.workouts.name : 'Treino avulso'))].join(', ');
 
     heroSection.innerHTML = `
-      <div class="hero hero-done">
+      <div class="hero hero-done gv-anim-hero">
         <div class="tag">Treino de hoje concluído ✓</div>
         <h2>${names}</h2>
         <div class="stats">
@@ -128,7 +136,7 @@ async function renderHero(){
     : `${groupNames} <b>100% recuperados</b>`;
 
   heroSection.innerHTML = `
-    <div class="hero">
+    <div class="hero gv-anim-hero gv-glow gv-energy-line">
       <div class="tag">Treino de hoje</div>
       <h2>${suggestion.workout.name}</h2>
       <div class="why${suggestion.warn ? ' warn' : ''}">${why}</div>
@@ -142,14 +150,14 @@ async function renderHero(){
 }
 
 function renderRecovery(recovery){
-  recoveryStrip.innerHTML = recovery.map(r => {
+  recoveryStrip.innerHTML = recovery.map((r, i) => {
     const ready = r.status !== 'em_recuperacao';
     const label = ready ? 'Pronto' : `${r.hoursRemaining}h rest.`;
-    const barStyle = ready ? '' : `style="width:${r.pct}%"`;
+    const barStyle = ready ? 'width:100%' : `width:${r.pct}%`;
     return `
-      <div class="muscle-chip ${ready ? 'ok' : 'rec'}">
+      <div class="muscle-chip ${ready ? 'ok' : 'rec'} gv-anim-card" style="--gv-delay:${i * 40}ms">
         <div class="m">${MUSCLE_GROUP_LABELS[r.group]}</div>
-        <div class="bar"><i ${barStyle}></i></div>
+        <div class="gv-progress gv-progress--thin"><div class="gv-progress__fill" style="${barStyle};background:${ready ? 'var(--gv-green)' : 'var(--gv-yellow)'}"></div></div>
         <div class="st">${label}</div>
       </div>`;
   }).join('');
@@ -173,6 +181,10 @@ const [sessionDates, recovery, recentDates, xp] = await Promise.all([
 renderWeek(weekStart, sessionDates);
 renderRing(sessionDates.length, weeklyGoal);
 streakValue.textContent = computeStreak(recentDates);
-leagueDot.style.background = getLeagueForXP(xp).color;
+
+const league = getLeagueForXP(xp);
+leagueEmoji.textContent = league.emoji;
+leagueLabel.textContent = `${league.name} · ${xp} XP`;
+
 renderRecovery(recovery);
 await renderHero();
