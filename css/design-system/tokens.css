@@ -1,0 +1,67 @@
+/* GV Design System — Tokens
+   Fonte única de verdade para cor, espaçamento, radius, tipografia,
+   sombra e opacidade. Mantém compatibilidade com as variáveis já
+   usadas em css/base.css (--bg, --surface, --border, --text, --muted,
+   --red, --green, --yellow, --radius) e adiciona a escala que faltava. */
+
+:root{
+  /* Cor — reafirma as cores base (única fonte, elimina os hardcoded
+     #ef4444 / #a8b0bd encontrados na auditoria) */
+  --gv-bg: var(--bg, #0b0d10);
+  --gv-surface: var(--surface, #14171c);
+  --gv-surface-2: var(--surface-2, #1b1f26);
+  --gv-border: var(--border, #262b33);
+  --gv-text: var(--text, #f2f3f5);
+  --gv-muted: var(--muted, #8b93a1);
+  --gv-red: var(--red, #d9333f);
+  --gv-green: var(--green, #3fa958);
+  --gv-yellow: var(--yellow, #e9b93b);
+
+  /* Radius */
+  --gv-radius-sm: 8px;
+  --gv-radius-md: 14px;
+  --gv-radius-lg: 18px;
+  --gv-radius-xl: 22px;
+  --gv-radius-pill: 999px;
+
+  /* Spacing (múltiplos de 4) */
+  --gv-space-1: 4px;
+  --gv-space-2: 8px;
+  --gv-space-3: 12px;
+  --gv-space-4: 16px;
+  --gv-space-5: 24px;
+  --gv-space-6: 32px;
+
+  /* Tipografia — escala que substitui os px soltos (9-11px) achados
+     em calendar.css, dashboard.css, components.css, diet.css */
+  --gv-text-2xs: 10px;
+  --gv-text-xs: 11px;
+  --gv-text-sm: 13px;
+  --gv-text-base: 15px;
+  --gv-text-lg: 17px;
+  --gv-text-xl: 20px;
+  --gv-text-2xl: 26px;
+
+  --gv-font-ui: 'Inter', sans-serif;
+  --gv-font-display: 'Anton', sans-serif;
+
+  /* Sombra */
+  --gv-shadow-sm: 0 2px 8px rgba(0,0,0,.35);
+  --gv-shadow-md: 0 8px 24px rgba(0,0,0,.5);
+  --gv-shadow-lg: 0 16px 40px rgba(0,0,0,.55);
+
+  /* Opacidade / blur */
+  --gv-opacity-disabled: .5;
+  --gv-opacity-pressed: .8;
+  --gv-blur-md: 10px;
+
+  /* Breakpoint (referência — media queries continuam literais no CSS) */
+  --gv-breakpoint-mobile: 820px;
+
+  /* Duração base (consumida pelo GV Motion System na Fase 2) */
+  --gv-duration-fast: 120ms;
+  --gv-duration-normal: 200ms;
+  --gv-duration-slow: 320ms;
+  --gv-ease-standard: cubic-bezier(.4,0,.2,1);
+  --gv-ease-spring: cubic-bezier(.34,1.56,.64,1);
+}

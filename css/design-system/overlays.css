@@ -1,0 +1,174 @@
+/* GV Design System — Overlays (Toast, Modal, BottomSheet, Dialog, FAB)
+   Origem: .app-toast + .ex-toast (2 toasts), .rest-sheet/.photo-viewer/
+   .summary-overlay/.ex-info-overlay (4 overlays cheios de tela sem
+   componente base). Consumido pelos helpers em js/design-system/. */
+
+/* ---------- GVToast ---------- */
+.gv-toast{
+  position:fixed;
+  top:16px;
+  left:50%;
+  transform:translateX(-50%) scale(.9);
+  z-index:200;
+  background:var(--gv-surface);
+  border:1px solid var(--gv-yellow);
+  border-radius:var(--gv-radius-md);
+  padding:14px 20px;
+  font-family:var(--gv-font-display);
+  font-weight:400;
+  letter-spacing:.5px;
+  color:var(--gv-yellow);
+  font-size:var(--gv-text-base);
+  text-align:center;
+  max-width:90vw;
+  box-shadow:var(--gv-shadow-md);
+  animation:gv-toast-in var(--gv-duration-normal) var(--gv-ease-standard) forwards;
+}
+
+.gv-toast.out{
+  animation:gv-toast-out var(--gv-duration-normal) ease-in forwards;
+}
+
+.gv-toast.no-motion{
+  animation:none;
+  transform:translateX(-50%) scale(1);
+}
+
+@keyframes gv-toast-in{
+  from{ opacity:0; transform:translateX(-50%) scale(.9); }
+  to{ opacity:1; transform:translateX(-50%) scale(1); }
+}
+
+@keyframes gv-toast-out{
+  from{ opacity:1; transform:translateX(-50%) scale(1); }
+  to{ opacity:0; transform:translateX(-50%) scale(.9); }
+}
+
+/* ---------- GVModal (overlay central) ---------- */
+.gv-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:150;
+  background:rgba(0,0,0,.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:var(--gv-space-4);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--gv-duration-normal) var(--gv-ease-standard);
+}
+
+.gv-modal-backdrop.open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.gv-modal{
+  width:100%;
+  max-width:420px;
+  max-height:85vh;
+  overflow-y:auto;
+  background:var(--gv-surface);
+  border:1px solid var(--gv-border);
+  border-radius:var(--gv-radius-lg);
+  padding:var(--gv-space-5);
+  transform:scale(.94);
+  transition:transform var(--gv-duration-normal) var(--gv-ease-spring);
+}
+
+.gv-modal-backdrop.open .gv-modal{
+  transform:scale(1);
+}
+
+/* ---------- GVBottomSheet ---------- */
+.gv-sheet-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:150;
+  background:rgba(0,0,0,.55);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--gv-duration-normal) var(--gv-ease-standard);
+}
+
+.gv-sheet-backdrop.open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.gv-bottom-sheet{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  z-index:151;
+  background:var(--gv-surface);
+  border:1px solid var(--gv-border);
+  border-bottom:none;
+  border-radius:var(--gv-radius-xl) var(--gv-radius-xl) 0 0;
+  padding:var(--gv-space-4) var(--gv-space-4) calc(var(--gv-space-5) + env(safe-area-inset-bottom));
+  box-shadow:var(--gv-shadow-lg);
+  transform:translateY(100%);
+  transition:transform var(--gv-duration-slow) var(--gv-ease-spring);
+  max-height:88vh;
+  overflow-y:auto;
+}
+
+.gv-sheet-backdrop.open .gv-bottom-sheet{
+  transform:translateY(0);
+}
+
+.gv-bottom-sheet__handle{
+  width:36px;
+  height:4px;
+  border-radius:var(--gv-radius-pill);
+  background:var(--gv-border);
+  margin:0 auto var(--gv-space-4);
+}
+
+/* ---------- GVDialog (confirmação) ----------
+   Variante compacta do GVModal, para confirmar ações destrutivas. */
+.gv-dialog{
+  max-width:340px;
+  text-align:center;
+}
+
+.gv-dialog__actions{
+  display:flex;
+  gap:var(--gv-space-2);
+  margin-top:var(--gv-space-4);
+}
+
+.gv-dialog__actions .gv-button{ flex:1; margin-bottom:0; }
+
+/* ---------- GVFAB ---------- */
+.gv-fab{
+  position:fixed;
+  right:var(--gv-space-4);
+  bottom:calc(90px + var(--gv-space-4));
+  z-index:40;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  border:none;
+  cursor:pointer;
+  background:var(--gv-red);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 20px rgba(217,51,63,.45);
+  transition:transform var(--gv-duration-fast) var(--gv-ease-standard);
+}
+
+.gv-fab:active{ transform:scale(.94); }
+
+@media (prefers-reduced-motion:reduce){
+  .gv-toast,
+  .gv-modal-backdrop,
+  .gv-modal,
+  .gv-sheet-backdrop,
+  .gv-bottom-sheet{
+    animation-duration:.001ms !important;
+    transition-duration:.001ms !important;
+  }
+}
