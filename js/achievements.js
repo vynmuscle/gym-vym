@@ -1,4 +1,5 @@
 import { showToast } from './toast.js';
+import { celebrate, playAchievementChime } from './design-system/motion.js';
 import { listUnlockedAchievements, unlockAchievement } from './services/achievementsService.js';
 import {
   listCompletedSessions, getRecentCompletedSessionDates,
@@ -63,6 +64,10 @@ export async function checkAchievements(userId, { hadPRThisSession = false } = {
 
   for (const achievement of newlyUnlocked) {
     showToast(`${achievement.icon} Conquista desbloqueada: ${achievement.name}`);
+  }
+  if (newlyUnlocked.length > 0) {
+    celebrate({ count: 28 });
+    playAchievementChime();
   }
 
   return newlyUnlocked;

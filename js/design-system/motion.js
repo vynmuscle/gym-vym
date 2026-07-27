@@ -97,3 +97,24 @@ export function celebrate({ originX, originY, count = 24 } = {}){
     anim.onfinish = () => piece.remove();
   }
 }
+
+// ---------- Som (estrutura) ----------
+// Chime curto via Web Audio API — sem depender de arquivo de áudio.
+// Falha em silêncio se o navegador bloquear (política de autoplay).
+export function playAchievementChime(){
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if(!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + .15);
+    gain.gain.setValueAtTime(.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .4);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + .4);
+  } catch(e) {}
+}
