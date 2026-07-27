@@ -1,0 +1,133 @@
+/* GV Motion System — camada CSS
+   Padrões de animação consumidos por classes utilitárias e pelos
+   overlays (toast/modal/bottom-sheet já usam os tokens de duração/
+   easing definidos em tokens.css). Sem dependência externa — Web
+   Animations API cobre o que precisa de JS (ver js/design-system/motion.js). */
+
+/* ---------- Fast / Normal / Slow (utilitários genéricos) ---------- */
+.gv-motion-fast{ transition-duration:var(--gv-duration-fast); transition-timing-function:var(--gv-ease-standard); }
+.gv-motion-normal{ transition-duration:var(--gv-duration-normal); transition-timing-function:var(--gv-ease-standard); }
+.gv-motion-slow{ transition-duration:var(--gv-duration-slow); transition-timing-function:var(--gv-ease-standard); }
+.gv-motion-spring{ transition-timing-function:var(--gv-ease-spring); }
+
+/* ---------- Hero Motion (entrada de hero cards, ex. dashboard/train) ---------- */
+@keyframes gv-hero-in{
+  from{ opacity:0; transform:translateY(12px) scale(.98); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+.gv-anim-hero{
+  animation:gv-hero-in var(--gv-duration-slow) var(--gv-ease-spring) both;
+}
+
+/* ---------- FAB Motion ---------- */
+@keyframes gv-fab-in{
+  from{ opacity:0; transform:scale(.6) rotate(-15deg); }
+  to{ opacity:1; transform:scale(1) rotate(0); }
+}
+.gv-anim-fab{
+  animation:gv-fab-in var(--gv-duration-normal) var(--gv-ease-spring) both;
+}
+
+/* ---------- Card Motion (entrada em lista, stagger via --gv-delay) ---------- */
+@keyframes gv-card-in{
+  from{ opacity:0; transform:translateY(8px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+.gv-anim-card{
+  animation:gv-card-in var(--gv-duration-normal) var(--gv-ease-standard) both;
+  animation-delay:var(--gv-delay, 0ms);
+}
+
+/* ---------- Navigation Motion (troca de página/tab) ---------- */
+@keyframes gv-nav-enter{
+  from{ opacity:0; transform:translateX(8px); }
+  to{ opacity:1; transform:translateX(0); }
+}
+.gv-anim-nav-enter{
+  animation:gv-nav-enter var(--gv-duration-normal) var(--gv-ease-standard) both;
+}
+
+/* View Transition API — usada quando o browser suporta (navigation.js
+   decide via document.startViewTransition); fallback é o fade acima. */
+::view-transition-old(root),
+::view-transition-new(root){
+  animation-duration:var(--gv-duration-normal);
+  animation-timing-function:var(--gv-ease-standard);
+}
+
+/* ---------- Loading Motion (shimmer já em components.css .gv-skeleton) ---------- */
+@keyframes gv-pulse{
+  0%,100%{ opacity:1; }
+  50%{ opacity:.55; }
+}
+.gv-anim-pulse{
+  animation:gv-pulse 1.2s var(--gv-ease-standard) infinite;
+}
+
+/* ---------- Chart Motion (linhas/barras desenhando) ---------- */
+@keyframes gv-draw{
+  from{ stroke-dashoffset:var(--gv-draw-length, 1000); }
+  to{ stroke-dashoffset:0; }
+}
+.gv-anim-draw{
+  animation:gv-draw var(--gv-duration-slow) var(--gv-ease-standard) both;
+}
+
+@keyframes gv-grow-up{
+  from{ transform:scaleY(0); }
+  to{ transform:scaleY(1); }
+}
+.gv-anim-grow-up{
+  transform-origin:bottom;
+  animation:gv-grow-up var(--gv-duration-slow) var(--gv-ease-spring) both;
+}
+
+/* ---------- Celebration / Success / Error ---------- */
+@keyframes gv-pop{
+  0%{ transform:scale(.4); opacity:0; }
+  60%{ transform:scale(1.08); opacity:1; }
+  100%{ transform:scale(1); }
+}
+.gv-anim-success{
+  animation:gv-pop var(--gv-duration-normal) var(--gv-ease-spring) both;
+}
+
+@keyframes gv-shake{
+  10%,90%{ transform:translateX(-1px); }
+  20%,80%{ transform:translateX(2px); }
+  30%,50%,70%{ transform:translateX(-4px); }
+  40%,60%{ transform:translateX(4px); }
+}
+.gv-anim-error{
+  animation:gv-shake .4s var(--gv-ease-standard);
+}
+
+.gv-confetti-piece{
+  position:fixed;
+  top:0;
+  left:0;
+  width:8px;
+  height:8px;
+  border-radius:2px;
+  pointer-events:none;
+  z-index:300;
+  will-change:transform,opacity;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .gv-anim-hero,
+  .gv-anim-fab,
+  .gv-anim-card,
+  .gv-anim-nav-enter,
+  .gv-anim-pulse,
+  .gv-anim-draw,
+  .gv-anim-grow-up,
+  .gv-anim-success,
+  .gv-anim-error{
+    animation:none !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root){
+    animation:none !important;
+  }
+}
