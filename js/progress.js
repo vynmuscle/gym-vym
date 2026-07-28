@@ -33,7 +33,11 @@ let currentMetric = 'maxWeight';
 function showEmptyState(message){
   progressContent.style.display = 'none';
   emptyState.style.display = 'block';
-  emptyState.innerHTML = `<p class="muted">${message}</p>`;
+  emptyState.innerHTML = `
+    <div class="gv3-empty">
+      <svg class="gv3-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-6" /><path d="M22 20H2" /></svg>
+      <div class="gv3-empty__desc">${message}</div>
+    </div>`;
 }
 
 function formatDateShort(iso){

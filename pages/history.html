@@ -29,11 +29,19 @@
       <div id="incompleteList"></div>
     </div>
 
-    <div id="sessionsList" style="margin-top:16px"></div>
+    <div id="sessionsList" style="margin-top:16px">
+      <div class="gv3-skeleton" style="height:70px;margin-bottom:12px"></div>
+      <div class="gv3-skeleton" style="height:70px;margin-bottom:12px"></div>
+      <div class="gv3-skeleton" style="height:70px;margin-bottom:12px"></div>
+    </div>
 
-    <div class="panel" id="emptyState" style="display:none;margin-top:16px;text-align:center;padding:40px 20px">
-      <p class="muted" style="margin-bottom:16px">Você ainda não treinou. Bora começar?</p>
-      <a href="./workouts.html" class="btn btn-primary">Ver fichas</a>
+    <div class="panel" id="emptyState" style="display:none;margin-top:16px">
+      <div class="gv3-empty">
+        <svg class="gv3-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 2" /></svg>
+        <div class="gv3-empty__title">Você ainda não treinou</div>
+        <div class="gv3-empty__desc">Bora começar? Seu histórico aparece aqui.</div>
+        <a href="./workouts.html" class="gv3-btn gv3-btn--primary" style="margin-top:8px;text-decoration:none">Ver fichas</a>
+      </div>
     </div>
   </div>
 </main>

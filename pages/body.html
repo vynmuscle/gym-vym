@@ -26,8 +26,12 @@
   <div class="container">
     <h2>Medidas</h2>
 
-    <div id="emptyState" class="panel" style="display:none;text-align:center;padding:40px 20px">
-      <p class="muted">Nenhuma medida registrada ainda. Preencha o formulário abaixo pra começar a acompanhar sua evolução.</p>
+    <div id="emptyState" class="panel" style="display:none">
+      <div class="gv3-empty">
+        <svg class="gv3-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="13" r="7" /><path d="M12 13l3-3" /><path d="M9.5 6.5h5" /></svg>
+        <div class="gv3-empty__title">Nenhuma medida ainda</div>
+        <div class="gv3-empty__desc">Preencha o formulário abaixo pra começar a acompanhar sua evolução.</div>
+      </div>
     </div>
 
     <div id="highlightCard" class="panel highlight-card" style="display:none">
@@ -118,7 +122,10 @@
       </div>
     </div>
 
-    <div class="panel" id="listPanel" style="margin-top:16px"></div>
+    <div class="panel" id="listPanel" style="margin-top:16px">
+      <div class="gv3-skeleton" style="height:56px;margin:14px"></div>
+      <div class="gv3-skeleton" style="height:56px;margin:14px"></div>
+    </div>
   </div>
 </main>
 
