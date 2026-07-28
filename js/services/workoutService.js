@@ -100,7 +100,7 @@ export async function removeWorkoutExercise(id) {
 export async function findIncompleteSessionForWorkout(userId, workoutId) {
   const { data, error } = await supabase
     .from('workout_sessions')
-    .select('id')
+    .select('id, started_at')
     .eq('user_id', userId)
     .eq('workout_id', workoutId)
     .is('finished_at', null)
@@ -109,6 +109,19 @@ export async function findIncompleteSessionForWorkout(userId, workoutId) {
     .maybeSingle();
   if (error) throw error;
   return data;
+}
+
+// Usado ao retomar uma sessão pelo link "Continuar" do Histórico (chega só
+// com o id na URL) — precisa do started_at original pra o cronômetro/duração
+// final do treino contarem desde o início real, não desde que a aba reabriu.
+export async function getSessionStartedAt(sessionId) {
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('started_at')
+    .eq('id', sessionId)
+    .single();
+  if (error) throw error;
+  return data.started_at;
 }
 
 export async function createWorkoutSession(userId, workoutId) {

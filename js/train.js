@@ -7,7 +7,7 @@ import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout,
   getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
-  getExerciseProgress, getPersonalRecordsMap, getUserXP
+  getExerciseProgress, getPersonalRecordsMap, getUserXP, getSessionStartedAt
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
@@ -63,7 +63,10 @@ const summaryKcal = document.getElementById('summaryKcal');
 let doneSets = 0;
 let totalSets = 0;
 let totalVolume = 0;
-const startTime = Date.now();
+// Ajustado pro horário real de início assim que a sessão é resolvida (ver
+// bloco final do arquivo) — sessões retomadas não devem zerar o cronômetro
+// nem contar a duração final a partir de quando a aba foi reaberta.
+let startTime = Date.now();
 let restInterval = null;
 let restEndTime = 0;
 let restExName = '';
@@ -876,10 +879,22 @@ finishBtn.addEventListener('click', async () => {
 document.getElementById('btnBackToWorkouts').addEventListener('click', () => navigate('./workouts.html'));
 document.getElementById('btnViewProgress').addEventListener('click', () => navigate('./progress.html'));
 
-setInterval(() => {
+function updateElapsedDisplay(){
   const t = Math.floor((Date.now() - startTime) / 1000);
   elapsedEl.textContent = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
-}, 1000);
+}
+
+setInterval(updateElapsedDisplay, 1000);
+
+// Navegadores throttlam/pausam setInterval com a tela apagada ou o app em
+// segundo plano — o relógio parece "travar" até voltar a foco. Como o
+// cálculo é sempre Date.now() - startTime (nunca incrementa um contador),
+// forçar um recálculo assim que a aba volta a ficar visível corrige o
+// mostrador na hora, sem esperar o próximo tick do interval.
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden) return;
+  updateElapsedDisplay();
+});
 
 if(!workoutIdValid){
   showTrainError('Nenhuma ficha selecionada.', './workouts.html', 'Ver fichas');
@@ -900,6 +915,7 @@ if(!workoutIdValid){
       if(existingSessionId){
         session = { id: existingSessionId };
         isResumedSession = true;
+        startTime = new Date(await getSessionStartedAt(existingSessionId)).getTime();
       } else {
         // Continua automaticamente uma sessão dessa ficha que ficou em
         // aberto (sem ter clicado em "Finalizar treino"), em vez de criar
@@ -908,6 +924,10 @@ if(!workoutIdValid){
         if(incomplete){
           session = incomplete;
           isResumedSession = true;
+          // Cronômetro e duração final contam desde o início real da sessão,
+          // não desde que a aba foi reaberta — sem isso um treino de 1h+
+          // finalizado numa sessão retomada aparecia como "4min" no resumo.
+          startTime = new Date(incomplete.started_at).getTime();
         } else {
           session = await createWorkoutSession(user.id, workoutId);
         }
