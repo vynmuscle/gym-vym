@@ -757,18 +757,23 @@ function addSet(ei){
   document.getElementById('ex-' + ei).classList.remove('done');
 }
 
+// UI primeiro, localStorage depois (só serve pra restaurar o descanso se a
+// aba recarregar) — um setItem que falhe (Safari modo privado, storage
+// cheio) não pode impedir a sheet de abrir.
 function startRest(seconds, exName, done, total){
   restEndTime = Date.now() + seconds * 1000;
   restExName = exName;
   restDone = done;
   restTotal = total;
-  localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName, done, total }));
   restContext.textContent = `${exName} — série ${done}/${total} feita`;
   restSheet.classList.add('open');
   updateRestDisplay();
   clearInterval(restInterval);
   restInterval = setInterval(updateRestDisplay, 1000);
   startKeepAlive();
+  try {
+    localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName, done, total }));
+  } catch(err) {}
 }
 
 function updateRestDisplay(){
@@ -786,7 +791,7 @@ function updateRestDisplay(){
 function closeRest(){
   clearInterval(restInterval);
   restSheet.classList.remove('open');
-  localStorage.removeItem(REST_STORAGE_KEY);
+  try { localStorage.removeItem(REST_STORAGE_KEY); } catch(err) {}
   stopKeepAlive();
 }
 
@@ -798,7 +803,9 @@ document.addEventListener('visibilitychange', () => {
 
 document.getElementById('btnAddRest').addEventListener('click', () => {
   restEndTime += 30000;
-  localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName: restExName, done: restDone, total: restTotal }));
+  try {
+    localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName: restExName, done: restDone, total: restTotal }));
+  } catch(err) {}
   updateRestDisplay();
 });
 
