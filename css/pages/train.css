@@ -89,7 +89,7 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 
 .sets-header, .set-row{
   display: grid;
-  grid-template-columns: 44px 1fr 76px 76px 60px;
+  grid-template-columns: 32px 1fr 64px 64px 92px;
   align-items: center;
   gap: 6px;
   padding: 0 10px;
@@ -98,7 +98,7 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 .sets-header .left{ text-align: left; padding-left: 4px; }
 .set-row{ min-height: 58px; }
 .set-row:nth-child(even){ background: rgba(255,255,255,.025); }
-.set-num{ font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-lg); text-align: center; color: var(--gv3-text-primary); }
+.set-num{ font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-base); text-align: center; color: var(--gv3-text-primary); }
 .pr-badge{ font-size: 12px; margin-left: 2px; }
 .set-prev{ font-size: var(--gv3-text-sm); color: var(--gv3-text-muted); padding-left: 4px; }
 
@@ -111,29 +111,27 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   color: var(--gv3-text-primary);
   font-family: var(--gv3-font-display);
   font-weight: 700;
-  font-size: 19px;
+  font-size: 17px;
   text-align: center;
   cursor: pointer;
 }
 .value-btn:active{ border-color: var(--gv3-accent-precision); }
 
-/* Coluna de ações da série: check (ação primária, 44px) e excluir (ação
-   secundária) — os dois com caixa própria pra ficarem reconhecíveis como
-   um par de botões, só que o de excluir menor/mais discreto em vez de
-   competir em destaque com o de concluir. */
-.check-col{ display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+/* Coluna de ações da série: check (primária) e excluir (secundária) lado
+   a lado, mesma altura — liberou espaço reduzindo peso/reps/nº da série. */
+.check-col{ display: flex; flex-direction: row; align-items: stretch; gap: 6px; }
 .check-btn{
-  min-height: 44px; width: 100%;
+  flex: 1.3; min-height: 44px; min-width: 0;
   border: 2px solid var(--gv3-border-strong);
   border-radius: var(--gv3-radius-sm);
   background: var(--gv3-bg-card-raised);
   color: var(--gv3-text-muted);
-  font-size: 20px; font-weight: 700; cursor: pointer;
+  font-size: 18px; font-weight: 700; cursor: pointer;
   transition: transform var(--gv3-duration-fast) ease, background var(--gv3-duration-normal), border-color var(--gv3-duration-normal), color var(--gv3-duration-normal);
 }
 .check-btn:active{ transform: scale(.93); }
 .del-btn{
-  min-height: 32px; width: 100%;
+  flex: 1; min-height: 44px; min-width: 0;
   border: 1px solid var(--gv3-border);
   border-radius: var(--gv3-radius-sm);
   background: var(--gv3-bg-surface);
