@@ -1,0 +1,62 @@
+/* GymVym 3.0 — Perfil
+   Mesmos nomes de classe do CSS legado — js/profile.js não foi tocado
+   (cores de liga/conquista continuam vindo de js/leagues.js via JS). */
+
+.league-card{ box-shadow: var(--gv3-glow-ember); }
+
+.league-avatar-row{ display: flex; align-items: center; gap: 14px; }
+.league-avatar{
+  width: 56px; height: 56px;
+  border-radius: var(--gv3-radius-pill);
+  border: 3px solid var(--gv3-status-good);
+  background: var(--gv3-bg-card-raised);
+  color: var(--gv3-text-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--gv3-font-display);
+  font-weight: 700;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.league-name{ font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-base); }
+.league-xp{ font-family: var(--gv3-font-mono); font-size: var(--gv3-text-sm); color: var(--gv3-text-secondary); margin-top: 2px; }
+
+.league-progress-track{ height: 8px; border-radius: var(--gv3-radius-pill); background: var(--gv3-bg-card-raised); margin-top: 16px; overflow: hidden; }
+.league-progress-fill{
+  height: 100%;
+  border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-accent-ember);
+  width: 0%;
+  transition: width var(--gv3-duration-slow) var(--gv3-ease-standard);
+}
+.league-progress-label{ font-size: var(--gv3-text-xs); color: var(--gv3-text-secondary); margin-top: 8px; text-align: center; }
+
+.stepper{ display: flex; align-items: center; justify-content: center; gap: 24px; margin-top: 8px; }
+.stepper-btn{
+  width: 52px; height: 52px;
+  border-radius: var(--gv3-radius-pill);
+  border: 1px solid var(--gv3-border-strong);
+  background: var(--gv3-bg-card-raised);
+  color: var(--gv3-text-primary);
+  font-size: 24px; font-weight: 700;
+  cursor: pointer;
+}
+.stepper-btn:active{ transform: scale(.93); }
+.stepper-value{ font-family: var(--gv3-font-display); font-weight: 700; font-size: 36px; min-width: 50px; text-align: center; }
+.stepper-sub{ text-align: center; color: var(--gv3-text-muted); font-size: var(--gv3-text-xs); margin-top: 8px; }
+
+.achievements-grid{ display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 12px; }
+.achievement-badge{
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-lg);
+  padding: 14px 8px;
+  text-align: center;
+  transition: transform var(--gv3-duration-fast) var(--gv3-ease-spring);
+}
+.achievement-badge.unlocked{ border-color: var(--gv3-accent-ember); box-shadow: var(--gv3-glow-ember); }
+.achievement-badge.locked{ opacity: var(--gv3-opacity-disabled); }
+.achievement-icon{ font-size: 26px; }
+.achievement-name{ font-size: var(--gv3-text-xs); font-weight: 600; margin-top: 6px; }
+.achievement-badge.locked .achievement-name{ color: var(--gv3-text-muted); }
+.achievement-date{ font-size: 10px; color: var(--gv3-accent-ember); margin-top: 2px; }
+.achievement-desc{ font-size: 10px; color: var(--gv3-text-muted); margin-top: 2px; }
