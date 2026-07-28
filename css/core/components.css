@@ -148,40 +148,30 @@
   transition: width var(--gv3-duration-slow) var(--gv3-ease-standard);
 }
 
-/* Nav inferior --------------------------------------------------------------- */
-.gv3-nav{
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  z-index: var(--gv3-z-nav);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: var(--gv3-space-2) var(--gv3-space-3) calc(var(--gv3-space-2) + env(safe-area-inset-bottom));
-  background: rgba(19,19,23,.85);
-  backdrop-filter: blur(var(--gv3-glass-blur));
-  -webkit-backdrop-filter: blur(var(--gv3-glass-blur));
-  border-top: 1px solid var(--gv3-border);
+/* Anel de progresso (SVG gerado por js/design-system/progressRing.js —
+   mesmos nomes de classe, migração da matemática do anel fica pra Fase 4) */
+.gv-progress-ring{
+  width: var(--gv-ring-size, 64px);
+  height: var(--gv-ring-size, 64px);
 }
-.gv3-nav__item{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-width: 44px;
-  min-height: 44px;
-  justify-content: center;
-  color: var(--gv3-text-muted);
-  font-size: var(--gv3-text-2xs);
+.gv-progress-ring circle{ fill: none; stroke-width: 8; }
+.gv-progress-ring__track{ stroke: var(--gv3-bg-card-raised); }
+.gv-progress-ring__fill{
+  stroke: var(--gv3-accent-precision);
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset var(--gv3-duration-slow) var(--gv3-ease-standard);
 }
-.gv3-nav__item svg{ width: 22px; height: 22px; }
-.gv3-nav__item--active{ color: var(--gv3-accent-precision); }
-.gv3-nav__fab{
-  width: 56px; height: 56px;
-  margin-top: -28px;
-  border-radius: var(--gv3-radius-pill);
-  background: var(--gv3-accent-ember);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--gv3-glow-ember);
-  color: #12100F;
+
+/* Marca --------------------------------------------------------------- */
+.gv3-brand{
+  font-family: var(--gv3-font-display);
+  font-size: var(--gv3-text-sm);
+  letter-spacing: .06em;
 }
-.gv3-nav__fab svg{ width: 26px; height: 26px; }
+.gv3-brand .vym{ color: var(--gv3-accent-ember); }
+
+/* Nav inferior — ver css/core/nav.css (carregado também nas telas ainda
+   não migradas, por isso ficou em arquivo próprio em vez de só aqui). */
+@import url('./nav.css');

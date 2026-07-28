@@ -25,6 +25,7 @@ const ICONS = {
   photo: '<rect x="3.5" y="4.5" width="17" height="15" rx="2" /><circle cx="9" cy="10" r="1.6" /><path d="M4 17l5-5 3.5 3.5L16 12l4 5" />',
   scale: '<circle cx="12" cy="13" r="7" /><path d="M12 13l3-3" /><path d="M9.5 6.5h5" />',
   food: '<path d="M6 3v8a3 3 0 0 0 6 0V3" /><path d="M9 11v10" /><path d="M17 3c-2 0-3 2-3 5s1 4 3 4" /><path d="M17 12v9" />',
+  sparkle: '<path d="M12 3l1.6 4.8L18 9.4l-4.4 1.6L12 16l-1.6-5L6 9.4l4.4-1.6z" /><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />',
 };
 
 export function icon(name, opts = {}) {

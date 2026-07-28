@@ -12,7 +12,8 @@ import { computeStreak } from './utils.js';
 import { getLeagueForXP } from './leagues.js';
 import { createProgressRing } from './design-system/progressRing.js';
 import { getDietProfile, getLatestWeight, getLatestHeight, listFoodLogsRange, calculateDietTargets } from './services/dietService.js';
-import { showToast } from './toast.js';
+import { showToast } from './core/toast.js';
+import { icon } from './icons.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('./login.html');
@@ -37,6 +38,7 @@ const heroSection = document.getElementById('heroSection');
 const ringHost = document.getElementById('ringHost');
 const progressBig = document.getElementById('progressBig');
 const progressSub = document.getElementById('progressSub');
+const streakIcon = document.getElementById('streakIcon');
 const streakValue = document.getElementById('streakValue');
 const recoveryStrip = document.getElementById('recoveryStrip');
 const insightCard = document.getElementById('insightCard');
@@ -44,6 +46,10 @@ const insightText = document.getElementById('insightText');
 const nutritionBody = document.getElementById('nutritionBody');
 const bodyBody = document.getElementById('bodyBody');
 const recentActivityCard = document.getElementById('recentActivityCard');
+const btnAskAI = document.getElementById('btnAskAI');
+
+btnAskAI.innerHTML = icon('sparkle');
+streakIcon.innerHTML = icon('flame');
 
 const ring = createProgressRing({ size: 92, strokeWidth: 9, percent: 0 });
 const ringPct = document.createElement('div');
@@ -64,7 +70,7 @@ function mondayOf(date){
 
 function renderGreeting(displayName){
   const name = displayName || user.email.split('@')[0];
-  greetingName.textContent = `Fala, ${name}! 💪`;
+  greetingName.textContent = `Fala, ${name}!`;
 
   const label = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
   greetingDate.textContent = label.charAt(0).toUpperCase() + label.slice(1);
@@ -80,8 +86,8 @@ function renderWeek(weekStart, sessionDates){
     const isToday = date.toDateString() === today.toDateString();
     const done = daySet.has(date.toDateString());
     const dotContent = done ? '✓' : (isToday ? '?' : '·');
-    const cls = `day${done ? ' done' : ''}${isToday ? ' today' : ''}`;
-    return `<div class="${cls}"><div class="lbl">${lbl}</div><div class="dot">${dotContent}</div></div>`;
+    const cls = `gv3-day${done ? ' gv3-day--done' : ''}${isToday ? ' gv3-day--today' : ''}`;
+    return `<div class="${cls}"><div class="gv3-day__lbl">${lbl}</div><div class="gv3-day__dot">${dotContent}</div></div>`;
   }).join('');
 }
 
@@ -93,7 +99,7 @@ function renderRing(weekCount, weeklyGoal){
   ringPct.textContent = `${pct}%`;
 
   progressBig.textContent = pct >= 100
-    ? 'Meta da semana batida! 🎉'
+    ? 'Meta da semana batida!'
     : pct >= 50
       ? 'Você está no caminho certo!'
       : 'Vamos começar a semana!';
@@ -118,16 +124,16 @@ async function renderHero(){
     const names = [...new Set(todaysSessions.map(s => s.workouts ? s.workouts.name : 'Treino avulso'))].join(', ');
 
     heroSection.innerHTML = `
-      <div class="hero hero-done gv-anim-hero">
-        <div class="tag">Treino de hoje concluído ✓</div>
+      <div class="gv3-hero gv3-hero--done gv3-anim-in">
+        <div class="gv3-hero__tag">Treino de hoje concluído ✓</div>
         <h2>${names}</h2>
-        <div class="stats">
-          <div class="stat"><div class="v num">${formatMinutes(totalMinutes)}</div><div class="k">Duração</div></div>
-          <div class="stat"><div class="v num">${totalSets}</div><div class="k">Séries</div></div>
-          <div class="stat"><div class="v num">${Math.round(totalVolume).toLocaleString('pt-BR')}</div><div class="k">Volume kg</div></div>
+        <div class="gv3-hero__stats">
+          <div class="gv3-hero__stat"><div class="v gv3-mono">${formatMinutes(totalMinutes)}</div><div class="k">Duração</div></div>
+          <div class="gv3-hero__stat"><div class="v gv3-mono">${totalSets}</div><div class="k">Séries</div></div>
+          <div class="gv3-hero__stat"><div class="v gv3-mono">${Math.round(totalVolume).toLocaleString('pt-BR')}</div><div class="k">Volume kg</div></div>
         </div>
-        <a href="./pages/history.html" class="btn btn-secondary full" style="text-decoration:none;display:flex;align-items:center;justify-content:center">Ver histórico</a>
-        <a href="./pages/ai-workout.html" class="hero-ai-link">Renovar treinos com IA</a>
+        <a href="./pages/history.html" class="gv3-btn gv3-btn--secondary gv3-btn--full">Ver histórico</a>
+        <a href="./pages/ai-workout.html" class="gv3-hero__ai-link">Renovar treinos com IA</a>
       </div>`;
     return;
   }
@@ -144,12 +150,12 @@ async function renderHero(){
     : `${groupNames} <b>100% recuperados</b>`;
 
   heroSection.innerHTML = `
-    <div class="hero gv-anim-hero gv-glow gv-energy-line">
-      <div class="tag">Treino de hoje</div>
+    <div class="gv3-hero gv3-anim-in">
+      <div class="gv3-hero__tag">Treino de hoje</div>
       <h2>${suggestion.workout.name}</h2>
-      <div class="why${suggestion.warn ? ' warn' : ''}">${why}</div>
-      <button type="button" class="hero-btn" id="btnStartHero">▶ &nbsp;Iniciar treino</button>
-      <a href="./pages/ai-workout.html" class="hero-ai-link">Renovar treinos com IA</a>
+      <div class="gv3-hero__why${suggestion.warn ? ' gv3-hero__why--warn' : ''}">${why}</div>
+      <button type="button" class="gv3-btn gv3-btn--primary gv3-btn--full" id="btnStartHero">Iniciar treino</button>
+      <a href="./pages/ai-workout.html" class="gv3-hero__ai-link">Renovar treinos com IA</a>
     </div>`;
 
   document.getElementById('btnStartHero').addEventListener('click', () => {
@@ -162,10 +168,11 @@ function renderRecovery(recovery){
     const ready = r.status !== 'em_recuperacao';
     const label = ready ? 'Pronto' : `${r.hoursRemaining}h rest.`;
     const barStyle = ready ? 'width:100%' : `width:${r.pct}%`;
+    const color = ready ? 'var(--gv3-status-good)' : 'var(--gv3-status-warning)';
     return `
-      <div class="muscle-chip ${ready ? 'ok' : 'rec'}">
+      <div class="gv3-muscle-chip">
         <div class="m">${MUSCLE_GROUP_LABELS[r.group]}</div>
-        <div class="gv-progress gv-progress--thin"><div class="gv-progress__fill" style="${barStyle};background:${ready ? 'var(--gv-green)' : 'var(--gv-yellow)'}"></div></div>
+        <div class="gv3-progress"><div class="gv3-progress__fill" style="${barStyle};background:${color}"></div></div>
         <div class="st">${label}</div>
       </div>`;
   }).join('');
@@ -196,7 +203,7 @@ function renderInsight({ weekCount, weeklyGoal, streak, recovery }){
 async function renderNutrition(){
   const profile = await getDietProfile(user.id);
   if(!profile){
-    nutritionBody.innerHTML = '<div style="color:var(--muted);font-size:13px">Configure sua meta calórica →</div>';
+    nutritionBody.innerHTML = '<div class="gv3-shortcut-hint">Configure sua meta calórica →</div>';
     return;
   }
 
@@ -207,7 +214,7 @@ async function renderNutrition(){
   ]);
 
   if(!weightRow?.weight_kg || !heightCm){
-    nutritionBody.innerHTML = '<div style="color:var(--muted);font-size:13px">Registre peso/altura pra ver a meta →</div>';
+    nutritionBody.innerHTML = '<div class="gv3-shortcut-hint">Registre peso/altura pra ver a meta →</div>';
     return;
   }
 
@@ -216,8 +223,8 @@ async function renderNutrition(){
   const pct = targets.targetCalories > 0 ? Math.min(100, Math.round((consumed / targets.targetCalories) * 100)) : 0;
 
   nutritionBody.innerHTML = `
-    <div style="font-size:20px;font-weight:800;font-family:'Anton',sans-serif">${Math.round(consumed)} <span style="font-size:13px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:600">/ ${targets.targetCalories} kcal</span></div>
-    <div class="gv-progress gv-progress--thin" style="margin-top:8px"><div class="gv-progress__fill" style="width:${pct}%"></div></div>`;
+    <div class="gv3-shortcut-value">${Math.round(consumed)} <span class="gv3-shortcut-unit">/ ${targets.targetCalories} kcal</span></div>
+    <div class="gv3-progress" style="margin-top:8px;height:4px"><div class="gv3-progress__fill" style="width:${pct}%"></div></div>`;
 }
 
 function todayStr(){
@@ -228,28 +235,28 @@ function todayStr(){
 async function renderBody(){
   const weightRow = await getLatestWeight(user.id);
   if(!weightRow){
-    bodyBody.innerHTML = '<div style="color:var(--muted);font-size:13px">Registre sua primeira medida →</div>';
+    bodyBody.innerHTML = '<div class="gv3-shortcut-hint">Registre sua primeira medida →</div>';
     return;
   }
   const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(weightRow.measured_at));
   bodyBody.innerHTML = `
-    <div style="font-size:20px;font-weight:800;font-family:'Anton',sans-serif">${weightRow.weight_kg} <span style="font-size:13px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:600">kg</span></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:4px">Última medida em ${date}</div>`;
+    <div class="gv3-shortcut-value">${weightRow.weight_kg} <span class="gv3-shortcut-unit">kg</span></div>
+    <div style="font-size:11px;color:var(--gv3-text-muted);margin-top:4px">Última medida em ${date}</div>`;
 }
 
 async function renderRecentActivity(){
   const sessions = (await listCompletedSessions()).slice(0, 3);
   if(sessions.length === 0){
-    recentActivityCard.innerHTML = '<div class="list-item"><div class="list-item-sub">Nenhum treino concluído ainda.</div></div>';
+    recentActivityCard.innerHTML = '<div class="gv3-activity-item"><div class="gv3-activity-item__sub">Nenhum treino concluído ainda.</div></div>';
     return;
   }
   recentActivityCard.innerHTML = sessions.map(s => {
     const label = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(s.started_at));
     return `
-      <div class="list-item">
-        <div class="list-item-info">
-          <div class="list-item-title">${s.workouts ? s.workouts.name : 'Treino avulso'}</div>
-          <div class="list-item-sub">${label}</div>
+      <div class="gv3-activity-item">
+        <div>
+          <div class="gv3-activity-item__title">${s.workouts ? s.workouts.name : 'Treino avulso'}</div>
+          <div class="gv3-activity-item__sub">${label}</div>
         </div>
       </div>`;
   }).join('');
@@ -283,10 +290,10 @@ renderRecovery(recovery);
 renderInsight({ weekCount: sessionDates.length, weeklyGoal, streak, recovery });
 await renderHero();
 
-renderNutrition().catch(() => { nutritionBody.innerHTML = '<div style="color:var(--muted);font-size:13px">Configure sua meta calórica →</div>'; });
-renderBody().catch(() => { bodyBody.innerHTML = '<div style="color:var(--muted);font-size:13px">Registre sua primeira medida →</div>'; });
+renderNutrition().catch(() => { nutritionBody.innerHTML = '<div class="gv3-shortcut-hint">Configure sua meta calórica →</div>'; });
+renderBody().catch(() => { bodyBody.innerHTML = '<div class="gv3-shortcut-hint">Registre sua primeira medida →</div>'; });
 renderRecentActivity();
 
-document.getElementById('btnAskAI').addEventListener('click', () => {
+btnAskAI.addEventListener('click', () => {
   showToast('✨ Assistente de IA conversacional — em breve');
 });

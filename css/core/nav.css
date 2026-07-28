@@ -1,0 +1,50 @@
+/* GymVym 3.0 — Nav inferior
+   Extraído de components.css pra poder ser carregado (com tokens.css) em
+   TODAS as 13 telas desde já — js/navigation.js é compartilhado por todas
+   as páginas, então o CSS do nav não pode esperar a migração completa de
+   cada tela pra fase de "core" sem quebrar a navegação nas telas ainda não
+   migradas. components.css importa este arquivo pra não duplicar regra. */
+
+.gv3-nav{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--gv3-z-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: var(--gv3-space-2) var(--gv3-space-3) calc(var(--gv3-space-2) + env(safe-area-inset-bottom));
+  background: rgba(19,19,23,.85);
+  backdrop-filter: blur(var(--gv3-glass-blur));
+  -webkit-backdrop-filter: blur(var(--gv3-glass-blur));
+  border-top: 1px solid var(--gv3-border);
+}
+.gv3-nav__item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  color: var(--gv3-text-muted);
+  font-size: var(--gv3-text-2xs);
+  text-decoration: none;
+}
+.gv3-nav__item svg{ width: 22px; height: 22px; }
+.gv3-nav__item--active{ color: var(--gv3-accent-precision); }
+.gv3-nav__fab{
+  width: 56px; height: 56px;
+  margin-top: -28px;
+  border: none;
+  border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-accent-ember);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--gv3-glow-ember);
+  color: #12100F;
+  cursor: pointer;
+}
+.gv3-nav__fab svg{ width: 26px; height: 26px; }
+
+/* Reserva espaço no fim da página pra não ficar atrás do nav fixo, em
+   telas que ainda não migraram pro .gv3-page (que já reserva isso). */
+body.has-bottom-nav{ padding-bottom: 88px; }
