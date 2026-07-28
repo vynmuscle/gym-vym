@@ -117,10 +117,11 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 }
 .value-btn:active{ border-color: var(--gv3-accent-precision); }
 
-/* Coluna de ações da série: check (ação primária, alvo de toque cheio de
-   44px) e excluir (ação secundária, mais discreta — sem caixa própria pra
-   não parecer um segundo botão empilhado igual ao de concluir). */
-.check-col{ display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+/* Coluna de ações da série: check (ação primária, 44px) e excluir (ação
+   secundária) — os dois com caixa própria pra ficarem reconhecíveis como
+   um par de botões, só que o de excluir menor/mais discreto em vez de
+   competir em destaque com o de concluir. */
+.check-col{ display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
 .check-btn{
   min-height: 44px; width: 100%;
   border: 2px solid var(--gv3-border-strong);
@@ -132,15 +133,15 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 }
 .check-btn:active{ transform: scale(.93); }
 .del-btn{
-  min-height: 44px; width: 100%;
-  border: none;
+  min-height: 32px; width: 100%;
+  border: 1px solid var(--gv3-border);
   border-radius: var(--gv3-radius-sm);
-  background: transparent;
+  background: var(--gv3-bg-surface);
   color: var(--gv3-text-muted);
-  font-size: 12px; cursor: pointer;
-  transition: color var(--gv3-duration-fast) ease, background var(--gv3-duration-fast) ease;
+  font-size: 13px; cursor: pointer;
+  transition: transform var(--gv3-duration-fast) ease, background var(--gv3-duration-fast) ease, border-color var(--gv3-duration-fast) ease, color var(--gv3-duration-fast) ease;
 }
-.del-btn:active{ background: rgba(239,68,68,.12); color: var(--gv3-status-danger); }
+.del-btn:active{ transform: scale(.93); background: rgba(239,68,68,.12); border-color: var(--gv3-status-danger); color: var(--gv3-status-danger); }
 
 .ex-note-row{ padding: 0 14px 12px; }
 .ex-note-input{
