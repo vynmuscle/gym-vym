@@ -1,0 +1,64 @@
+/* GymVym 3.0 — Calendário
+   Mesmos nomes de classe do CSS legado — js/calendar.js não foi tocado. */
+
+.cal-header{ display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--gv3-space-4); }
+.cal-header h2{ margin: 0; font-family: var(--gv3-font-display); font-size: var(--gv3-text-xl); }
+
+.cal-nav-btn{
+  min-width: 44px; min-height: 44px;
+  border-radius: var(--gv3-radius-sm);
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-border-strong);
+  color: var(--gv3-text-primary);
+  font-size: 18px; cursor: pointer;
+}
+.cal-nav-btn:disabled{ opacity: .3; cursor: default; }
+
+.cal-weekdays{
+  display: grid; grid-template-columns: repeat(7,1fr);
+  text-align: center;
+  font-size: var(--gv3-text-2xs);
+  color: var(--gv3-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.cal-grid{ display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+.cal-day{
+  min-height: 56px;
+  border-radius: var(--gv3-radius-sm);
+  background: var(--gv3-bg-card);
+  border: 1px solid var(--gv3-border);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  padding: 4px 2px;
+  cursor: pointer;
+  transition: transform var(--gv3-duration-fast) ease;
+}
+.cal-day.empty{ background: transparent; border-color: transparent; cursor: default; }
+.cal-day.today{ border-color: var(--gv3-accent-ember); border-width: 2px; }
+.cal-day:active:not(.empty){ transform: scale(.96); }
+.cal-day-num{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); }
+
+.cal-markers{ display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; justify-content: center; }
+.cal-marker{
+  width: 18px; height: 18px;
+  border-radius: var(--gv3-radius-pill);
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--gv3-text-2xs); font-weight: 700;
+  flex-shrink: 0;
+}
+.cal-marker.completed{ background: var(--gv3-status-good); color: #fff; }
+.cal-marker.incomplete{ background: var(--gv3-status-warning); color: #0A0A0C; }
+.cal-marker-more{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-muted); align-self: center; }
+
+.cal-footer{
+  display: flex; justify-content: space-around;
+  margin-top: var(--gv3-space-4);
+  padding: 14px 16px;
+  background: var(--gv3-bg-card);
+  border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-lg);
+}
+.cal-footer .stat-item{ text-align: center; }
+.cal-footer .stat-item .v{ font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-xl); }
+.cal-footer .stat-item .k{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }

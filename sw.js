@@ -1,6 +1,6 @@
 // Service worker clássico (não module) — Firefox ainda não suporta SW do tipo module.
 // Bumpar CACHE_VERSION junto com APP_VERSION (js/config.js) sempre que JS/CSS/HTML mudar.
-const CACHE_VERSION = 43;
+const CACHE_VERSION = 44;
 const CACHE_NAME = `gymvym-v${CACHE_VERSION}`;
 
 // cdn.jsdelivr.net: Motion One (motion.js), carregado sob demanda no 3.0 —

@@ -2,6 +2,26 @@
    Modal, bottom sheet e toast. Consumidos por js/design-system/{modal,bottomSheet,toast}.js
    (mantidos, só re-estilizados). */
 
+/* Alias de compatibilidade — telas ainda não migradas (progress/diet)
+   usam esta classe pro FAB "Perguntar à IA". */
+.gv-fab{
+  position: fixed;
+  right: var(--gv3-space-4);
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: var(--gv3-z-nav);
+  width: 52px; height: 52px;
+  border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-border-strong);
+  box-shadow: var(--gv3-shadow-lg);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gv3-accent-precision);
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform var(--gv3-duration-fast) var(--gv3-ease-standard);
+}
+.gv-fab:active{ transform: scale(.94); }
+
 .gv3-backdrop{
   position: fixed; inset: 0;
   z-index: var(--gv3-z-overlay);

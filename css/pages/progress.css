@@ -1,0 +1,29 @@
+/* GymVym 3.0 — Progresso
+   Mesmos nomes de classe do CSS legado — js/progress.js não foi tocado.
+   O gráfico é SVG gerado via JS referenciando var(--red)/var(--yellow)/
+   var(--muted)/var(--border)/var(--bg) diretamente — essas variáveis são
+   redirecionadas pros tokens gv3 em css/core/tokens.css (compat shim). */
+
+.progress-toolbar{ display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.metric-toggle{ display: flex; gap: 4px; }
+.metric-toggle .tab-btn{ padding: 8px 12px; min-height: 40px; font-size: var(--gv3-text-sm); }
+
+#periodSelect{ width: auto; min-height: 40px; padding: 8px 10px; }
+
+.chart-container{ position: relative; }
+.chart-svg{ width: 100%; height: 240px; display: block; }
+
+.chart-tooltip{
+  position: absolute;
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-accent-precision);
+  border-radius: var(--gv3-radius-sm);
+  padding: 8px 12px;
+  font-size: var(--gv3-text-sm);
+  text-align: center;
+  pointer-events: none;
+  transform: translate(-50%, -115%);
+  white-space: nowrap;
+  z-index: 5;
+}
+.chart-tooltip .num{ font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-base); }

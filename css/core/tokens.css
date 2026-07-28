@@ -91,4 +91,20 @@
   --gv3-z-nav: 100;
   --gv3-z-overlay: 500;
   --gv3-z-toast: 1000;
+
+  /* Compatibilidade — algumas telas ainda não migradas (ex: progress.js)
+     geram SVG/CSS inline referenciando os nomes de variável antigos
+     diretamente (var(--red), var(--muted) etc). Redireciona pros tokens
+     novos em vez de deixar undefined — sem isso, gráficos/estilos gerados
+     por JS quebrariam silenciosamente antes da fase de cada tela. */
+  --bg: var(--gv3-bg-root);
+  --surface: var(--gv3-bg-card);
+  --surface-2: var(--gv3-bg-card-raised);
+  --border: var(--gv3-border);
+  --text: var(--gv3-text-primary);
+  --muted: var(--gv3-text-secondary);
+  --red: var(--gv3-accent-ember);
+  --green: var(--gv3-status-good);
+  --yellow: var(--gv3-accent-precision);
+  --radius: var(--gv3-radius-md);
 }

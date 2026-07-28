@@ -1,0 +1,21 @@
+/* GymVym 3.0 — Hub de Evolução */
+
+.hub-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--gv3-space-3); }
+.hub-card{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 12px;
+  background: var(--gv3-bg-card);
+  border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-lg);
+  text-decoration: none;
+  color: var(--gv3-text-primary);
+  min-height: 110px;
+  transition: transform var(--gv3-duration-fast) ease;
+}
+.hub-card svg{ width: 28px; height: 28px; stroke: var(--gv3-accent-precision); fill: none; stroke-width: 1.8; }
+.hub-card span{ font-weight: 700; font-size: var(--gv3-text-sm); font-family: var(--gv3-font-ui); }
+.hub-card:active{ transform: scale(.97); }
