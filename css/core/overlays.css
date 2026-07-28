@@ -1,0 +1,69 @@
+/* GymVym 3.0 — Overlays
+   Modal, bottom sheet e toast. Consumidos por js/design-system/{modal,bottomSheet,toast}.js
+   (mantidos, só re-estilizados). */
+
+.gv3-backdrop{
+  position: fixed; inset: 0;
+  z-index: var(--gv3-z-overlay);
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  animation: gv3-fade-in var(--gv3-duration-normal) var(--gv3-ease-standard);
+}
+
+.gv3-modal{
+  margin: auto;
+  width: min(360px, calc(100vw - 32px));
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-border-strong);
+  border-radius: var(--gv3-radius-xl);
+  padding: var(--gv3-space-5);
+  box-shadow: var(--gv3-shadow-lg);
+  animation: gv3-modal-in var(--gv3-duration-normal) var(--gv3-ease-spring);
+}
+
+.gv3-sheet{
+  margin-top: auto;
+  width: 100%;
+  max-height: 85dvh;
+  background: var(--gv3-bg-card-raised);
+  border-radius: var(--gv3-radius-xl) var(--gv3-radius-xl) 0 0;
+  border: 1px solid var(--gv3-border-strong);
+  border-bottom: none;
+  padding: var(--gv3-space-2) var(--gv3-space-4) calc(var(--gv3-space-5) + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  animation: gv3-sheet-in var(--gv3-duration-normal) var(--gv3-ease-spring);
+}
+.gv3-sheet__handle{
+  width: 36px; height: 4px;
+  border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-border-strong);
+  margin: var(--gv3-space-2) auto var(--gv3-space-3);
+}
+
+.gv3-toast{
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: var(--gv3-z-toast);
+  max-width: min(320px, calc(100vw - 32px));
+  padding: var(--gv3-space-3) var(--gv3-space-4);
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-border-strong);
+  border-radius: var(--gv3-radius-md);
+  box-shadow: var(--gv3-shadow-lg);
+  font-size: var(--gv3-text-sm);
+  animation: gv3-toast-in var(--gv3-duration-normal) var(--gv3-ease-spring);
+}
+.gv3-toast--out{ animation: gv3-toast-out var(--gv3-duration-fast) var(--gv3-ease-standard) forwards; }
+
+@keyframes gv3-fade-in{ from{ opacity: 0; } to{ opacity: 1; } }
+@keyframes gv3-modal-in{ from{ opacity: 0; transform: scale(.92); } to{ opacity: 1; transform: scale(1); } }
+@keyframes gv3-sheet-in{ from{ transform: translateY(100%); } to{ transform: translateY(0); } }
+@keyframes gv3-toast-in{ from{ opacity: 0; transform: translate(-50%, 12px); } to{ opacity: 1; transform: translate(-50%, 0); } }
+@keyframes gv3-toast-out{ from{ opacity: 1; } to{ opacity: 0; transform: translate(-50%, 8px); } }
+
+@media (prefers-reduced-motion: reduce){
+  .gv3-backdrop, .gv3-modal, .gv3-sheet, .gv3-toast, .gv3-toast--out{ animation: none; }
+}

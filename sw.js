@@ -1,9 +1,12 @@
 // Service worker clássico (não module) — Firefox ainda não suporta SW do tipo module.
 // Bumpar CACHE_VERSION junto com APP_VERSION (js/config.js) sempre que JS/CSS/HTML mudar.
-const CACHE_VERSION = 35;
+const CACHE_VERSION = 36;
 const CACHE_NAME = `gymvym-v${CACHE_VERSION}`;
 
-const CACHE_FIRST_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'raw.githubusercontent.com'];
+// cdn.jsdelivr.net: Motion One (motion.js), carregado sob demanda no 3.0 —
+// cache-first + versão pinada na URL garante que funcione offline após o
+// primeiro carregamento de cada tela que o usa.
+const CACHE_FIRST_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com', 'raw.githubusercontent.com', 'cdn.jsdelivr.net'];
 
 self.addEventListener('install', () => {
   self.skipWaiting();

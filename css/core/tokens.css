@@ -1,0 +1,94 @@
+/* GymVym 3.0 — Tokens
+   Fonte única de verdade do redesenho 3.0. Substitui css/design-system/tokens.css
+   e as variáveis soltas de css/base.css. Namespace --gv3- para não colidir com
+   o sistema anterior enquanto a migração fase-a-fase acontece. */
+
+:root{
+  /* Cor — base */
+  --gv3-bg-root: #0A0A0C;
+  --gv3-bg-surface: #131317;
+  --gv3-bg-card: #1B1B21;
+  --gv3-bg-card-raised: #202027;
+  --gv3-border: rgba(255,255,255,.08);
+  --gv3-border-strong: rgba(255,255,255,.14);
+
+  /* Cor — texto */
+  --gv3-text-primary: #F5F4F2;
+  --gv3-text-secondary: #9B9AA3;
+  --gv3-text-muted: #6B6A72;
+
+  /* Cor — destaque (dois papéis semânticos, nunca decorativos) */
+  --gv3-accent-ember: #FF5A36;       /* ação, esforço, CTA, FAB */
+  --gv3-accent-ember-dim: #B23F26;   /* estado pressionado */
+  --gv3-accent-precision: #3ED9C4;   /* dado, métrica, anel de progresso */
+  --gv3-accent-precision-dim: #2AA08F;
+
+  /* Cor — status (reservado, nunca reaproveitado como accent decorativo) */
+  --gv3-status-good: #3FA958;
+  --gv3-status-warning: #E9B93B;
+  --gv3-status-danger: #EF4444;
+
+  /* Cor — gráficos (paleta categórica validada contra daltonismo, ver skill dataviz) */
+  --gv3-chart-1: #3987E5; /* azul */
+  --gv3-chart-2: #D95926; /* laranja */
+  --gv3-chart-3: #199E70; /* aqua */
+
+  /* Radius */
+  --gv3-radius-sm: 8px;
+  --gv3-radius-md: 14px;
+  --gv3-radius-lg: 18px;
+  --gv3-radius-xl: 24px;
+  --gv3-radius-pill: 999px;
+
+  /* Espaçamento (múltiplos de 4/8) */
+  --gv3-space-1: 4px;
+  --gv3-space-2: 8px;
+  --gv3-space-3: 12px;
+  --gv3-space-4: 16px;
+  --gv3-space-5: 24px;
+  --gv3-space-6: 32px;
+  --gv3-space-7: 48px;
+
+  /* Tipografia */
+  --gv3-text-2xs: 11px;
+  --gv3-text-xs: 12px;
+  --gv3-text-sm: 14px;
+  --gv3-text-base: 16px;
+  --gv3-text-lg: 18px;
+  --gv3-text-xl: 22px;
+  --gv3-text-2xl: 28px;
+  --gv3-text-3xl: 36px;
+
+  --gv3-font-ui: 'Inter', system-ui, sans-serif;
+  --gv3-font-display: 'Space Grotesk', system-ui, sans-serif;
+  --gv3-font-mono: 'DM Mono', ui-monospace, monospace;
+
+  /* Sombra / elevação */
+  --gv3-shadow-sm: 0 2px 8px rgba(0,0,0,.35);
+  --gv3-shadow-md: 0 8px 24px rgba(0,0,0,.45);
+  --gv3-shadow-lg: 0 16px 40px rgba(0,0,0,.55);
+
+  /* Glass / glow (uso comedido — cards de destaque e momentos de recorde) */
+  --gv3-glass-blur: 14px;
+  --gv3-glow-ember: 0 0 32px rgba(255,90,54,.30);
+  --gv3-glow-precision: 0 0 32px rgba(62,217,196,.28);
+
+  /* Opacidade */
+  --gv3-opacity-disabled: .5;
+  --gv3-opacity-pressed: .8;
+
+  /* Motion */
+  --gv3-duration-fast: 120ms;
+  --gv3-duration-normal: 200ms;
+  --gv3-duration-slow: 320ms;
+  --gv3-ease-standard: cubic-bezier(.4,0,.2,1);
+  --gv3-ease-spring: cubic-bezier(.34,1.56,.64,1);
+
+  /* Breakpoint (referência — media queries continuam literais no CSS) */
+  --gv3-breakpoint-mobile: 820px;
+
+  /* Z-index */
+  --gv3-z-nav: 100;
+  --gv3-z-overlay: 500;
+  --gv3-z-toast: 1000;
+}

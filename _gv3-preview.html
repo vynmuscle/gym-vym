@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GV3 Preview (não linkado ao app)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/core/tokens.css">
+<link rel="stylesheet" href="./css/core/base.css">
+<link rel="stylesheet" href="./css/core/components.css">
+<link rel="stylesheet" href="./css/core/overlays.css">
+<link rel="stylesheet" href="./css/core/motion.css">
+<meta name="theme-color" content="#0A0A0C">
+<style>
+  .swatch{ display:flex; flex-direction:column; align-items:center; gap:6px; font-size:12px; color:var(--gv3-text-secondary); }
+  .swatch i{ width:56px; height:56px; border-radius:12px; display:block; border:1px solid var(--gv3-border); }
+  .row{ display:flex; gap:16px; flex-wrap:wrap; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  section{ margin-bottom:32px; }
+  .metric{ position:relative; padding:20px; overflow:hidden; }
+  .metric .big{ font-family:var(--gv3-font-mono); font-size:36px; font-weight:500; }
+</style>
+</head>
+<body>
+<div class="gv3-page" style="max-width:640px">
+
+  <h1 style="margin-bottom:4px">GymVym 3.0 — Fundação</h1>
+  <p style="margin-bottom:24px">Página descartável de verificação visual — não faz parte do nav do app.</p>
+
+  <section>
+    <div class="gv3-section-title">Cor</div>
+    <div class="row">
+      <div class="swatch"><i style="background:var(--gv3-bg-root)"></i>bg-root</div>
+      <div class="swatch"><i style="background:var(--gv3-bg-surface)"></i>bg-surface</div>
+      <div class="swatch"><i style="background:var(--gv3-bg-card)"></i>bg-card</div>
+      <div class="swatch"><i style="background:var(--gv3-bg-card-raised)"></i>card-raised</div>
+      <div class="swatch"><i style="background:var(--gv3-accent-ember)"></i>ember</div>
+      <div class="swatch"><i style="background:var(--gv3-accent-precision)"></i>precision</div>
+      <div class="swatch"><i style="background:var(--gv3-status-good)"></i>good</div>
+      <div class="swatch"><i style="background:var(--gv3-status-warning)"></i>warning</div>
+      <div class="swatch"><i style="background:var(--gv3-status-danger)"></i>danger</div>
+      <div class="swatch"><i style="background:var(--gv3-chart-1)"></i>chart-1</div>
+      <div class="swatch"><i style="background:var(--gv3-chart-2)"></i>chart-2</div>
+      <div class="swatch"><i style="background:var(--gv3-chart-3)"></i>chart-3</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Tipografia</div>
+    <h1>H1 — Space Grotesk 28px</h1>
+    <h2 style="margin-top:8px">H2 — Space Grotesk 22px</h2>
+    <p style="margin-top:8px">Corpo em Inter — o rápido cachorro marrom pula sobre o cão preguiçoso.</p>
+    <div class="gv3-mono" style="font-size:20px;margin-top:8px">82.5 kg · 12 reps · 01:45</div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Botões</div>
+    <div class="row">
+      <button class="gv3-btn gv3-btn--primary">Começar treino</button>
+      <button class="gv3-btn gv3-btn--secondary">Ver histórico</button>
+      <button class="gv3-btn gv3-btn--ghost">Cancelar</button>
+      <button class="gv3-btn gv3-btn--danger">Excluir</button>
+      <button class="gv3-btn gv3-btn--icon gv3-btn--secondary" id="btnIcon">＋</button>
+      <button class="gv3-btn gv3-btn--primary" disabled>Desabilitado</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Card com Linha de Ascensão (assinatura)</div>
+    <div class="gv3-card gv3-card--raised metric">
+      <div class="gv3-ascent" id="ascentHost"><svg viewBox="0 0 200 80" preserveAspectRatio="none"><path d="M0 70 L60 55 L110 40 L150 20 L200 5" /></svg></div>
+      <div style="position:relative">
+        <div class="gv3-section-title">Streak</div>
+        <div class="big">14 dias</div>
+        <button class="gv3-btn gv3-btn--secondary" id="btnAscent" style="margin-top:12px">Disparar animação de recorde</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Chips &amp; badges</div>
+    <div class="row" style="align-items:center">
+      <span class="gv3-chip gv3-chip--active">Hoje</span>
+      <span class="gv3-chip">7 dias</span>
+      <span class="gv3-chip">30 dias</span>
+      <span class="gv3-badge gv3-badge--good">Bateu meta</span>
+      <span class="gv3-badge gv3-badge--warning">Quase lá</span>
+      <span class="gv3-badge gv3-badge--danger">Atrasado</span>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div>
+      <div class="gv3-section-title">Input</div>
+      <input class="gv3-input" placeholder="Peso (kg)">
+    </div>
+    <div>
+      <div class="gv3-section-title">Progresso</div>
+      <div class="gv3-progress"><div class="gv3-progress__fill" style="width:64%"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Skeleton</div>
+    <div class="gv3-skeleton" style="height:56px"></div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Empty state</div>
+    <div class="gv3-card">
+      <div class="gv3-empty">
+        <svg class="gv3-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 8v8" /><path d="M18 8v8" /><path d="M6 12h12" /></svg>
+        <div class="gv3-empty__title">Nenhum treino ainda</div>
+        <div class="gv3-empty__desc">Crie sua primeira ficha para começar a registrar suas séries.</div>
+        <button class="gv3-btn gv3-btn--primary" style="margin-top:8px">Criar ficha</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Lista com stagger (WAAPI)</div>
+    <div id="staggerList" class="grid2" style="grid-template-columns:1fr"></div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Motion</div>
+    <div class="row">
+      <button class="gv3-btn gv3-btn--secondary" id="btnSuccess">playSuccess()</button>
+      <button class="gv3-btn gv3-btn--secondary" id="btnError">playError()</button>
+      <button class="gv3-btn gv3-btn--primary" id="btnCelebrate">celebrate()</button>
+    </div>
+    <div class="gv3-card" id="motionTarget" style="margin-top:12px;width:120px;text-align:center">Alvo</div>
+  </section>
+
+  <section>
+    <div class="gv3-section-title">Nav inferior (mockup)</div>
+    <nav class="gv3-nav" style="position:relative;border-radius:20px">
+      <div class="gv3-nav__item gv3-nav__item--active" id="navHome"></div>
+      <div class="gv3-nav__item" id="navEvo"></div>
+      <div class="gv3-nav__fab" id="navFab"></div>
+      <div class="gv3-nav__item" id="navWorkouts"></div>
+      <div class="gv3-nav__item" id="navProfile"></div>
+    </nav>
+  </section>
+
+</div>
+
+<script type="module">
+  import { icon } from './js/icons.js';
+  import { playSuccess, playError, celebrate, drawAscent, staggerListWAAPI } from './js/core/motion.js';
+
+  document.getElementById('navHome').innerHTML = icon('home') + '<span>Início</span>';
+  document.getElementById('navEvo').innerHTML = icon('evolution') + '<span>Evolução</span>';
+  document.getElementById('navFab').innerHTML = icon('dumbbell');
+  document.getElementById('navWorkouts').innerHTML = icon('workouts') + '<span>Fichas</span>';
+  document.getElementById('navProfile').innerHTML = icon('profile') + '<span>Perfil</span>';
+  document.getElementById('btnIcon').innerHTML = icon('plus');
+
+  const list = document.getElementById('staggerList');
+  list.innerHTML = ['Treino A — Peito/Tríceps','Treino B — Costas/Bíceps','Treino C — Pernas'].map(t => `<div class="gv3-card" style="margin-bottom:8px">${t}</div>`).join('');
+  staggerListWAAPI(list.children);
+
+  document.getElementById('btnAscent').addEventListener('click', () => drawAscent(document.getElementById('ascentHost')));
+  document.getElementById('btnSuccess').addEventListener('click', () => playSuccess(document.getElementById('motionTarget')));
+  document.getElementById('btnError').addEventListener('click', () => playError(document.getElementById('motionTarget')));
+  document.getElementById('btnCelebrate').addEventListener('click', (e) => celebrate({ originX: e.clientX, originY: e.clientY }));
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+/* GymVym 3.0 — Componentes
+   Vocabulário visual compartilhado por todas as telas. Substitui
+   css/components.css (legado) e css/design-system/components.css (2.0). */
+
+/* Card ------------------------------------------------------------ */
+.gv3-card{
+  background: var(--gv3-bg-card);
+  border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-lg);
+  padding: var(--gv3-space-4);
+}
+.gv3-card--raised{
+  background: var(--gv3-bg-card-raised);
+  box-shadow: var(--gv3-shadow-md);
+}
+.gv3-card--glass{
+  background: rgba(27,27,33,.6);
+  backdrop-filter: blur(var(--gv3-glass-blur));
+  -webkit-backdrop-filter: blur(var(--gv3-glass-blur));
+  border: 1px solid var(--gv3-border-strong);
+}
+
+/* Botão ------------------------------------------------------------ */
+.gv3-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gv3-space-2);
+  min-height: 44px;
+  padding: 0 var(--gv3-space-4);
+  border: none;
+  border-radius: var(--gv3-radius-md);
+  font-size: var(--gv3-text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--gv3-duration-fast) var(--gv3-ease-standard),
+              opacity var(--gv3-duration-fast) var(--gv3-ease-standard);
+}
+.gv3-btn:active{ transform: scale(.97); }
+.gv3-btn:disabled{ opacity: var(--gv3-opacity-disabled); cursor: not-allowed; pointer-events: none; }
+
+.gv3-btn--primary{ background: var(--gv3-accent-ember); color: #12100F; }
+.gv3-btn--primary:active{ background: var(--gv3-accent-ember-dim); }
+
+.gv3-btn--secondary{ background: var(--gv3-bg-card-raised); color: var(--gv3-text-primary); border: 1px solid var(--gv3-border-strong); }
+
+.gv3-btn--ghost{ background: transparent; color: var(--gv3-text-secondary); }
+
+.gv3-btn--danger{ background: var(--gv3-status-danger); color: #1A0000; }
+
+.gv3-btn--full{ width: 100%; }
+.gv3-btn--icon{ width: 44px; height: 44px; padding: 0; border-radius: var(--gv3-radius-pill); }
+
+/* Input -------------------------------------------------------------- */
+.gv3-input{
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--gv3-space-3);
+  background: var(--gv3-bg-surface);
+  border: 1px solid var(--gv3-border-strong);
+  border-radius: var(--gv3-radius-md);
+  color: var(--gv3-text-primary);
+  font-size: var(--gv3-text-base);
+}
+.gv3-input:focus-visible{ border-color: var(--gv3-accent-precision); }
+.gv3-input::placeholder{ color: var(--gv3-text-muted); }
+
+/* Chip / Badge --------------------------------------------------------- */
+.gv3-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gv3-space-1);
+  padding: var(--gv3-space-1) var(--gv3-space-3);
+  border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-border);
+  font-size: var(--gv3-text-sm);
+  color: var(--gv3-text-secondary);
+}
+.gv3-chip--active{ background: var(--gv3-accent-ember); color: #12100F; border-color: transparent; }
+
+.gv3-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--gv3-space-2);
+  border-radius: var(--gv3-radius-pill);
+  font-size: var(--gv3-text-2xs);
+  font-weight: 600;
+}
+.gv3-badge--good{ background: color-mix(in srgb, var(--gv3-status-good) 18%, transparent); color: var(--gv3-status-good); }
+.gv3-badge--warning{ background: color-mix(in srgb, var(--gv3-status-warning) 18%, transparent); color: var(--gv3-status-warning); }
+.gv3-badge--danger{ background: color-mix(in srgb, var(--gv3-status-danger) 18%, transparent); color: var(--gv3-status-danger); }
+
+/* Avatar --------------------------------------------------------------- */
+.gv3-avatar{
+  width: 40px; height: 40px;
+  border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-bg-card-raised);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--gv3-font-display);
+  color: var(--gv3-text-primary);
+  overflow: hidden;
+}
+.gv3-avatar--lg{ width: 64px; height: 64px; }
+
+/* Skeleton --------------------------------------------------------------- */
+.gv3-skeleton{
+  position: relative;
+  overflow: hidden;
+  background: var(--gv3-bg-card-raised);
+  border-radius: var(--gv3-radius-md);
+}
+.gv3-skeleton::after{
+  content: '';
+  position: absolute; inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  animation: gv3-shimmer 1.4s infinite;
+}
+@keyframes gv3-shimmer{ 100%{ transform: translateX(100%); } }
+
+/* Empty state --------------------------------------------------------------- */
+.gv3-empty{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--gv3-space-2);
+  padding: var(--gv3-space-6) var(--gv3-space-4);
+  color: var(--gv3-text-secondary);
+}
+.gv3-empty__icon{ width: 40px; height: 40px; color: var(--gv3-text-muted); }
+.gv3-empty__title{ font-family: var(--gv3-font-display); font-size: var(--gv3-text-lg); color: var(--gv3-text-primary); }
+.gv3-empty__desc{ font-size: var(--gv3-text-sm); max-width: 280px; }
+
+/* Progresso (linear + host do anel SVG gerado por progressRing.js) ------------- */
+.gv3-progress{
+  height: 8px;
+  border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-bg-card-raised);
+  overflow: hidden;
+}
+.gv3-progress__fill{
+  height: 100%;
+  background: var(--gv3-accent-precision);
+  border-radius: inherit;
+  transition: width var(--gv3-duration-slow) var(--gv3-ease-standard);
+}
+
+/* Nav inferior --------------------------------------------------------------- */
+.gv3-nav{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--gv3-z-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: var(--gv3-space-2) var(--gv3-space-3) calc(var(--gv3-space-2) + env(safe-area-inset-bottom));
+  background: rgba(19,19,23,.85);
+  backdrop-filter: blur(var(--gv3-glass-blur));
+  -webkit-backdrop-filter: blur(var(--gv3-glass-blur));
+  border-top: 1px solid var(--gv3-border);
+}
+.gv3-nav__item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  color: var(--gv3-text-muted);
+  font-size: var(--gv3-text-2xs);
+}
+.gv3-nav__item svg{ width: 22px; height: 22px; }
+.gv3-nav__item--active{ color: var(--gv3-accent-precision); }
+.gv3-nav__fab{
+  width: 56px; height: 56px;
+  margin-top: -28px;
+  border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-accent-ember);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--gv3-glow-ember);
+  color: #12100F;
+}
+.gv3-nav__fab svg{ width: 26px; height: 26px; }
