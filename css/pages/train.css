@@ -17,7 +17,11 @@ body{ padding-bottom: 120px; background: var(--gv3-bg-root); color: var(--gv3-te
   border-radius: var(--gv3-radius-md);
 }
 
-.num{ font-family: var(--gv3-font-mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+/* DM Mono só vai até peso 500 (sem bold de verdade) — pra números grandes/
+   protagonistas usamos Space Grotesk 700, que tem o mesmo "peso visual"
+   robusto que o Anton tinha antes. DM Mono fica reservado pra tabelas
+   densas de dado pequeno (dashboard), não pra estes números de destaque. */
+.num{ font-family: var(--gv3-font-display); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0; }
 
 header{
   position: sticky;
@@ -63,7 +67,18 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   overflow: hidden;
 }
 .ex-thumb img{ width: 100%; height: 100%; object-fit: cover; }
-.ex-name{ font-size: var(--gv3-text-lg); font-weight: 700; color: var(--gv3-accent-precision); flex: 1; }
+.ex-name{
+  font-size: var(--gv3-text-base);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--gv3-accent-precision);
+  flex: 1;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .ex-action-btn{
   background: none; border: none; color: var(--gv3-text-secondary);
   font-size: 18px; cursor: pointer; padding: 6px; line-height: 1; flex-shrink: 0;
@@ -83,7 +98,7 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 .sets-header .left{ text-align: left; padding-left: 4px; }
 .set-row{ min-height: 58px; }
 .set-row:nth-child(even){ background: rgba(255,255,255,.025); }
-.set-num{ font-family: var(--gv3-font-mono); font-size: var(--gv3-text-lg); text-align: center; color: var(--gv3-text-primary); }
+.set-num{ font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-lg); text-align: center; color: var(--gv3-text-primary); }
 .pr-badge{ font-size: 12px; margin-left: 2px; }
 .set-prev{ font-size: var(--gv3-text-sm); color: var(--gv3-text-muted); padding-left: 4px; }
 
@@ -94,7 +109,8 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   border: 1px solid var(--gv3-border-strong);
   border-radius: var(--gv3-radius-sm);
   color: var(--gv3-text-primary);
-  font-family: var(--gv3-font-mono);
+  font-family: var(--gv3-font-display);
+  font-weight: 700;
   font-size: 19px;
   text-align: center;
   cursor: pointer;
@@ -167,7 +183,7 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 }
 .rest-sheet.open{ transform: translateY(0); }
 .rest-label{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-secondary); text-transform: uppercase; letter-spacing: .14em; text-align: center; }
-.rest-time{ font-family: var(--gv3-font-mono); font-size: 84px; line-height: 1; text-align: center; margin: 6px 0 4px; font-variant-numeric: tabular-nums; color: var(--gv3-accent-precision); }
+.rest-time{ font-family: var(--gv3-font-display); font-weight: 700; font-size: 84px; line-height: 1; text-align: center; margin: 6px 0 4px; font-variant-numeric: tabular-nums; color: var(--gv3-accent-precision); }
 .rest-time.ending{ color: var(--gv3-status-danger); }
 .rest-context{ text-align: center; font-size: var(--gv3-text-sm); color: var(--gv3-text-secondary); margin-bottom: 16px; }
 .rest-actions{ display: flex; gap: 10px; }
@@ -262,7 +278,7 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   pointer-events: none;
 }
 .wheel-col{ height: 160px; overflow-y: scroll; scroll-snap-type: y proximity; -webkit-overflow-scrolling: touch; }
-.wheel-item{ height: 40px; scroll-snap-align: center; display: flex; align-items: center; justify-content: center; font-family: var(--gv3-font-mono); font-size: 18px; color: var(--gv3-text-muted); cursor: pointer; }
+.wheel-item{ height: 40px; scroll-snap-align: center; display: flex; align-items: center; justify-content: center; font-family: var(--gv3-font-display); font-weight: 700; font-size: 18px; color: var(--gv3-text-muted); cursor: pointer; }
 .wheel-item:active{ color: var(--gv3-accent-precision); }
 
 .ex-info-overlay{ position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.75); display: flex; align-items: center; justify-content: center; padding: 20px; }
