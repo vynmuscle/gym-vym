@@ -172,6 +172,7 @@
 }
 .gv3-brand .vym{ color: var(--gv3-accent-ember); }
 
-/* Nav inferior — ver css/core/nav.css (carregado também nas telas ainda
-   não migradas, por isso ficou em arquivo próprio em vez de só aqui). */
-@import url('./nav.css');
+/* Nav inferior: ver css/core/nav.css — carregado via <link> próprio em
+   TODA página (inclusive esta), não via @import (regra de CSS exige
+   @import no topo do arquivo pra valer; no meio do arquivo o navegador
+   ignora silenciosamente — foi exatamente o que quebrou o nav em produção). */
