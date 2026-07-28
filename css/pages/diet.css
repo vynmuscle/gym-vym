@@ -1,0 +1,153 @@
+/* GymVym 3.0 — Dieta
+   Mesmos nomes de classe do CSS legado — js/diet.js não foi tocado
+   (inclusive a única blindagem XSS do app hoje, escapeHtml, preservada). */
+
+.diet-warning{ padding: 20px; text-align: center; margin-top: var(--gv3-space-4); }
+.diet-warning p{ color: var(--gv3-text-secondary); margin-bottom: 14px; font-size: var(--gv3-text-base); }
+
+.diet-macros{ padding: 16px; }
+
+.diet-tabs{
+  display: flex; gap: 8px; margin-top: 14px;
+  background: var(--gv3-bg-card);
+  border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-lg);
+  padding: 4px;
+}
+.diet-tab{
+  flex: 1; min-height: 44px; border: 0;
+  border-radius: calc(var(--gv3-radius-lg) - 4px);
+  background: transparent;
+  color: var(--gv3-text-secondary);
+  font-weight: 700; font-size: var(--gv3-text-sm);
+  cursor: pointer;
+  transition: transform var(--gv3-duration-fast) ease;
+  font-family: var(--gv3-font-ui);
+}
+.diet-tab:active{ transform: scale(.96); }
+.diet-tab.active{ background: var(--gv3-bg-card-raised); color: var(--gv3-text-primary); }
+
+.diet-search-group{ position: relative; }
+.diet-search-row{ display: flex; gap: 8px; align-items: center; }
+.diet-search-row input{ flex: 1; }
+.diet-search-row .btn-icon{ flex-shrink: 0; width: 52px; height: 52px; font-size: 20px; }
+
+.diet-search-results{
+  margin-top: 8px;
+  border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-sm);
+  overflow: hidden;
+  background: var(--gv3-bg-card-raised);
+}
+.diet-search-result{
+  display: block; width: 100%; text-align: left;
+  padding: 12px; min-height: 44px;
+  background: transparent; border: 0;
+  border-bottom: 1px solid var(--gv3-border);
+  color: var(--gv3-text-primary);
+  cursor: pointer;
+}
+.diet-search-result:last-child{ border-bottom: 0; }
+.diet-search-result:active{ background: var(--gv3-bg-card); }
+.diet-search-result-name{ font-size: var(--gv3-text-sm); font-weight: 600; }
+.diet-search-result-kcal{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); margin-top: 2px; }
+
+.macro-row{ display: flex; flex-direction: column; gap: 14px; }
+.macro-item{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.macro-label{ font-size: var(--gv3-text-sm); font-weight: 600; flex: 0 0 90px; }
+.macro-value{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); margin-left: auto; }
+.macro-item .gv-progress{ flex-basis: 100%; }
+
+.diet-info{ padding: 16px; }
+.diet-info-row{ display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--gv3-border); font-size: var(--gv3-text-sm); }
+.diet-info-row:last-of-type{ border-bottom: none; }
+.diet-info-row span{ color: var(--gv3-text-secondary); }
+.diet-info-row b{ font-weight: 700; }
+
+.food-item{ display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--gv3-border); }
+.food-item:last-child{ border-bottom: none; }
+.food-item-main{ min-width: 0; }
+.food-item-meal{ font-size: var(--gv3-text-xs); color: var(--gv3-accent-precision); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.food-item-name{ font-size: var(--gv3-text-sm); font-weight: 600; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.food-item-macros{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); margin-top: 2px; }
+.food-item-cal{ font-family: var(--gv3-font-mono); font-weight: 700; white-space: nowrap; }
+.food-empty{ padding: 24px 16px; text-align: center; color: var(--gv3-text-muted); font-size: var(--gv3-text-sm); }
+
+/* Gauge de calorias (reusa o SVG do anel gerado por progressRing.js) */
+.diet-gauge-card{ display: flex; align-items: center; gap: 16px; padding: 16px 14px; }
+.ring{ position: relative; width: 92px; height: 92px; flex-shrink: 0; }
+.ring .pct{
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--gv3-font-display);
+  font-size: var(--gv3-text-xl);
+  color: var(--gv3-accent-precision);
+}
+.diet-gauge-stats{ flex: 1; display: flex; justify-content: space-between; gap: 8px; }
+.diet-gauge-stat{ text-align: center; }
+.diet-gauge-stat-value{ font-family: var(--gv3-font-mono); font-size: var(--gv3-text-base); font-weight: 700; }
+.diet-gauge-stat-main .diet-gauge-stat-value{ font-family: var(--gv3-font-display); font-size: var(--gv3-text-xl); color: var(--gv3-accent-precision); }
+.diet-gauge-stat-label{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); margin-top: 2px; }
+
+.diet-imc-card{ padding: 16px; }
+.diet-imc-row{ display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.diet-imc-value{ font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-xl); }
+
+.diet-charts-card{ padding: 16px; }
+.diet-chart-block{ margin-top: 14px; }
+.diet-chart-block:first-of-type{ margin-top: 8px; }
+.diet-chart-label{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); margin-bottom: 8px; }
+.diet-bar-chart{ display: flex; align-items: flex-end; gap: 6px; height: 64px; }
+.diet-bar{ flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.diet-bar-fill{ width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; background: var(--gv3-bg-card-raised); min-height: 2px; }
+.diet-bar.over .diet-bar-fill{ background: var(--gv3-status-warning); }
+.diet-bar.today .diet-bar-fill{ background: var(--gv3-accent-ember); }
+.diet-bar-day{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-muted); margin-top: 6px; text-transform: uppercase; }
+
+.diet-day-strip-panel{ padding: 12px 10px; }
+.diet-day-strip{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.diet-day-pill{
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 0; min-height: 52px;
+  background: transparent; border: 0;
+  border-radius: var(--gv3-radius-sm);
+  color: var(--gv3-text-muted);
+  cursor: pointer;
+}
+.diet-day-pill .lbl{ font-size: var(--gv3-text-2xs); text-transform: uppercase; letter-spacing: .08em; }
+.diet-day-pill .num{
+  font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-sm);
+  width: 28px; height: 28px; border-radius: var(--gv3-radius-pill);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gv3-text-primary);
+}
+.diet-day-pill .dot{ width: 4px; height: 4px; border-radius: var(--gv3-radius-pill); background: transparent; }
+.diet-day-pill.has-log .dot{ background: var(--gv3-accent-precision); }
+.diet-day-pill.selected .num{ background: var(--gv3-accent-ember); color: #12100F; }
+.diet-day-pill.is-today .lbl{ color: var(--gv3-accent-ember); }
+
+.diet-meal-cards{ display: flex; flex-direction: column; gap: 12px; }
+.diet-meal-card{ background: var(--gv3-bg-card); border: 1px solid var(--gv3-border); border-radius: var(--gv3-radius-lg); overflow: hidden; }
+.diet-meal-card-header{ display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.diet-meal-card-info{ flex: 1; min-width: 0; }
+.diet-meal-card-name{ font-size: var(--gv3-text-sm); font-weight: 700; }
+.diet-meal-card-cal{ font-family: var(--gv3-font-mono); font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); margin-top: 2px; }
+.diet-meal-card-bar{ height: 4px; border-radius: var(--gv3-radius-pill); background: var(--gv3-bg-card-raised); overflow: hidden; margin: 0 16px 14px; }
+.diet-meal-card-bar i{ display: block; height: 100%; border-radius: var(--gv3-radius-pill); background: var(--gv3-accent-precision); width: 0%; }
+.diet-meal-card-add{
+  flex-shrink: 0; width: 36px; height: 36px;
+  border-radius: var(--gv3-radius-pill);
+  border: 0; background: var(--gv3-bg-card-raised);
+  color: var(--gv3-accent-ember);
+  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.diet-meal-card-items .food-item{ padding: 10px 16px; border-top: 1px solid var(--gv3-border); }
+
+.diet-form-header{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.diet-form-header h2{ margin: 0; }
+
+.barcode-scanner-overlay{ position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.barcode-scanner-box{ background: var(--gv3-bg-card-raised); border-radius: var(--gv3-radius-lg); padding: 20px; width: 100%; max-width: 400px; border: 1px solid var(--gv3-border-strong); }
+#barcodeReader{ margin-top: 12px; border-radius: var(--gv3-radius-sm); overflow: hidden; }

@@ -134,6 +134,12 @@
 .gv3-empty__title{ font-family: var(--gv3-font-display); font-size: var(--gv3-text-lg); color: var(--gv3-text-primary); }
 .gv3-empty__desc{ font-size: var(--gv3-text-sm); max-width: 280px; }
 
+/* Alias de compatibilidade — telas ainda não migradas (diet.html) usam
+   os nomes de classe da 2.0 (.gv-progress/.gv-progress--thin/.gv-progress__fill). */
+.gv-progress{ height: 8px; border-radius: var(--gv3-radius-pill); background: var(--gv3-bg-card-raised); overflow: hidden; }
+.gv-progress--thin{ height: 4px; }
+.gv-progress__fill{ height: 100%; border-radius: inherit; transition: width var(--gv3-duration-slow) var(--gv3-ease-standard); }
+
 /* Progresso (linear + host do anel SVG gerado por progressRing.js) ------------- */
 .gv3-progress{
   height: 8px;
