@@ -37,6 +37,9 @@ const groupTargetSets = document.getElementById('groupTargetSets');
 const groupTargetReps = document.getElementById('groupTargetReps');
 const groupTargetWeight = document.getElementById('groupTargetWeight');
 const groupTargetDuration = document.getElementById('groupTargetDuration');
+const btnAskAiReview = document.getElementById('btnAskAiReview');
+const aiReviewMsg = document.getElementById('aiReviewMsg');
+const aiReviewResult = document.getElementById('aiReviewResult');
 
 let editingId = null;
 let editingIsCardio = false;
@@ -188,6 +191,59 @@ btnSave.addEventListener('click', async () => {
 });
 
 btnCancel.addEventListener('click', showAddMode);
+
+function showAiReviewMessage(text, type = 'info'){
+  aiReviewMsg.className = `message ${type}`;
+  aiReviewMsg.innerText = text;
+}
+
+btnAskAiReview.addEventListener('click', async () => {
+  if(currentItems.length === 0){
+    showAiReviewMessage('Adicione ao menos um exercício antes de pedir a avaliação.', 'warning');
+    return;
+  }
+
+  showAiReviewMessage('Avaliando ficha... isso pode levar até 15s.');
+  aiReviewResult.style.display = 'none';
+  btnAskAiReview.disabled = true;
+
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const exercises = currentItems.map(item => ({
+      name: item.exercises.name,
+      muscle_group: item.exercises.muscle_group,
+      equipment: item.exercises.equipment,
+      isDuration: item.exercises.tracking_type === 'duration',
+      target_sets: item.target_sets,
+      target_reps: item.target_reps,
+      target_duration_seconds: item.target_duration_seconds,
+      rest_seconds: item.rest_seconds
+    }));
+
+    const res = await fetch('/api/ai-review-workout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ workout_name: workoutNameEl.innerText, exercises })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      showAiReviewMessage(data.error || 'Não consegui avaliar a ficha agora.', 'danger');
+      return;
+    }
+
+    showAiReviewMessage('');
+    aiReviewResult.textContent = data.feedback;
+    aiReviewResult.style.display = 'block';
+  } catch(err){
+    showAiReviewMessage('Erro de conexão. Tente de novo.', 'danger');
+  } finally {
+    btnAskAiReview.disabled = false;
+  }
+});
 
 const workout = await getWorkout(workoutId);
 workoutNameEl.innerText = workout.name;

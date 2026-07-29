@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
-import { listWorkouts, createWorkout, updateWorkout, deleteWorkout } from './services/workoutService.js';
+import { listWorkouts, createWorkout, updateWorkout, deleteWorkout, listWorkoutExercises } from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -22,6 +22,9 @@ const listPanel = document.getElementById('listPanel');
 const archivedSection = document.getElementById('archivedSection');
 const archivedSummary = document.getElementById('archivedSummary');
 const archivedList = document.getElementById('archivedList');
+const btnAskAiProgram = document.getElementById('btnAskAiProgram');
+const aiProgramMsg = document.getElementById('aiProgramMsg');
+const aiProgramResult = document.getElementById('aiProgramResult');
 
 let editingId = null;
 
@@ -149,6 +152,68 @@ btnSave.addEventListener('click', async () => {
 });
 
 btnCancel.addEventListener('click', resetForm);
+
+function showAiProgramMessage(text, type = 'info'){
+  aiProgramMsg.className = `message ${type}`;
+  aiProgramMsg.innerText = text;
+}
+
+btnAskAiProgram.addEventListener('click', async () => {
+  showAiProgramMessage('Avaliando programa... isso pode levar até 20s.');
+  aiProgramResult.style.display = 'none';
+  btnAskAiProgram.disabled = true;
+
+  try {
+    const active = (await listWorkouts()).filter(w => w.is_active);
+
+    if(active.length === 0){
+      showAiProgramMessage('Nenhuma ficha ativa pra avaliar.', 'warning');
+      return;
+    }
+
+    const workouts = [];
+    for(const w of active){
+      const items = await listWorkoutExercises(w.id);
+      workouts.push({
+        name: w.name,
+        exercises: items.map(item => ({
+          name: item.exercises.name,
+          muscle_group: item.exercises.muscle_group,
+          equipment: item.exercises.equipment,
+          isDuration: item.exercises.tracking_type === 'duration',
+          target_sets: item.target_sets,
+          target_reps: item.target_reps,
+          target_duration_seconds: item.target_duration_seconds,
+          rest_seconds: item.rest_seconds
+        }))
+      });
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const res = await fetch('/api/ai-review-program', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ workouts })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      showAiProgramMessage(data.error || 'Não consegui avaliar o programa agora.', 'danger');
+      return;
+    }
+
+    showAiProgramMessage('');
+    aiProgramResult.textContent = data.feedback;
+    aiProgramResult.style.display = 'block';
+  } catch(err){
+    showAiProgramMessage('Erro de conexão. Tente de novo.', 'danger');
+  } finally {
+    btnAskAiProgram.disabled = false;
+  }
+});
 
 resetForm();
 await loadList();
