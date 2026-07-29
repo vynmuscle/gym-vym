@@ -214,7 +214,8 @@ const WHEEL_FIELD_CONFIG = {
   kg: { min: 0, max: 300, step: 0.5, unit: 'kg' },
   reps: { min: 0, max: 50, step: 1, unit: '' },
   durationMin: { min: 0, max: 180, step: 1, unit: 'min' },
-  distanceKm: { min: 0, max: 100, step: 0.1, unit: 'km' }
+  distanceKm: { min: 0, max: 100, step: 0.1, unit: 'km' },
+  inclinePct: { min: 0, max: 15, step: 0.5, unit: '%' }
 };
 
 function formatWheelValue(v){
@@ -274,7 +275,7 @@ function openWheelPicker(field, currentValue, anchorEl){
 }
 
 function setRowHTML(ei, setNumber, set, isDuration){
-  const rowClass = `set-row${set.completed ? ' completed' : ''}`;
+  const rowClass = `set-row${isDuration ? ' duration' : ''}${set.completed ? ' completed' : ''}`;
   const checkCol = `
     <div class="check-col">
       <button type="button" class="check-btn" data-exercise="${ei}" data-set="${setNumber}" aria-label="Concluir série ${setNumber}">✓</button>
@@ -288,6 +289,7 @@ function setRowHTML(ei, setNumber, set, isDuration){
         <div class="set-prev">${set.prev || '—'}</div>
         <button type="button" class="value-btn" data-field="durationMin" data-value="${set.durationMin ?? 0}">${formatWheelValue(set.durationMin ?? 0)}</button>
         <button type="button" class="value-btn" data-field="distanceKm" data-value="${set.distanceKm ?? 0}">${formatWheelValue(set.distanceKm ?? 0)}</button>
+        <button type="button" class="value-btn" data-field="inclinePct" data-value="${set.inclinePct ?? 0}">${formatWheelValue(set.inclinePct ?? 0)}</button>
         ${checkCol}
       </div>`;
   }
@@ -379,9 +381,10 @@ async function refreshExerciseCard(ei, newEx){
     const prev = lastSets[i];
     if(isDuration){
       ex.sets.push({
-        prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min${prev.distance_km ? ' · ' + prev.distance_km + 'km' : ''}` : null,
+        prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min${prev.distance_km ? ' · ' + prev.distance_km + 'km' : ''}${prev.incline_pct ? ' · ' + prev.incline_pct + '%' : ''}` : null,
         durationMin: prev ? Math.round((prev.duration_seconds || 0) / 60) : 20,
-        distanceKm: prev ? (prev.distance_km || 0) : 0
+        distanceKm: prev ? (prev.distance_km || 0) : 0,
+        inclinePct: prev ? (prev.incline_pct || 0) : 0
       });
     } else {
       ex.sets.push({
@@ -414,7 +417,7 @@ function renderExerciseCard(ei){
   const restLabel = ex.isDuration ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
   const uplevelLabel = ex.suggestUp ? `<div class="ex-uplevel">🔼 Hora de subir a carga</div>` : '';
   const headerLabels = ex.isDuration
-    ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div>Km</div><div>✓</div>`
+    ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div>Km</div><div>Elev%</div><div>✓</div>`
     : `<div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>✓</div>`;
 
   card.innerHTML = `
@@ -430,7 +433,7 @@ function renderExerciseCard(ei){
     </div>
     ${uplevelLabel}
     ${restLabel}
-    <div class="sets-header">${headerLabels}</div>
+    <div class="sets-header${ex.isDuration ? ' duration' : ''}">${headerLabels}</div>
     <div class="sets-body" id="sets-${ei}">${rows}</div>
     <button type="button" class="add-set-btn" data-exercise="${ei}">+ Adicionar série</button>`;
 
@@ -513,9 +516,10 @@ async function buildWorkout(){
       const prev = lastSets[i];
       if(isDuration){
         ex.sets.push({
-          prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min${prev.distance_km ? ' · ' + prev.distance_km + 'km' : ''}` : null,
+          prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min${prev.distance_km ? ' · ' + prev.distance_km + 'km' : ''}${prev.incline_pct ? ' · ' + prev.incline_pct + '%' : ''}` : null,
           durationMin: done ? Math.round((done.duration_seconds || 0) / 60) : (prev ? Math.round((prev.duration_seconds || 0) / 60) : Math.round((item.target_duration_seconds || 1200) / 60)),
           distanceKm: done ? (done.distance_km || 0) : (prev ? (prev.distance_km || 0) : 0),
+          inclinePct: done ? (done.incline_pct || 0) : (prev ? (prev.incline_pct || 0) : 0),
           completed: !!done
         });
       } else {
@@ -620,6 +624,7 @@ function syncSetFromDOM(ei, setNumber){
   if(ex.isDuration){
     set.durationMin = parseFloat(row.querySelector('[data-field="durationMin"]').dataset.value) || 0;
     set.distanceKm = parseFloat(row.querySelector('[data-field="distanceKm"]').dataset.value) || 0;
+    set.inclinePct = parseFloat(row.querySelector('[data-field="inclinePct"]').dataset.value) || 0;
   } else {
     set.kg = parseFloat(row.querySelector('[data-field="kg"]').dataset.value) || 0;
     set.reps = parseInt(row.querySelector('[data-field="reps"]').dataset.value) || 0;
@@ -683,12 +688,14 @@ async function completeSet(ei, setNumber, row){
   if(ex.isDuration){
     const minutes = parseFloat(row.querySelector('[data-field="durationMin"]').dataset.value) || 0;
     const distanceKm = parseFloat(row.querySelector('[data-field="distanceKm"]').dataset.value) || 0;
+    const inclinePct = parseFloat(row.querySelector('[data-field="inclinePct"]').dataset.value) || 0;
     payload = {
       session_id: session.id,
       exercise_id: ex.exerciseId,
       set_number: setNumber,
       duration_seconds: Math.round(minutes * 60),
       distance_km: distanceKm || null,
+      incline_pct: inclinePct || null,
       notes: noteValue
     };
   } else {
@@ -745,7 +752,7 @@ function addSet(ei){
   const body = document.getElementById('sets-' + ei);
   const setNumber = body.querySelectorAll('.set-row').length + 1;
   const last = ex.sets[ex.sets.length - 1];
-  const newSet = ex.isDuration ? { prev: null, durationMin: last.durationMin, distanceKm: last.distanceKm } : { prev: null, kg: last.kg, reps: last.reps };
+  const newSet = ex.isDuration ? { prev: null, durationMin: last.durationMin, distanceKm: last.distanceKm, inclinePct: last.inclinePct } : { prev: null, kg: last.kg, reps: last.reps };
   ex.sets.push(newSet);
   body.insertAdjacentHTML('beforeend', setRowHTML(ei, setNumber, newSet, ex.isDuration));
   wireRow(ei, setNumber);

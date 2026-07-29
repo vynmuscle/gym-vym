@@ -161,7 +161,7 @@ export async function getLastSets(exerciseId) {
 export async function getSessionSets(sessionId) {
   const { data, error } = await supabase
     .from('session_sets')
-    .select('exercise_id, set_number, weight, reps, duration_seconds, distance_km')
+    .select('exercise_id, set_number, weight, reps, duration_seconds, distance_km, incline_pct')
     .eq('session_id', sessionId);
   if (error) throw error;
   return data;
@@ -325,7 +325,7 @@ export async function listExercisesWithProgress() {
 
   const { data: exercises, error: exError } = await supabase
     .from('exercises')
-    .select('id, name')
+    .select('id, name, tracking_type')
     .in('id', uniqueIds)
     .order('name');
   if (exError) throw exError;
@@ -335,7 +335,7 @@ export async function listExercisesWithProgress() {
 export async function getExerciseProgress(exerciseId) {
   const { data, error } = await supabase
     .from('session_sets')
-    .select('weight, reps, session_id, completed_at, workout_sessions(started_at)')
+    .select('weight, reps, duration_seconds, distance_km, incline_pct, session_id, completed_at, workout_sessions(started_at)')
     .eq('exercise_id', exerciseId)
     .order('completed_at', { ascending: true });
   if (error) throw error;
@@ -346,7 +346,11 @@ export async function getExerciseProgress(exerciseId) {
     if (!date) continue;
 
     if (!bySession.has(row.session_id)) {
-      bySession.set(row.session_id, { session_id: row.session_id, date, maxWeight: 0, topReps: 0, volume: 0 });
+      bySession.set(row.session_id, {
+        session_id: row.session_id, date,
+        maxWeight: 0, topReps: 0, volume: 0,
+        maxDurationMin: 0, maxDistanceKm: 0, maxInclinePct: 0
+      });
     }
 
     const s = bySession.get(row.session_id);
@@ -357,6 +361,11 @@ export async function getExerciseProgress(exerciseId) {
       s.topReps = r;
     }
     s.volume += w * r;
+
+    const durationMin = Math.round((row.duration_seconds || 0) / 60);
+    if (durationMin > s.maxDurationMin) s.maxDurationMin = durationMin;
+    if ((row.distance_km || 0) > s.maxDistanceKm) s.maxDistanceKm = row.distance_km;
+    if ((row.incline_pct || 0) > s.maxInclinePct) s.maxInclinePct = row.incline_pct;
   }
 
   return [...bySession.values()].sort((a, b) => new Date(a.date) - new Date(b.date));

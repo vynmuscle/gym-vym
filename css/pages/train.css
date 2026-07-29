@@ -94,6 +94,9 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   gap: 6px;
   padding: 0 10px;
 }
+.sets-header.duration, .set-row.duration{
+  grid-template-columns: 28px 1fr 52px 52px 52px 92px;
+}
 .sets-header{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-muted); text-transform: uppercase; letter-spacing: .1em; padding-bottom: 8px; text-align: center; }
 .sets-header .left{ text-align: left; padding-left: 4px; }
 .set-row{ min-height: 58px; }

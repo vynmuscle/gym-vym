@@ -29,6 +29,7 @@ document.getElementById('btnAskAI').addEventListener('click', () => {
 
 let allSessions = [];
 let currentMetric = 'maxWeight';
+let currentIsDuration = false;
 
 function showEmptyState(message){
   progressContent.style.display = 'none';
@@ -52,9 +53,24 @@ function filterByPeriod(sessions, period){
   return sessions.filter(s => new Date(s.date) >= cutoff);
 }
 
+// Pra exercícios de duração (esteira etc.), o "recorde" que importa é a
+// elevação/inclinação máxima, não peso x reps (que nem existe nesse tipo).
+function prField(){
+  return currentIsDuration ? 'maxInclinePct' : 'maxWeight';
+}
+
+// currentMetric é o mesmo toggle (2 botões) reaproveitado: pra exercício de
+// duração o 1º vira "Elevação" (em vez de carga) e o 2º vira "Duração" (em
+// vez de volume) — não existe peso/reps nesse tipo de exercício.
+function valueFor(session){
+  if(currentIsDuration) return currentMetric === 'volume' ? session.maxDurationMin : session.maxInclinePct;
+  return currentMetric === 'volume' ? session.volume : session.maxWeight;
+}
+
 function computeStats(sessions){
+  const field = prField();
   let pr = sessions[0];
-  for(const s of sessions) if(s.maxWeight > pr.maxWeight) pr = s;
+  for(const s of sessions) if(s[field] > pr[field]) pr = s;
 
   const last = sessions[sessions.length - 1];
 
@@ -68,8 +84,8 @@ function computeStats(sessions){
   if(!baseline && sessions.length > 1) baseline = sessions[0];
 
   let evolutionPct = null;
-  if(baseline && baseline !== last && baseline.maxWeight > 0){
-    evolutionPct = ((last.maxWeight - baseline.maxWeight) / baseline.maxWeight) * 100;
+  if(baseline && baseline !== last && baseline[field] > 0){
+    evolutionPct = ((last[field] - baseline[field]) / baseline[field]) * 100;
   }
 
   return { pr, last, evolutionPct };
@@ -77,8 +93,10 @@ function computeStats(sessions){
 
 function renderCards(){
   const stats = computeStats(allSessions);
-  cardPR.textContent = `${stats.pr.maxWeight}kg`;
-  cardLast.textContent = `${stats.last.maxWeight}kg`;
+  const field = prField();
+  const unit = currentIsDuration ? '%' : 'kg';
+  cardPR.textContent = `${stats.pr[field]}${unit}`;
+  cardLast.textContent = `${stats.last[field]}${unit}`;
   cardEvolution.textContent = stats.evolutionPct === null
     ? '—'
     : `${stats.evolutionPct > 0 ? '+' : ''}${stats.evolutionPct.toFixed(0)}%`;
@@ -108,7 +126,7 @@ function renderChart(){
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
 
-  const values = sessions.map(s => currentMetric === 'volume' ? s.volume : s.maxWeight);
+  const values = sessions.map(s => valueFor(s));
   const minV = Math.min(...values);
   const maxV = Math.max(...values);
   const rangeV = (maxV - minV) || Math.max(maxV, 1);
@@ -122,7 +140,7 @@ function renderChart(){
 
   const points = sessions.map((s, i) => ({
     x: xFor(i),
-    y: yFor(currentMetric === 'volume' ? s.volume : s.maxWeight),
+    y: yFor(valueFor(s)),
     session: s
   }));
 
@@ -142,7 +160,8 @@ function renderChart(){
     .map(p => `<text x="${p.x.toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${formatDateShort(p.session.date)}</text>`)
     .join('');
 
-  const prSession = allSessions.reduce((a, b) => b.maxWeight > a.maxWeight ? b : a, allSessions[0]);
+  const field = prField();
+  const prSession = allSessions.reduce((a, b) => b[field] > a[field] ? b : a, allSessions[0]);
 
   const circles = points.map((p, i) => {
     const isPR = currentMetric === 'maxWeight' && p.session === prSession;
@@ -188,16 +207,33 @@ function showTooltip(circleEl, point){
 
   const dateLabel = new Date(point.session.date).toLocaleDateString('pt-BR');
 
-  chartTooltip.innerHTML = currentMetric === 'volume'
-    ? `${dateLabel}<br><span class="num">${Math.round(point.session.volume)}kg</span> volume`
-    : `${dateLabel}<br><span class="num">${point.session.maxWeight}kg</span> × ${point.session.topReps}`;
+  if(currentIsDuration){
+    chartTooltip.innerHTML = currentMetric === 'volume'
+      ? `${dateLabel}<br><span class="num">${point.session.maxDurationMin}min</span> duração`
+      : `${dateLabel}<br><span class="num">${point.session.maxInclinePct}%</span> elevação`;
+  } else {
+    chartTooltip.innerHTML = currentMetric === 'volume'
+      ? `${dateLabel}<br><span class="num">${Math.round(point.session.volume)}kg</span> volume`
+      : `${dateLabel}<br><span class="num">${point.session.maxWeight}kg</span> × ${point.session.topReps}`;
+  }
 
   chartTooltip.style.left = x + 'px';
   chartTooltip.style.top = y + 'px';
   chartTooltip.style.display = 'block';
 }
 
+function updateMetricLabels(){
+  metricMax.textContent = currentIsDuration ? 'Elevação' : 'Carga máxima';
+  metricVolume.textContent = currentIsDuration ? 'Duração' : 'Volume';
+}
+
 async function loadExerciseProgress(exerciseId){
+  currentIsDuration = trackingTypeById.get(exerciseId) === 'duration';
+  currentMetric = 'maxWeight';
+  metricMax.classList.add('active');
+  metricVolume.classList.remove('active');
+  updateMetricLabels();
+
   allSessions = await getExerciseProgress(exerciseId);
 
   if(allSessions.length < 2){
@@ -240,6 +276,7 @@ metricVolume.addEventListener('click', () => {
 periodSelect.addEventListener('change', renderChart);
 
 const exercises = await listExercisesWithProgress();
+const trackingTypeById = new Map(exercises.map(ex => [ex.id, ex.tracking_type]));
 exerciseSelect.innerHTML = '<option value="">Selecione...</option>' +
   exercises.map(ex => `<option value="${ex.id}">${ex.name}</option>`).join('');
 
