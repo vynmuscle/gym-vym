@@ -40,6 +40,18 @@ const groupTargetDuration = document.getElementById('groupTargetDuration');
 
 let editingId = null;
 let editingIsCardio = false;
+let currentItems = [];
+
+// Cardio sempre por último na ordem de execução — isolado numa faixa alta
+// (900+) pra não competir com o sort_order dos exercícios de força.
+function getNextSortOrder(isCardio){
+  if(isCardio){
+    const cardioItems = currentItems.filter(i => i.exercises.tracking_type === 'duration');
+    return cardioItems.length ? Math.max(...cardioItems.map(i => i.sort_order)) + 1 : 900;
+  }
+  const nonCardio = currentItems.filter(i => i.exercises.tracking_type !== 'duration');
+  return nonCardio.length ? Math.max(...nonCardio.map(i => i.sort_order)) + 10 : 10;
+}
 
 function showMessage(text, type = 'info'){
   mensagem.className = `message ${type}`;
@@ -73,6 +85,7 @@ function showEditMode(item){
 
 async function loadList(){
   const items = await listWorkoutExercises(workoutId);
+  currentItems = items;
 
   if(items.length === 0){
     listPanel.innerHTML = '<p class="muted" style="padding:20px">Nenhum exercício na ficha ainda.</p>';
@@ -134,6 +147,7 @@ btnOpenPicker.addEventListener('click', () => {
       await addWorkoutExercise(user.id, {
         workout_id: workoutId,
         exercise_id: ex.id,
+        sort_order: getNextSortOrder(isCardio),
         target_sets: isCardio ? 1 : 3,
         target_reps: isCardio ? null : '10',
         target_weight: null,

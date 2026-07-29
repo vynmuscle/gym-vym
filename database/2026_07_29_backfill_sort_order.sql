@@ -1,0 +1,18 @@
+-- 2026_07_29_backfill_sort_order.sql
+-- workout_exercises.sort_order nunca era setado ao adicionar exercicio pela
+-- tela "Montar Ficha" (so aiWorkout.js setava) -- todas as linhas ficavam
+-- com o valor default 0. Com todos empatados em 0, ".order('sort_order')"
+-- cai no order fisico de armazenamento, que muda quando a linha sofre
+-- QUALQUER update (ex: trocar o exercicio) -- por isso o exercicio
+-- substituido "pulava" pro fim da ficha.
+--
+-- Este arquivo documenta o backfill ja aplicado direto no banco (via SQL
+-- Editor) em 29/07/2026: valores de sort_order reorganizados pela ordem de
+-- execucao correta (compostos antes de isolados, cardio sempre por ultimo)
+-- para as 5 fichas ativas + 3 legadas. Os valores exatos foram aplicados
+-- manualmente por linha (nao reexecutar em massa -- os ids sao especificos
+-- do ambiente de producao).
+--
+-- A correcao definitiva do bug esta em js/workoutEdit.js: toda nova linha
+-- inserida agora recebe sort_order calculado (getNextSortOrder), nunca mais
+-- o default 0.
