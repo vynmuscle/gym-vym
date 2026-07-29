@@ -1,5 +1,8 @@
 const SUPABASE_URL = 'https://lyxzqejagdwkrnpfemkd.supabase.co';
 
+const MUSCLE_GROUPS = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'abdomen', 'gluteos', 'cardio'];
+const EQUIPMENT_OPTIONS = ['barra', 'halter', 'maquina', 'polia', 'peso corporal'];
+
 export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', 'https://gym-vym.vercel.app');
@@ -25,13 +28,13 @@ export default async function handler(req, res) {
     }
 
     const prompt = buildPrompt(workouts);
-    const feedback = await callClaudeForReview(prompt);
+    const result = await callClaudeForReview(prompt);
 
-    if (!feedback) {
+    if (!result) {
       return res.status(502).json({ error: 'Não consegui avaliar o programa agora. Tente de novo em instantes.' });
     }
 
-    return res.status(200).json({ feedback });
+    return res.status(200).json(result);
 
   } catch (err) {
     console.error(err);
@@ -54,13 +57,32 @@ function buildPrompt(workouts) {
 
 ${fichas}
 
-Dê um parecer curto e direto em português (máximo ~250 palavras) sobre o PROGRAMA COMO UM TODO (não ficha por ficha isolada), cobrindo:
-- Se a divisão entre as fichas faz sentido (grupos musculares bem distribuídos, sem sobrecarga nem grupo esquecido)
-- Exercícios redundantes entre fichas diferentes (ex: mesmo movimento repetido sem necessidade)
-- Se o volume total por grupo muscular na semana parece adequado
-- Sugestões concretas de ajuste na estrutura do programa
+Responda APENAS com JSON válido, sem markdown, sem texto antes ou depois, no formato exato:
+{
+  "feedback": "Parecer curto e direto em português (máximo ~250 palavras) sobre o PROGRAMA COMO UM TODO: divisão entre fichas, exercícios redundantes entre fichas diferentes, volume semanal por grupo muscular, e o que foi ajustado abaixo.",
+  "workouts": [
+    {
+      "name": "Nome EXATO de uma das fichas acima",
+      "exercises": [
+        { "name": "Supino reto com barra", "muscle_group": "peito", "equipment": "barra", "target_sets": 4, "target_reps": "8-12", "rest_seconds": 90, "notes": null, "is_duration": false, "target_duration_seconds": null }
+      ]
+    }
+  ]
+}
 
-Responda em texto simples (sem markdown, sem JSON), direto ao aluno.`;
+O campo "workouts" deve conter TODAS as fichas ativas listadas acima (use o "name" EXATAMENTE igual ao original pra eu conseguir casar), cada uma com seus exercícios corrigidos (pode mover exercício redundante de uma ficha pra outra, reordenar, ajustar séries/reps/descanso, remover redundância). Não invente uma ficha nova que não esteja na lista original. Mantenha exercícios de cardio ("is_duration": true, com "target_duration_seconds" em segundos) sempre por último em cada ficha.
+
+muscle_group deve ser exatamente um destes valores: ${MUSCLE_GROUPS.join(', ')}.
+equipment deve ser exatamente um destes valores (ou vazio): ${EQUIPMENT_OPTIONS.join(', ')}.`;
+}
+
+function isValidResult(parsed) {
+  if (!parsed || typeof parsed.feedback !== 'string' || !Array.isArray(parsed.workouts) || parsed.workouts.length === 0) return false;
+  return parsed.workouts.every(w =>
+    typeof w.name === 'string' &&
+    Array.isArray(w.exercises) &&
+    w.exercises.every(ex => typeof ex.name === 'string')
+  );
 }
 
 async function callClaudeForReview(prompt, attempt = 1) {
@@ -73,7 +95,7 @@ async function callClaudeForReview(prompt, attempt = 1) {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1536,
+      max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
@@ -84,6 +106,14 @@ async function callClaudeForReview(prompt, attempt = 1) {
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.text?.trim();
-  return text || null;
+  const text = data.content?.[0]?.text || '';
+
+  try {
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    if (!isValidResult(parsed)) throw new Error('formato inválido');
+    return parsed;
+  } catch (err) {
+    if (attempt < 2) return callClaudeForReview(prompt, attempt + 1);
+    return null;
+  }
 }

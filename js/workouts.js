@@ -2,7 +2,10 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
-import { listWorkouts, createWorkout, updateWorkout, deleteWorkout, listWorkoutExercises } from './services/workoutService.js';
+import {
+  listWorkouts, createWorkout, updateWorkout, deleteWorkout, listWorkoutExercises,
+  removeWorkoutExercise, addWorkoutExercise, listExercises, createExercise
+} from './services/workoutService.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -25,8 +28,15 @@ const archivedList = document.getElementById('archivedList');
 const btnAskAiProgram = document.getElementById('btnAskAiProgram');
 const aiProgramMsg = document.getElementById('aiProgramMsg');
 const aiProgramResult = document.getElementById('aiProgramResult');
+const aiProgramSuggestions = document.getElementById('aiProgramSuggestions');
+const aiProgramSuggestionsList = document.getElementById('aiProgramSuggestionsList');
+const btnApplyProgramSuggestions = document.getElementById('btnApplyProgramSuggestions');
+const btnDiscardProgramSuggestions = document.getElementById('btnDiscardProgramSuggestions');
+const aiProgramApplyMsg = document.getElementById('aiProgramApplyMsg');
 
 let editingId = null;
+let suggestedWorkouts = null;
+let activeWorkoutIdByName = new Map();
 
 function showMessage(text, type = 'info'){
   mensagem.className = `message ${type}`;
@@ -158,9 +168,73 @@ function showAiProgramMessage(text, type = 'info'){
   aiProgramMsg.innerText = text;
 }
 
+function showAiApplyMessage(text, type = 'info'){
+  aiProgramApplyMsg.className = `message ${type}`;
+  aiProgramApplyMsg.innerText = text;
+}
+
+function renderProgramSuggestions(){
+  aiProgramSuggestionsList.innerHTML = suggestedWorkouts.map((w, wi) => `
+    <div class="panel ai-workout-card">
+      <div class="ai-workout-head">
+        <h3>${w.name}${!activeWorkoutIdByName.has(w.name.trim().toLowerCase()) ? ' (não encontrada — será ignorada)' : ''}</h3>
+      </div>
+      ${w.exercises.map((ex, ei) => `
+        <div class="ai-exercise-row">
+          <div class="ai-exercise-head">
+            <span class="ai-exercise-name">${ex.name}</span>
+            <span class="ai-exercise-meta">${ex.muscle_group || ''}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
+            <button type="button" class="btn-icon danger" data-remove-exercise data-workout="${wi}" data-exercise="${ei}">✕</button>
+          </div>
+          <div class="ai-exercise-fields">
+            ${ex.is_duration ? `
+              <label>Min
+                <input type="number" min="1" value="${Math.round((ex.target_duration_seconds || 0) / 60)}" data-field="target_duration_min" data-workout="${wi}" data-exercise="${ei}">
+              </label>
+            ` : `
+              <label>Séries
+                <input type="number" min="1" value="${ex.target_sets}" data-field="target_sets" data-workout="${wi}" data-exercise="${ei}">
+              </label>
+              <label>Reps
+                <input type="text" value="${ex.target_reps || ''}" data-field="target_reps" data-workout="${wi}" data-exercise="${ei}">
+              </label>
+            `}
+            <label>Descanso (s)
+              <input type="number" min="0" value="${ex.rest_seconds || 90}" data-field="rest_seconds" data-workout="${wi}" data-exercise="${ei}">
+            </label>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+
+  aiProgramSuggestionsList.querySelectorAll('[data-remove-exercise]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const wi = Number(btn.dataset.workout);
+      const ei = Number(btn.dataset.exercise);
+      suggestedWorkouts[wi].exercises.splice(ei, 1);
+      renderProgramSuggestions();
+    });
+  });
+
+  aiProgramSuggestionsList.querySelectorAll('[data-field]').forEach(input => {
+    input.addEventListener('change', () => {
+      const wi = Number(input.dataset.workout);
+      const ei = Number(input.dataset.exercise);
+      const field = input.dataset.field;
+      const ex = suggestedWorkouts[wi].exercises[ei];
+      if(field === 'target_duration_min') ex.target_duration_seconds = Number(input.value) * 60;
+      else if(field === 'target_sets' || field === 'rest_seconds') ex[field] = Number(input.value);
+      else ex[field] = input.value;
+    });
+  });
+}
+
 btnAskAiProgram.addEventListener('click', async () => {
   showAiProgramMessage('Avaliando programa... isso pode levar até 20s.');
   aiProgramResult.style.display = 'none';
+  aiProgramSuggestions.style.display = 'none';
+  showAiApplyMessage('');
   btnAskAiProgram.disabled = true;
 
   try {
@@ -170,6 +244,8 @@ btnAskAiProgram.addEventListener('click', async () => {
       showAiProgramMessage('Nenhuma ficha ativa pra avaliar.', 'warning');
       return;
     }
+
+    activeWorkoutIdByName = new Map(active.map(w => [w.name.trim().toLowerCase(), w.id]));
 
     const workouts = [];
     for(const w of active){
@@ -208,10 +284,96 @@ btnAskAiProgram.addEventListener('click', async () => {
     showAiProgramMessage('');
     aiProgramResult.textContent = data.feedback;
     aiProgramResult.style.display = 'block';
+
+    suggestedWorkouts = data.workouts;
+    renderProgramSuggestions();
+    aiProgramSuggestions.style.display = 'block';
   } catch(err){
     showAiProgramMessage('Erro de conexão. Tente de novo.', 'danger');
   } finally {
     btnAskAiProgram.disabled = false;
+  }
+});
+
+btnDiscardProgramSuggestions.addEventListener('click', () => {
+  suggestedWorkouts = null;
+  aiProgramSuggestions.style.display = 'none';
+  showAiApplyMessage('');
+});
+
+btnApplyProgramSuggestions.addEventListener('click', async () => {
+  if(!suggestedWorkouts || suggestedWorkouts.length === 0){
+    showAiApplyMessage('Nada pra aplicar.', 'warning');
+    return;
+  }
+
+  const matched = suggestedWorkouts.filter(w => activeWorkoutIdByName.has(w.name.trim().toLowerCase()));
+
+  if(matched.length === 0){
+    showAiApplyMessage('Nenhuma ficha sugerida bateu com as fichas ativas atuais.', 'danger');
+    return;
+  }
+
+  if(!confirm(`Isso substitui todos os exercícios de ${matched.length} ficha(s) pela sugestão da IA. Continuar?`)) return;
+
+  btnApplyProgramSuggestions.disabled = true;
+  showAiApplyMessage('Aplicando...');
+
+  try {
+    const existing = await listExercises();
+    const exerciseCache = new Map(existing.map(e => [e.name.trim().toLowerCase(), e.id]));
+
+    for(const w of matched){
+      const workoutId = activeWorkoutIdByName.get(w.name.trim().toLowerCase());
+      const currentItems = await listWorkoutExercises(workoutId);
+
+      for(const item of currentItems){
+        await removeWorkoutExercise(item.id);
+      }
+
+      let nonCardioOrder = 10;
+      let cardioOrder = 900;
+
+      for(const ex of w.exercises){
+        const key = ex.name.trim().toLowerCase();
+        let exerciseId = exerciseCache.get(key);
+
+        if(!exerciseId){
+          const created = await createExercise(user.id, {
+            name: ex.name.trim(),
+            muscle_group: ex.muscle_group || 'peito',
+            equipment: ex.equipment || null,
+            tracking_type: ex.is_duration ? 'duration' : 'reps'
+          });
+          exerciseId = created.id;
+          exerciseCache.set(key, exerciseId);
+        }
+
+        await addWorkoutExercise(user.id, {
+          workout_id: workoutId,
+          exercise_id: exerciseId,
+          sort_order: ex.is_duration ? cardioOrder++ : nonCardioOrder,
+          target_sets: ex.is_duration ? 1 : (ex.target_sets || 3),
+          target_reps: ex.is_duration ? null : (ex.target_reps || '10'),
+          target_weight: null,
+          target_duration_seconds: ex.is_duration ? (ex.target_duration_seconds || 1200) : null,
+          rest_seconds: ex.rest_seconds ?? (ex.is_duration ? 0 : 90),
+          notes: ex.notes || null
+        });
+
+        if(!ex.is_duration) nonCardioOrder += 10;
+      }
+    }
+
+    suggestedWorkouts = null;
+    aiProgramSuggestions.style.display = 'none';
+    aiProgramResult.style.display = 'none';
+    showAiApplyMessage('');
+    await loadList();
+  } catch(err){
+    showAiApplyMessage('Erro ao aplicar. Tente de novo.', 'danger');
+  } finally {
+    btnApplyProgramSuggestions.disabled = false;
   }
 });
 

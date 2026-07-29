@@ -1,5 +1,8 @@
 const SUPABASE_URL = 'https://lyxzqejagdwkrnpfemkd.supabase.co';
 
+const MUSCLE_GROUPS = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'abdomen', 'gluteos', 'cardio'];
+const EQUIPMENT_OPTIONS = ['barra', 'halter', 'maquina', 'polia', 'peso corporal'];
+
 export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', 'https://gym-vym.vercel.app');
@@ -25,13 +28,13 @@ export default async function handler(req, res) {
     }
 
     const prompt = buildPrompt(workout_name, exercises);
-    const feedback = await callClaudeForReview(prompt);
+    const result = await callClaudeForReview(prompt);
 
-    if (!feedback) {
+    if (!result) {
       return res.status(502).json({ error: 'Não consegui avaliar a ficha agora. Tente de novo em instantes.' });
     }
 
-    return res.status(200).json({ feedback });
+    return res.status(200).json(result);
 
   } catch (err) {
     console.error(err);
@@ -52,12 +55,23 @@ function buildPrompt(workoutName, exercises) {
 Ficha: ${workoutName}
 ${lista}
 
-Dê um parecer curto e direto em português (máximo ~150 palavras), cobrindo:
-- Pontos fortes da ficha
-- Pontos fracos ou riscos (ex: ordem de execução ruim, volume desbalanceado entre grupos, descanso incoerente, exercício redundante ou faltando)
-- Sugestões concretas de ajuste
+Responda APENAS com JSON válido, sem markdown, sem texto antes ou depois, no formato exato:
+{
+  "feedback": "Parecer curto e direto em português (máximo ~150 palavras): pontos fortes, pontos fracos/riscos (ordem ruim, volume desbalanceado, descanso incoerente, exercício redundante ou faltando) e o que foi ajustado abaixo.",
+  "exercises": [
+    { "name": "Supino reto com barra", "muscle_group": "peito", "equipment": "barra", "target_sets": 4, "target_reps": "8-12", "rest_seconds": 90, "notes": null, "is_duration": false, "target_duration_seconds": null }
+  ]
+}
 
-Responda em texto simples (sem markdown, sem JSON), direto ao aluno.`;
+O array "exercises" é a MESMA ficha, mas na ordem e configuração corrigidas por você (pode reordenar, ajustar séries/reps/descanso, remover redundância, sugerir 1 exercício novo se fizer falta clara — sem exagerar). Mantenha exercícios de cardio ("is_duration": true, com "target_duration_seconds" em segundos) sempre por último. Sempre inclua TODOS os exercícios da ficha original nesse array (corrigidos), não deixe nenhum de fora.
+
+muscle_group deve ser exatamente um destes valores: ${MUSCLE_GROUPS.join(', ')}.
+equipment deve ser exatamente um destes valores (ou vazio): ${EQUIPMENT_OPTIONS.join(', ')}.`;
+}
+
+function isValidResult(parsed) {
+  if (!parsed || typeof parsed.feedback !== 'string' || !Array.isArray(parsed.exercises) || parsed.exercises.length === 0) return false;
+  return parsed.exercises.every(ex => typeof ex.name === 'string');
 }
 
 async function callClaudeForReview(prompt, attempt = 1) {
@@ -70,7 +84,7 @@ async function callClaudeForReview(prompt, attempt = 1) {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
@@ -81,6 +95,14 @@ async function callClaudeForReview(prompt, attempt = 1) {
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.text?.trim();
-  return text || null;
+  const text = data.content?.[0]?.text || '';
+
+  try {
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    if (!isValidResult(parsed)) throw new Error('formato inválido');
+    return parsed;
+  } catch (err) {
+    if (attempt < 2) return callClaudeForReview(prompt, attempt + 1);
+    return null;
+  }
 }

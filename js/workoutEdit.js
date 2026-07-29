@@ -4,7 +4,7 @@ import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { openExercisePicker } from './exercisePicker.js';
 import {
-  getWorkout, listWorkoutExercises,
+  getWorkout, listWorkoutExercises, listExercises, createExercise,
   addWorkoutExercise, updateWorkoutExercise, removeWorkoutExercise,
   swapWorkoutExerciseExercise
 } from './services/workoutService.js';
@@ -40,6 +40,13 @@ const groupTargetDuration = document.getElementById('groupTargetDuration');
 const btnAskAiReview = document.getElementById('btnAskAiReview');
 const aiReviewMsg = document.getElementById('aiReviewMsg');
 const aiReviewResult = document.getElementById('aiReviewResult');
+const aiReviewSuggestions = document.getElementById('aiReviewSuggestions');
+const aiSuggestionsList = document.getElementById('aiSuggestionsList');
+const btnApplySuggestions = document.getElementById('btnApplySuggestions');
+const btnDiscardSuggestions = document.getElementById('btnDiscardSuggestions');
+const aiApplyMsg = document.getElementById('aiApplyMsg');
+
+let suggestedExercises = null;
 
 let editingId = null;
 let editingIsCardio = false;
@@ -197,6 +204,57 @@ function showAiReviewMessage(text, type = 'info'){
   aiReviewMsg.innerText = text;
 }
 
+function showAiApplyMessage(text, type = 'info'){
+  aiApplyMsg.className = `message ${type}`;
+  aiApplyMsg.innerText = text;
+}
+
+function renderSuggestions(){
+  aiSuggestionsList.innerHTML = suggestedExercises.map((ex, i) => `
+    <div class="ai-exercise-row">
+      <div class="ai-exercise-head">
+        <span class="ai-exercise-name">${ex.name}</span>
+        <span class="ai-exercise-meta">${ex.muscle_group || ''}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
+        <button type="button" class="btn-icon danger" data-remove-exercise="${i}">✕</button>
+      </div>
+      <div class="ai-exercise-fields">
+        ${ex.is_duration ? `
+          <label>Min
+            <input type="number" min="1" value="${Math.round((ex.target_duration_seconds || 0) / 60)}" data-field="target_duration_min" data-exercise="${i}">
+          </label>
+        ` : `
+          <label>Séries
+            <input type="number" min="1" value="${ex.target_sets}" data-field="target_sets" data-exercise="${i}">
+          </label>
+          <label>Reps
+            <input type="text" value="${ex.target_reps || ''}" data-field="target_reps" data-exercise="${i}">
+          </label>
+        `}
+        <label>Descanso (s)
+          <input type="number" min="0" value="${ex.rest_seconds || 90}" data-field="rest_seconds" data-exercise="${i}">
+        </label>
+      </div>
+    </div>
+  `).join('');
+
+  aiSuggestionsList.querySelectorAll('[data-remove-exercise]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      suggestedExercises.splice(Number(btn.dataset.removeExercise), 1);
+      renderSuggestions();
+    });
+  });
+
+  aiSuggestionsList.querySelectorAll('[data-field]').forEach(input => {
+    input.addEventListener('change', () => {
+      const i = Number(input.dataset.exercise);
+      const field = input.dataset.field;
+      if(field === 'target_duration_min') suggestedExercises[i].target_duration_seconds = Number(input.value) * 60;
+      else if(field === 'target_sets' || field === 'rest_seconds') suggestedExercises[i][field] = Number(input.value);
+      else suggestedExercises[i][field] = input.value;
+    });
+  });
+}
+
 btnAskAiReview.addEventListener('click', async () => {
   if(currentItems.length === 0){
     showAiReviewMessage('Adicione ao menos um exercício antes de pedir a avaliação.', 'warning');
@@ -205,6 +263,8 @@ btnAskAiReview.addEventListener('click', async () => {
 
   showAiReviewMessage('Avaliando ficha... isso pode levar até 15s.');
   aiReviewResult.style.display = 'none';
+  aiReviewSuggestions.style.display = 'none';
+  showAiApplyMessage('');
   btnAskAiReview.disabled = true;
 
   try {
@@ -238,10 +298,84 @@ btnAskAiReview.addEventListener('click', async () => {
     showAiReviewMessage('');
     aiReviewResult.textContent = data.feedback;
     aiReviewResult.style.display = 'block';
+
+    suggestedExercises = data.exercises;
+    renderSuggestions();
+    aiReviewSuggestions.style.display = 'block';
   } catch(err){
     showAiReviewMessage('Erro de conexão. Tente de novo.', 'danger');
   } finally {
     btnAskAiReview.disabled = false;
+  }
+});
+
+btnDiscardSuggestions.addEventListener('click', () => {
+  suggestedExercises = null;
+  aiReviewSuggestions.style.display = 'none';
+  showAiApplyMessage('');
+});
+
+btnApplySuggestions.addEventListener('click', async () => {
+  if(!suggestedExercises || suggestedExercises.length === 0){
+    showAiApplyMessage('Nada pra aplicar.', 'warning');
+    return;
+  }
+
+  if(!confirm('Isso substitui todos os exercícios atuais dessa ficha pela sugestão da IA. Continuar?')) return;
+
+  btnApplySuggestions.disabled = true;
+  showAiApplyMessage('Aplicando...');
+
+  try {
+    for(const item of currentItems){
+      await removeWorkoutExercise(item.id);
+    }
+
+    const existing = await listExercises();
+    const exerciseCache = new Map(existing.map(e => [e.name.trim().toLowerCase(), e.id]));
+
+    let nonCardioOrder = 10;
+    let cardioOrder = 900;
+
+    for(const ex of suggestedExercises){
+      const key = ex.name.trim().toLowerCase();
+      let exerciseId = exerciseCache.get(key);
+
+      if(!exerciseId){
+        const created = await createExercise(user.id, {
+          name: ex.name.trim(),
+          muscle_group: ex.muscle_group || 'peito',
+          equipment: ex.equipment || null,
+          tracking_type: ex.is_duration ? 'duration' : 'reps'
+        });
+        exerciseId = created.id;
+        exerciseCache.set(key, exerciseId);
+      }
+
+      await addWorkoutExercise(user.id, {
+        workout_id: workoutId,
+        exercise_id: exerciseId,
+        sort_order: ex.is_duration ? cardioOrder++ : nonCardioOrder,
+        target_sets: ex.is_duration ? 1 : (ex.target_sets || 3),
+        target_reps: ex.is_duration ? null : (ex.target_reps || '10'),
+        target_weight: null,
+        target_duration_seconds: ex.is_duration ? (ex.target_duration_seconds || 1200) : null,
+        rest_seconds: ex.rest_seconds ?? (ex.is_duration ? 0 : 90),
+        notes: ex.notes || null
+      });
+
+      if(!ex.is_duration) nonCardioOrder += 10;
+    }
+
+    suggestedExercises = null;
+    aiReviewSuggestions.style.display = 'none';
+    aiReviewResult.style.display = 'none';
+    showAiApplyMessage('');
+    await loadList();
+  } catch(err){
+    showAiApplyMessage('Erro ao aplicar. Tente de novo.', 'danger');
+  } finally {
+    btnApplySuggestions.disabled = false;
   }
 });
 
