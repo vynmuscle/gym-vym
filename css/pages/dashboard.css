@@ -68,6 +68,7 @@
 .gv3-hero__stats{ display: flex; justify-content: space-around; margin: var(--gv3-space-4) 0; }
 .gv3-hero__stat .v{ font-family: var(--gv3-font-mono); font-size: var(--gv3-text-lg); font-variant-numeric: tabular-nums; }
 .gv3-hero__stat .k{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-muted); margin-top: 2px; }
+a.gv3-hero__stat{ color: inherit; text-decoration: none; text-align: center; }
 
 /* Progresso da semana ------------------------------------------------------------ */
 .gv3-ring-wrap{ position: relative; width: 92px; height: 92px; flex-shrink: 0; }

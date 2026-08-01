@@ -44,10 +44,10 @@ const streakValue = document.getElementById('streakValue');
 const recoveryStrip = document.getElementById('recoveryStrip');
 const insightCard = document.getElementById('insightCard');
 const insightText = document.getElementById('insightText');
-const nutritionBody = document.getElementById('nutritionBody');
-const bodyBody = document.getElementById('bodyBody');
-const watchCard = document.getElementById('watchCard');
-const watchBody = document.getElementById('watchBody');
+const nutritionValue = document.getElementById('nutritionValue');
+const bodyValue = document.getElementById('bodyValue');
+const watchStat = document.getElementById('watchStat');
+const watchValue = document.getElementById('watchValue');
 const recentActivityCard = document.getElementById('recentActivityCard');
 const btnAskAI = document.getElementById('btnAskAI');
 
@@ -205,10 +205,7 @@ function renderInsight({ weekCount, weeklyGoal, streak, recovery }){
 
 async function renderNutrition(){
   const profile = await getDietProfile(user.id);
-  if(!profile){
-    nutritionBody.innerHTML = '<div class="gv3-shortcut-hint">Configure sua meta calórica →</div>';
-    return;
-  }
+  if(!profile) return;
 
   const [weightRow, heightCm, todayLogs] = await Promise.all([
     getLatestWeight(user.id),
@@ -216,18 +213,10 @@ async function renderNutrition(){
     listFoodLogsRange(user.id, `${todayStr()}T00:00:00`, `${todayStr()}T23:59:59`)
   ]);
 
-  if(!weightRow?.weight_kg || !heightCm){
-    nutritionBody.innerHTML = '<div class="gv3-shortcut-hint">Registre peso/altura pra ver a meta →</div>';
-    return;
-  }
+  if(!weightRow?.weight_kg || !heightCm) return;
 
-  const targets = calculateDietTargets(profile, weightRow.weight_kg, heightCm);
   const consumed = todayLogs.reduce((sum, log) => sum + (Number(log.calories) || 0), 0);
-  const pct = targets.targetCalories > 0 ? Math.min(100, Math.round((consumed / targets.targetCalories) * 100)) : 0;
-
-  nutritionBody.innerHTML = `
-    <div class="gv3-shortcut-value">${Math.round(consumed)} <span class="gv3-shortcut-unit">/ ${targets.targetCalories} kcal</span></div>
-    <div class="gv3-progress" style="margin-top:8px;height:4px"><div class="gv3-progress__fill" style="width:${pct}%"></div></div>`;
+  nutritionValue.textContent = `${Math.round(consumed)} kcal`;
 }
 
 function todayStr(){
@@ -237,25 +226,18 @@ function todayStr(){
 
 async function renderBody(){
   const weightRow = await getLatestWeight(user.id);
-  if(!weightRow){
-    bodyBody.innerHTML = '<div class="gv3-shortcut-hint">Registre sua primeira medida →</div>';
-    return;
-  }
-  const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(weightRow.measured_at));
-  bodyBody.innerHTML = `
-    <div class="gv3-shortcut-value">${weightRow.weight_kg} <span class="gv3-shortcut-unit">kg</span></div>
-    <div style="font-size:11px;color:var(--gv3-text-muted);margin-top:4px">Última medida em ${date}</div>`;
+  if(!weightRow) return;
+  bodyValue.textContent = `${weightRow.weight_kg} kg`;
 }
 
 async function renderWatch(){
   const stats = await getDailyHealthStats(user.id, todayStr());
   if(!stats || (!stats.steps && !stats.calories_total)) return;
 
-  watchCard.style.display = '';
-  const parts = [];
-  if(stats.steps) parts.push(`<div class="gv3-shortcut-value">${stats.steps.toLocaleString('pt-BR')} <span class="gv3-shortcut-unit">passos</span></div>`);
-  if(stats.calories_total) parts.push(`<div style="font-size:11px;color:var(--gv3-text-muted);margin-top:4px">${stats.calories_total.toLocaleString('pt-BR')} kcal hoje</div>`);
-  watchBody.innerHTML = parts.join('');
+  watchStat.style.display = '';
+  watchValue.textContent = stats.steps
+    ? stats.steps.toLocaleString('pt-BR')
+    : `${stats.calories_total.toLocaleString('pt-BR')} kcal`;
 }
 
 async function renderRecentActivity(){
@@ -304,8 +286,8 @@ renderRecovery(recovery);
 renderInsight({ weekCount: sessionDates.length, weeklyGoal, streak, recovery });
 await renderHero();
 
-renderNutrition().catch(() => { nutritionBody.innerHTML = '<div class="gv3-shortcut-hint">Configure sua meta calórica →</div>'; });
-renderBody().catch(() => { bodyBody.innerHTML = '<div class="gv3-shortcut-hint">Registre sua primeira medida →</div>'; });
+renderNutrition().catch(() => {});
+renderBody().catch(() => {});
 renderWatch().catch(() => {});
 renderRecentActivity();
 

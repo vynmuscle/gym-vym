@@ -57,18 +57,21 @@
     </div>
   </div>
 
-  <div class="gv3-shortcut-grid" style="margin-top:14px">
-    <a href="./pages/diet.html" class="gv3-card gv3-anim-in" id="nutritionCard">
-      <div class="gv3-section-title">Nutrição hoje</div>
-      <div id="nutritionBody"><div class="gv3-skeleton" style="height:28px"></div></div>
-    </a>
-    <a href="./pages/body.html" class="gv3-card gv3-anim-in" id="bodyCard">
-      <div class="gv3-section-title">Corpo</div>
-      <div id="bodyBody"><div class="gv3-skeleton" style="height:28px"></div></div>
-    </a>
-    <div class="gv3-card gv3-anim-in" id="watchCard" style="display:none">
-      <div class="gv3-section-title">Atividade hoje</div>
-      <div id="watchBody"></div>
+  <div class="gv3-card gv3-anim-in" id="todayCard" style="margin-top:14px">
+    <div class="gv3-section-title">Hoje</div>
+    <div class="gv3-hero__stats" id="todayStatsRow">
+      <a href="./pages/diet.html" class="gv3-hero__stat">
+        <div class="v" id="nutritionValue">—</div>
+        <div class="k">Nutrição</div>
+      </a>
+      <a href="./pages/body.html" class="gv3-hero__stat">
+        <div class="v" id="bodyValue">—</div>
+        <div class="k">Peso</div>
+      </a>
+      <div class="gv3-hero__stat" id="watchStat" style="display:none">
+        <div class="v" id="watchValue">—</div>
+        <div class="k">Passos</div>
+      </div>
     </div>
   </div>
 
