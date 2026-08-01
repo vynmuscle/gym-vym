@@ -1,0 +1,12 @@
+import { supabase } from '../supabaseClient.js';
+
+export async function getDailyHealthStats(userId, date) {
+  const { data, error } = await supabase
+    .from('daily_health_stats')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('date', date)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}

@@ -92,8 +92,9 @@ async function loadSessions(){
     const stats = summary[s.id] || { sets: 0, volume: 0 };
     const durationMinutes = (new Date(s.finished_at) - new Date(s.started_at)) / 60000;
     const weightKg = findWeightAtDate(measurements, s.started_at);
-    const kcal = estimateWorkoutKcal({ weightKg, totalSets: stats.sets, durationMinutes });
-    const kcalLabel = kcal !== null ? `~ ${kcal} kcal` : '—';
+    const kcal = s.watch_calories ?? estimateWorkoutKcal({ weightKg, totalSets: stats.sets, durationMinutes });
+    const kcalLabel = kcal !== null ? `${s.watch_calories ? '' : '~ '}${kcal} kcal` : '—';
+    const hrLabel = s.avg_heart_rate ? ` · ${s.avg_heart_rate} bpm méd.` : '';
 
     return `
     <div class="panel session-card" style="margin-bottom:12px;overflow:hidden">
@@ -104,7 +105,7 @@ async function loadSessions(){
         </div>
         <div class="list-item-info" style="align-items:flex-end">
           <span class="list-item-title">${stats.sets} séries</span>
-          <span class="list-item-sub">${stats.volume.toLocaleString('pt-BR')}kg · ${kcalLabel}</span>
+          <span class="list-item-sub">${stats.volume.toLocaleString('pt-BR')}kg · ${kcalLabel}${hrLabel}</span>
         </div>
       </div>
       <div class="session-details" id="details-${s.id}" style="display:none;padding:0 14px 14px"></div>

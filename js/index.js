@@ -12,6 +12,7 @@ import { computeStreak } from './utils.js';
 import { getLeagueForXP } from './leagues.js';
 import { createProgressRing } from './design-system/progressRing.js';
 import { getDietProfile, getLatestWeight, getLatestHeight, listFoodLogsRange, calculateDietTargets } from './services/dietService.js';
+import { getDailyHealthStats } from './services/healthService.js';
 import { showToast } from './core/toast.js';
 import { icon } from './icons.js';
 
@@ -45,6 +46,8 @@ const insightCard = document.getElementById('insightCard');
 const insightText = document.getElementById('insightText');
 const nutritionBody = document.getElementById('nutritionBody');
 const bodyBody = document.getElementById('bodyBody');
+const watchCard = document.getElementById('watchCard');
+const watchBody = document.getElementById('watchBody');
 const recentActivityCard = document.getElementById('recentActivityCard');
 const btnAskAI = document.getElementById('btnAskAI');
 
@@ -244,6 +247,17 @@ async function renderBody(){
     <div style="font-size:11px;color:var(--gv3-text-muted);margin-top:4px">Última medida em ${date}</div>`;
 }
 
+async function renderWatch(){
+  const stats = await getDailyHealthStats(user.id, todayStr());
+  if(!stats || (!stats.steps && !stats.calories_total)) return;
+
+  watchCard.style.display = '';
+  const parts = [];
+  if(stats.steps) parts.push(`<div class="gv3-shortcut-value">${stats.steps.toLocaleString('pt-BR')} <span class="gv3-shortcut-unit">passos</span></div>`);
+  if(stats.calories_total) parts.push(`<div style="font-size:11px;color:var(--gv3-text-muted);margin-top:4px">${stats.calories_total.toLocaleString('pt-BR')} kcal hoje</div>`);
+  watchBody.innerHTML = parts.join('');
+}
+
 async function renderRecentActivity(){
   const sessions = (await listCompletedSessions()).slice(0, 3);
   if(sessions.length === 0){
@@ -292,6 +306,7 @@ await renderHero();
 
 renderNutrition().catch(() => { nutritionBody.innerHTML = '<div class="gv3-shortcut-hint">Configure sua meta calórica →</div>'; });
 renderBody().catch(() => { bodyBody.innerHTML = '<div class="gv3-shortcut-hint">Registre sua primeira medida →</div>'; });
+renderWatch().catch(() => {});
 renderRecentActivity();
 
 btnAskAI.addEventListener('click', () => {

@@ -65,6 +65,17 @@
     </div>
 
     <div class="panel" style="padding:20px;margin-top:16px">
+      <h3 style="margin-top:0">Sincronizar smartwatch</h3>
+      <p style="font-size:13px;color:var(--gv3-text-secondary,#8a8a92);margin-top:0">Gere um token e configure no Atalho do iPhone pra enviar passos, calorias e frequência cardíaca do Apple Health automaticamente.</p>
+      <div class="form-group" id="tokenGroup" style="display:none">
+        <label for="tokenField">Token</label>
+        <input type="text" id="tokenField" readonly>
+        <button type="button" class="btn btn-secondary full" id="btnCopyToken" style="margin-top:8px">Copiar token</button>
+      </div>
+      <button type="button" class="btn btn-primary full" id="btnGenToken" style="margin-top:12px">Gerar novo token</button>
+    </div>
+
+    <div class="panel" style="padding:20px;margin-top:16px">
       <h3 style="margin-top:0">Conquistas</h3>
       <div class="achievements-grid" id="achievementsGrid"></div>
     </div>

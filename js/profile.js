@@ -29,6 +29,10 @@ const leagueName = document.getElementById('leagueName');
 const leagueXP = document.getElementById('leagueXP');
 const leagueProgressFill = document.getElementById('leagueProgressFill');
 const leagueProgressLabel = document.getElementById('leagueProgressLabel');
+const tokenGroup = document.getElementById('tokenGroup');
+const tokenField = document.getElementById('tokenField');
+const btnGenToken = document.getElementById('btnGenToken');
+const btnCopyToken = document.getElementById('btnCopyToken');
 
 let weeklyGoal = 4;
 
@@ -47,6 +51,24 @@ if(!settings){
 displayNameInput.value = settings.display_name || '';
 weeklyGoal = settings.weekly_goal || 4;
 goalValue.textContent = weeklyGoal;
+
+if(settings.health_sync_token){
+  tokenField.value = settings.health_sync_token;
+  tokenGroup.style.display = '';
+}
+
+btnGenToken.addEventListener('click', async () => {
+  const token = crypto.randomUUID();
+  settings = await upsertUserSettings(user.id, { health_sync_token: token });
+  tokenField.value = token;
+  tokenGroup.style.display = '';
+  showMessage('Token gerado. Configure no Atalho do iPhone.', 'success');
+});
+
+btnCopyToken.addEventListener('click', async () => {
+  await navigator.clipboard.writeText(tokenField.value);
+  showMessage('Token copiado.', 'success');
+});
 
 btnGoalMinus.addEventListener('click', () => {
   if(weeklyGoal > 1){
