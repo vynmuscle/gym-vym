@@ -26,6 +26,7 @@ const ICONS = {
   scale: '<circle cx="12" cy="13" r="7" /><path d="M12 13l3-3" /><path d="M9.5 6.5h5" />',
   food: '<path d="M6 3v8a3 3 0 0 0 6 0V3" /><path d="M9 11v10" /><path d="M17 3c-2 0-3 2-3 5s1 4 3 4" /><path d="M17 12v9" />',
   sparkle: '<path d="M12 3l1.6 4.8L18 9.4l-4.4 1.6L12 16l-1.6-5L6 9.4l4.4-1.6z" /><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />',
+  footprints: '<path d="M8.5 4.5c1.6 0 2.6 1.3 2.6 3.1 0 1.6-.6 2.4-1.3 3.1-.9.9-1.3 1.8-1.3 3.5v4.3" /><path d="M15.5 9c1.6 0 2.6 1.3 2.6 3.1 0 1.6-.6 2.4-1.3 3.1-.9.9-1.3 1.8-1.3 3.5v.3" />',
 };
 
 export function icon(name, opts = {}) {

@@ -71,7 +71,7 @@
 @keyframes gv3-ascent-draw{ to{ stroke-dashoffset: 0; } }
 
 @media (prefers-reduced-motion: reduce){
-  .gv3-anim-in, .gv3-anim-fab, .gv3-anim-success, .gv3-anim-error, .gv3-ascent--draw path{
+  .gv3-anim-in, .gv3-anim-fab, .gv3-anim-success, .gv3-anim-error, .gv3-ascent--draw path, .gv3-today__dot{
     animation: none !important;
   }
   .gv3-stagger > *{ animation-delay: 0ms !important; }

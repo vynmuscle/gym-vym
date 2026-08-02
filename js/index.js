@@ -53,6 +53,9 @@ const btnAskAI = document.getElementById('btnAskAI');
 
 btnAskAI.innerHTML = icon('sparkle');
 streakIcon.innerHTML = icon('flame');
+document.getElementById('caloriesIcon').innerHTML = icon('flame');
+document.getElementById('bodyIcon').innerHTML = icon('scale');
+document.getElementById('watchIcon').innerHTML = icon('footprints');
 
 const ring = createProgressRing({ size: 92, strokeWidth: 9, percent: 0 });
 const ringPct = document.createElement('div');
