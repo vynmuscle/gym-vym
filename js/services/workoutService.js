@@ -595,8 +595,14 @@ export async function getSuggestedWorkout(userId) {
   if (pending) return { ...pending, warn: !pending.allRecovered };
 
   const fullyRecovered = candidates.filter(c => c.allRecovered);
+  // Empate em 100% de recuperação é comum (pct satura no teto do grupo mais
+  // lento) — desempata pela ficha cujo grupo foi treinado há mais tempo, não
+  // pela ordem de criação da ficha.
   const chosen = fullyRecovered.length > 0
-    ? fullyRecovered.reduce((a, b) => b.avgPct > a.avgPct ? b : a)
+    ? fullyRecovered.reduce((a, b) => {
+        if (b.avgPct !== a.avgPct) return b.avgPct > a.avgPct ? b : a;
+        return b.recencyScore < a.recencyScore ? b : a;
+      })
     : candidates.reduce((a, b) => b.recencyScore < a.recencyScore ? b : a);
   const warn = fullyRecovered.length === 0;
 

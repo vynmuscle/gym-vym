@@ -11,7 +11,7 @@ import { getUserSettings } from './services/profileService.js';
 import { computeStreak } from './utils.js';
 import { getLeagueForXP } from './leagues.js';
 import { createProgressRing } from './design-system/progressRing.js';
-import { getDietProfile, getLatestWeight, getLatestHeight, listFoodLogsRange, calculateDietTargets } from './services/dietService.js';
+import { getLatestWeight } from './services/dietService.js';
 import { getDailyHealthStats } from './services/healthService.js';
 import { showToast } from './core/toast.js';
 import { icon } from './icons.js';
@@ -44,7 +44,7 @@ const streakValue = document.getElementById('streakValue');
 const recoveryStrip = document.getElementById('recoveryStrip');
 const insightCard = document.getElementById('insightCard');
 const insightText = document.getElementById('insightText');
-const nutritionValue = document.getElementById('nutritionValue');
+const caloriesValue = document.getElementById('caloriesValue');
 const bodyValue = document.getElementById('bodyValue');
 const watchStat = document.getElementById('watchStat');
 const watchValue = document.getElementById('watchValue');
@@ -203,22 +203,6 @@ function renderInsight({ weekCount, weeklyGoal, streak, recovery }){
   insightCard.style.display = 'block';
 }
 
-async function renderNutrition(){
-  const profile = await getDietProfile(user.id);
-  if(!profile) return;
-
-  const [weightRow, heightCm, todayLogs] = await Promise.all([
-    getLatestWeight(user.id),
-    getLatestHeight(user.id),
-    listFoodLogsRange(user.id, `${todayStr()}T00:00:00`, `${todayStr()}T23:59:59`)
-  ]);
-
-  if(!weightRow?.weight_kg || !heightCm) return;
-
-  const consumed = todayLogs.reduce((sum, log) => sum + (Number(log.calories) || 0), 0);
-  nutritionValue.textContent = `${Math.round(consumed)} kcal`;
-}
-
 function todayStr(){
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -232,12 +216,13 @@ async function renderBody(){
 
 async function renderWatch(){
   const stats = await getDailyHealthStats(user.id, todayStr());
-  if(!stats || (!stats.steps && !stats.calories_total)) return;
+  if(!stats) return;
 
+  if(stats.calories_total) caloriesValue.textContent = `${stats.calories_total.toLocaleString('pt-BR')} kcal`;
+
+  if(!stats.steps) return;
   watchStat.style.display = '';
-  watchValue.textContent = stats.steps
-    ? stats.steps.toLocaleString('pt-BR')
-    : `${stats.calories_total.toLocaleString('pt-BR')} kcal`;
+  watchValue.textContent = stats.steps.toLocaleString('pt-BR');
 }
 
 async function renderRecentActivity(){
@@ -286,7 +271,6 @@ renderRecovery(recovery);
 renderInsight({ weekCount: sessionDates.length, weeklyGoal, streak, recovery });
 await renderHero();
 
-renderNutrition().catch(() => {});
 renderBody().catch(() => {});
 renderWatch().catch(() => {});
 renderRecentActivity();
