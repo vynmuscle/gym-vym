@@ -62,8 +62,12 @@
 .gv3-hero__why b{ color: var(--gv3-status-good); font-weight: 600; }
 .gv3-hero__why--warn b{ color: var(--gv3-status-warning); }
 .gv3-hero__ai-link{ display: block; text-align: center; margin-top: var(--gv3-space-3); font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); text-decoration: underline; }
-.gv3-hero--done{ text-align: center; }
-.gv3-hero--done .gv3-hero__tag{ color: var(--gv3-status-good); }
+.gv3-hero--done{ text-align: center; box-shadow: var(--gv3-glow-ember); }
+.gv3-hero--done .gv3-hero__tag{
+  color: var(--gv3-status-good);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.gv3-hero--done .gv3-hero__tag svg{ flex-shrink: 0; }
 .gv3-hero--done h2{ font-family: var(--gv3-font-ui); font-size: var(--gv3-text-xl); }
 .gv3-hero__stats{ display: flex; justify-content: space-around; margin: var(--gv3-space-4) 0; }
 .gv3-hero__stat .v{ font-family: var(--gv3-font-mono); font-size: var(--gv3-text-lg); font-variant-numeric: tabular-nums; }

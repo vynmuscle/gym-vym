@@ -11,6 +11,7 @@ import { getUserSettings } from './services/profileService.js';
 import { computeStreak } from './utils.js';
 import { getLeagueForXP } from './leagues.js';
 import { createProgressRing } from './design-system/progressRing.js';
+import { drawAscent } from './core/motion.js';
 import { getLatestWeight } from './services/dietService.js';
 import { getDailyHealthStats } from './services/healthService.js';
 import { showToast } from './core/toast.js';
@@ -131,16 +132,20 @@ async function renderHero(){
 
     heroSection.innerHTML = `
       <div class="gv3-hero gv3-hero--done gv3-anim-in">
-        <div class="gv3-hero__tag">Treino de hoje concluído ✓</div>
-        <h2>${names}</h2>
-        <div class="gv3-hero__stats">
-          <div class="gv3-hero__stat"><div class="v gv3-mono">${formatMinutes(totalMinutes)}</div><div class="k">Duração</div></div>
-          <div class="gv3-hero__stat"><div class="v gv3-mono">${totalSets}</div><div class="k">Séries</div></div>
-          <div class="gv3-hero__stat"><div class="v gv3-mono">${Math.round(totalVolume).toLocaleString('pt-BR')}</div><div class="k">Volume kg</div></div>
+        <div class="gv3-ascent" id="heroAscent"><svg viewBox="0 0 200 80" preserveAspectRatio="none"><path d="M0 70 L60 55 L110 40 L150 20 L200 5" /></svg></div>
+        <div style="position:relative">
+          <div class="gv3-hero__tag">${icon('check', { size: 13 })}Treino de hoje concluído</div>
+          <h2>${names}</h2>
+          <div class="gv3-hero__stats">
+            <div class="gv3-hero__stat"><div class="v gv3-mono">${formatMinutes(totalMinutes)}</div><div class="k">Duração</div></div>
+            <div class="gv3-hero__stat"><div class="v gv3-mono">${totalSets}</div><div class="k">Séries</div></div>
+            <div class="gv3-hero__stat"><div class="v gv3-mono">${Math.round(totalVolume).toLocaleString('pt-BR')}</div><div class="k">Volume kg</div></div>
+          </div>
+          <a href="./pages/history.html" class="gv3-btn gv3-btn--secondary gv3-btn--full">Ver histórico</a>
+          <a href="./pages/ai-workout.html" class="gv3-hero__ai-link">Renovar treinos com IA</a>
         </div>
-        <a href="./pages/history.html" class="gv3-btn gv3-btn--secondary gv3-btn--full">Ver histórico</a>
-        <a href="./pages/ai-workout.html" class="gv3-hero__ai-link">Renovar treinos com IA</a>
       </div>`;
+    drawAscent(document.getElementById('heroAscent'));
     return;
   }
 
