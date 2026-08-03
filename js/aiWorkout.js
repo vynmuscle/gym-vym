@@ -3,6 +3,7 @@ import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { listExercises, createExercise, createWorkout, addWorkoutExercise, listWorkouts, updateWorkout } from './services/workoutService.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -54,14 +55,14 @@ function renderReview(){
   workoutsListEl.innerHTML = reviewData.workouts.map((w, wi) => `
     <div class="panel ai-workout-card">
       <div class="ai-workout-head">
-        <h3>${w.name}</h3>
+        <h3>${escapeHtml(w.name)}</h3>
         <button type="button" class="btn-icon danger" data-remove-workout="${wi}">✕</button>
       </div>
       ${w.exercises.map((ex, ei) => `
         <div class="ai-exercise-row">
           <div class="ai-exercise-head">
-            <span class="ai-exercise-name">${ex.name}</span>
-            <span class="ai-exercise-meta">${ex.muscle_group || ''}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
+            <span class="ai-exercise-name">${escapeHtml(ex.name)}</span>
+            <span class="ai-exercise-meta">${escapeHtml(ex.muscle_group || '')}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
             <button type="button" class="btn-icon danger" data-remove-exercise data-workout="${wi}" data-exercise="${ei}">✕</button>
           </div>
           <div class="ai-exercise-fields">
@@ -69,7 +70,7 @@ function renderReview(){
               <input type="number" min="1" value="${ex.target_sets}" data-field="target_sets" data-workout="${wi}" data-exercise="${ei}">
             </label>
             <label>Reps
-              <input type="text" value="${ex.target_reps || ''}" data-field="target_reps" data-workout="${wi}" data-exercise="${ei}">
+              <input type="text" value="${escapeHtml(ex.target_reps || '')}" data-field="target_reps" data-workout="${wi}" data-exercise="${ei}">
             </label>
             <label>Descanso (s)
               <input type="number" min="0" value="${ex.rest_seconds || 90}" data-field="rest_seconds" data-workout="${wi}" data-exercise="${ei}">

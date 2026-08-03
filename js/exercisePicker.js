@@ -1,6 +1,7 @@
 import {
   listExercises, searchLibraryExercises, addExerciseFromLibrary, getLibraryGroupCounts
 } from './services/workoutService.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const GROUPS = [
   { key: 'peito', label: 'Peito' },
@@ -100,7 +101,7 @@ export function openExercisePicker({ userId, onPick, initialGroup }){
       const count = groupData.counts[g.key] || 0;
       const img = groupData.images[g.key];
       const bg = img
-        ? `background-image:linear-gradient(to top, rgba(11,13,16,.88), rgba(11,13,16,.35)), url('${img}')`
+        ? `background-image:linear-gradient(to top, rgba(11,13,16,.88), rgba(11,13,16,.35)), url('${escapeHtml(img)}')`
         : '';
       return `
         <div class="group-card" data-group="${g.key}" style="${bg}" role="button" tabindex="0" aria-label="Ver exercícios de ${g.label}">
@@ -130,11 +131,11 @@ export function openExercisePicker({ userId, onPick, initialGroup }){
     const img = isMine ? ex.image_url : ex.image_urls?.[0];
     const name = isMine ? ex.name : (ex.name_pt || ex.name);
     return `
-      <div class="picker-item" data-id="${ex.id}" data-mine="${isMine ? '1' : '0'}" role="button" tabindex="0" aria-label="Escolher ${name}">
-        <div class="picker-item-thumb">${img ? `<img src="${img}" alt="${name}" loading="lazy">` : '🏋️'}</div>
+      <div class="picker-item" data-id="${ex.id}" data-mine="${isMine ? '1' : '0'}" role="button" tabindex="0" aria-label="Escolher ${escapeHtml(name)}">
+        <div class="picker-item-thumb">${img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(name)}" loading="lazy">` : '🏋️'}</div>
         <div class="picker-item-info">
-          <span class="picker-item-name">${name}</span>
-          <span class="picker-item-meta">${ex.equipment || ''}</span>
+          <span class="picker-item-name">${escapeHtml(name)}</span>
+          <span class="picker-item-meta">${escapeHtml(ex.equipment || '')}</span>
         </div>
       </div>`;
   }

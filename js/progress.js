@@ -4,6 +4,7 @@ import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { listExercisesWithProgress, getExerciseProgress } from './services/workoutService.js';
 import { showToast } from './toast.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -278,7 +279,7 @@ periodSelect.addEventListener('change', renderChart);
 const exercises = await listExercisesWithProgress();
 const trackingTypeById = new Map(exercises.map(ex => [ex.id, ex.tracking_type]));
 exerciseSelect.innerHTML = '<option value="">Selecione...</option>' +
-  exercises.map(ex => `<option value="${ex.id}">${ex.name}</option>`).join('');
+  exercises.map(ex => `<option value="${ex.id}">${escapeHtml(ex.name)}</option>`).join('');
 
 if(exercises.length === 0){
   showEmptyState('Você ainda não registrou nenhuma série. Treine primeiro pra ver seu progresso aqui!');

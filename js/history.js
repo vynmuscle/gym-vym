@@ -8,6 +8,7 @@ import {
 } from './services/workoutService.js';
 import { listMeasurements } from './services/bodyService.js';
 import { estimateWorkoutKcal, findWeightAtDate } from './utils.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -45,7 +46,7 @@ async function loadIncomplete(){
   incompleteList.innerHTML = incomplete.map(s => `
     <div class="list-item">
       <div class="list-item-info">
-        <span class="list-item-title">${s.workouts ? s.workouts.name : 'Treino avulso'}</span>
+        <span class="list-item-title">${escapeHtml(s.workouts ? s.workouts.name : 'Treino avulso')}</span>
         <span class="list-item-sub">Iniciado ${formatDate(s.started_at)} · nunca finalizado</span>
       </div>
       <div class="list-item-actions">
@@ -100,7 +101,7 @@ async function loadSessions(){
     <div class="panel session-card" style="margin-bottom:12px;overflow:hidden">
       <div class="list-item session-toggle" data-session="${s.id}" style="cursor:pointer">
         <div class="list-item-info">
-          <span class="list-item-title">${s.workouts ? s.workouts.name : 'Treino avulso'}</span>
+          <span class="list-item-title">${escapeHtml(s.workouts ? s.workouts.name : 'Treino avulso')}</span>
           <span class="list-item-sub">${formatDate(s.started_at)} · ${formatDuration(s.started_at, s.finished_at)}</span>
         </div>
         <div class="list-item-info" style="align-items:flex-end">
@@ -162,8 +163,8 @@ async function toggleDetails(sessionId){
   el.innerHTML = [...grouped.values()].map(ex => `
     <div class="exercise" style="margin-top:10px;padding-bottom:8px">
       <div class="ex-head" style="padding-bottom:8px">
-        <div class="ex-thumb">${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="${ex.name}" loading="lazy">` : '🏋️'}</div>
-        <div class="ex-name">${ex.name}${ex.equipment ? ' (' + ex.equipment + ')' : ''}</div>
+        <div class="ex-thumb">${ex.imageUrl ? `<img src="${escapeHtml(ex.imageUrl)}" alt="${escapeHtml(ex.name)}" loading="lazy">` : '🏋️'}</div>
+        <div class="ex-name">${escapeHtml(ex.name)}${ex.equipment ? ' (' + escapeHtml(ex.equipment) + ')' : ''}</div>
       </div>
       <div class="history-sets">
         ${ex.sets.map((s, i) => `

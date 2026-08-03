@@ -4,6 +4,7 @@ import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { getSessionsByMonth, getRecentCompletedSessionDates } from './services/workoutService.js';
 import { computeStreak, formatDuration } from './utils.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -63,7 +64,7 @@ function openDaySheet(day, sessions){
   daySheetList.innerHTML = sessions.map(s => `
     <div class="list-item">
       <div class="list-item-info">
-        <span class="list-item-title">${s.workouts ? s.workouts.name : 'Treino avulso'}${s.finished_at ? '' : ' (incompleta)'}</span>
+        <span class="list-item-title">${escapeHtml(s.workouts ? s.workouts.name : 'Treino avulso')}${s.finished_at ? '' : ' (incompleta)'}</span>
         <span class="list-item-sub">${s.finished_at ? formatDuration(s.started_at, s.finished_at) : 'sem duração'} · ${s.sets} séries · ${Math.round(s.volume).toLocaleString('pt-BR')}kg</span>
       </div>
     </div>

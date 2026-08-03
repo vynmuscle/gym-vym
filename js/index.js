@@ -16,6 +16,7 @@ import { getLatestWeight } from './services/dietService.js';
 import { getDailyHealthStats } from './services/healthService.js';
 import { showToast } from './core/toast.js';
 import { icon } from './icons.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('./login.html');
@@ -128,7 +129,7 @@ async function renderHero(){
     const totalVolume = todaysSessions.reduce((sum, s) => sum + s.volume, 0);
     const totalMinutes = todaysSessions.reduce((sum, s) =>
       sum + Math.round((new Date(s.finished_at) - new Date(s.started_at)) / 60000), 0);
-    const names = [...new Set(todaysSessions.map(s => s.workouts ? s.workouts.name : 'Treino avulso'))].join(', ');
+    const names = [...new Set(todaysSessions.map(s => escapeHtml(s.workouts ? s.workouts.name : 'Treino avulso')))].join(', ');
 
     heroSection.innerHTML = `
       <div class="gv3-hero gv3-hero--done gv3-anim-in">
@@ -163,7 +164,7 @@ async function renderHero(){
   heroSection.innerHTML = `
     <div class="gv3-hero gv3-anim-in">
       <div class="gv3-hero__tag">Treino de hoje</div>
-      <h2>${suggestion.workout.name}</h2>
+      <h2>${escapeHtml(suggestion.workout.name)}</h2>
       <div class="gv3-hero__why${suggestion.warn ? ' gv3-hero__why--warn' : ''}">${why}</div>
       <button type="button" class="gv3-btn gv3-btn--primary gv3-btn--full" id="btnStartHero">Iniciar treino</button>
       <a href="./pages/ai-workout.html" class="gv3-hero__ai-link">Renovar treinos com IA</a>
@@ -244,7 +245,7 @@ async function renderRecentActivity(){
     return `
       <div class="gv3-activity-item">
         <div>
-          <div class="gv3-activity-item__title">${s.workouts ? s.workouts.name : 'Treino avulso'}</div>
+          <div class="gv3-activity-item__title">${escapeHtml(s.workouts ? s.workouts.name : 'Treino avulso')}</div>
           <div class="gv3-activity-item__sub">${label}</div>
         </div>
       </div>`;

@@ -13,6 +13,7 @@ import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
 import { getLeagueForXP } from './leagues.js';
 import { listMeasurements } from './services/bodyService.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 import { celebrate } from './design-system/motion.js';
 import { estimateWorkoutKcal, findWeightAtDate } from './utils.js';
 
@@ -336,9 +337,9 @@ function showExerciseInfo(ex){
   overlay.innerHTML = `
     <div class="ex-info-card">
       <button type="button" class="ex-info-close" aria-label="Fechar">✕</button>
-      <h3>${ex.name}</h3>
-      ${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="${ex.name}" class="ex-info-img" loading="lazy">` : ''}
-      <div class="ex-info-text">${ex.instructions || 'Sem instruções disponíveis para este exercício.'}</div>
+      <h3>${escapeHtml(ex.name)}</h3>
+      ${ex.imageUrl ? `<img src="${escapeHtml(ex.imageUrl)}" alt="${escapeHtml(ex.name)}" class="ex-info-img" loading="lazy">` : ''}
+      <div class="ex-info-text">${escapeHtml(ex.instructions || 'Sem instruções disponíveis para este exercício.')}</div>
     </div>`;
   document.body.appendChild(overlay);
   overlay.querySelector('.ex-info-close').addEventListener('click', () => overlay.remove());
@@ -422,14 +423,14 @@ function renderExerciseCard(ei){
 
   card.innerHTML = `
     <div class="ex-head">
-      <div class="ex-thumb">${ex.imageUrl ? `<img src="${ex.imageUrl}" alt="${ex.name}" loading="lazy">` : '🏋️'}</div>
-      <div class="ex-name">${ex.name}${ex.equipment ? ' (' + ex.equipment + ')' : ''}</div>
+      <div class="ex-thumb">${ex.imageUrl ? `<img src="${escapeHtml(ex.imageUrl)}" alt="${escapeHtml(ex.name)}" loading="lazy">` : '🏋️'}</div>
+      <div class="ex-name">${escapeHtml(ex.name)}${ex.equipment ? ' (' + escapeHtml(ex.equipment) + ')' : ''}</div>
       <button type="button" class="ex-action-btn" aria-label="Como executar">ℹ️</button>
       <button type="button" class="ex-action-btn" aria-label="Substituir exercício">🔁</button>
       <button type="button" class="ex-action-btn" aria-label="Observação">📝</button>
     </div>
     <div class="ex-note-row" id="exnote-${ei}" style="display:none">
-      <input type="text" class="ex-note-input" placeholder="Observação sobre este exercício (opcional)" value="${ex.note || ''}">
+      <input type="text" class="ex-note-input" placeholder="Observação sobre este exercício (opcional)" value="${escapeHtml(ex.note || '')}">
     </div>
     ${uplevelLabel}
     ${restLabel}
@@ -865,7 +866,7 @@ finishBtn.addEventListener('click', async () => {
 
   if(prsByExercise.size > 0){
     summaryPRs.innerHTML = '<h3>Recordes de hoje</h3>' + [...prsByExercise.values()]
-      .map(pr => `<div class="summary-pr-item">🏆 ${pr.name}: ${formatWheelValue(pr.weight)}kg</div>`)
+      .map(pr => `<div class="summary-pr-item">🏆 ${escapeHtml(pr.name)}: ${formatWheelValue(pr.weight)}kg</div>`)
       .join('');
     summaryPRs.style.display = 'block';
   }

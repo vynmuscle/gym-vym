@@ -6,6 +6,7 @@ import {
   listWorkouts, createWorkout, updateWorkout, deleteWorkout, listWorkoutExercises,
   removeWorkoutExercise, addWorkoutExercise, listExercises, createExercise
 } from './services/workoutService.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -68,8 +69,8 @@ async function loadList(){
     listPanel.innerHTML = active.map(w => `
       <div class="list-item">
         <div class="list-item-info">
-          <span class="list-item-title">${w.name}</span>
-          <span class="list-item-sub">${w.description || ''}</span>
+          <span class="list-item-title">${escapeHtml(w.name)}</span>
+          <span class="list-item-sub">${escapeHtml(w.description || '')}</span>
         </div>
         <div class="list-item-actions">
           <a href="./train.html?id=${w.id}" class="btn-icon" title="Treinar">▶</a>
@@ -94,8 +95,8 @@ async function loadList(){
   archivedList.innerHTML = archived.map(w => `
     <div class="list-item">
       <div class="list-item-info">
-        <span class="list-item-title">${w.name}</span>
-        <span class="list-item-sub">${w.description || ''}</span>
+        <span class="list-item-title">${escapeHtml(w.name)}</span>
+        <span class="list-item-sub">${escapeHtml(w.description || '')}</span>
       </div>
       <div class="list-item-actions">
         <button type="button" class="btn-icon" data-reactivate="${w.id}" title="Reativar">↺</button>
@@ -177,13 +178,13 @@ function renderProgramSuggestions(){
   aiProgramSuggestionsList.innerHTML = suggestedWorkouts.map((w, wi) => `
     <div class="panel ai-workout-card">
       <div class="ai-workout-head">
-        <h3>${w.name}${!activeWorkoutIdByName.has(w.name.trim().toLowerCase()) ? ' (não encontrada — será ignorada)' : ''}</h3>
+        <h3>${escapeHtml(w.name)}${!activeWorkoutIdByName.has(w.name.trim().toLowerCase()) ? ' (não encontrada — será ignorada)' : ''}</h3>
       </div>
       ${w.exercises.map((ex, ei) => `
         <div class="ai-exercise-row">
           <div class="ai-exercise-head">
-            <span class="ai-exercise-name">${ex.name}</span>
-            <span class="ai-exercise-meta">${ex.muscle_group || ''}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
+            <span class="ai-exercise-name">${escapeHtml(ex.name)}</span>
+            <span class="ai-exercise-meta">${escapeHtml(ex.muscle_group || '')}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
             <button type="button" class="btn-icon danger" data-remove-exercise data-workout="${wi}" data-exercise="${ei}">✕</button>
           </div>
           <div class="ai-exercise-fields">
@@ -196,7 +197,7 @@ function renderProgramSuggestions(){
                 <input type="number" min="1" value="${ex.target_sets}" data-field="target_sets" data-workout="${wi}" data-exercise="${ei}">
               </label>
               <label>Reps
-                <input type="text" value="${ex.target_reps || ''}" data-field="target_reps" data-workout="${wi}" data-exercise="${ei}">
+                <input type="text" value="${escapeHtml(ex.target_reps || '')}" data-field="target_reps" data-workout="${wi}" data-exercise="${ei}">
               </label>
             `}
             <label>Descanso (s)

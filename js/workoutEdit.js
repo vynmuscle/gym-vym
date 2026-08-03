@@ -8,6 +8,7 @@ import {
   addWorkoutExercise, updateWorkoutExercise, removeWorkoutExercise,
   swapWorkoutExerciseExercise
 } from './services/workoutService.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -110,7 +111,7 @@ async function loadList(){
     return `
     <div class="list-item">
       <div class="list-item-info">
-        <span class="list-item-title">${item.exercises.name}</span>
+        <span class="list-item-title">${escapeHtml(item.exercises.name)}</span>
         <span class="list-item-sub">${sub}</span>
       </div>
       <div class="list-item-actions">
@@ -213,8 +214,8 @@ function renderSuggestions(){
   aiSuggestionsList.innerHTML = suggestedExercises.map((ex, i) => `
     <div class="ai-exercise-row">
       <div class="ai-exercise-head">
-        <span class="ai-exercise-name">${ex.name}</span>
-        <span class="ai-exercise-meta">${ex.muscle_group || ''}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
+        <span class="ai-exercise-name">${escapeHtml(ex.name)}</span>
+        <span class="ai-exercise-meta">${escapeHtml(ex.muscle_group || '')}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
         <button type="button" class="btn-icon danger" data-remove-exercise="${i}">✕</button>
       </div>
       <div class="ai-exercise-fields">
@@ -227,7 +228,7 @@ function renderSuggestions(){
             <input type="number" min="1" value="${ex.target_sets}" data-field="target_sets" data-exercise="${i}">
           </label>
           <label>Reps
-            <input type="text" value="${ex.target_reps || ''}" data-field="target_reps" data-exercise="${i}">
+            <input type="text" value="${escapeHtml(ex.target_reps || '')}" data-field="target_reps" data-exercise="${i}">
           </label>
         `}
         <label>Descanso (s)

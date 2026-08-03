@@ -6,6 +6,7 @@ import {
   listExercises, createExercise, updateExercise, deleteExercise,
   searchLibraryExercises, addExerciseFromLibrary
 } from './services/workoutService.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if(!sd.session) navigate('../login.html');
@@ -59,8 +60,8 @@ async function loadList(){
   listPanel.innerHTML = exercises.map(ex => `
     <div class="list-item">
       <div class="list-item-info">
-        <span class="list-item-title">${ex.name}</span>
-        <span class="list-item-sub">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
+        <span class="list-item-title">${escapeHtml(ex.name)}</span>
+        <span class="list-item-sub">${escapeHtml(ex.muscle_group)}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
       </div>
       <div class="list-item-actions">
         <button type="button" class="btn-icon" data-edit="${ex.id}">✎</button>
@@ -192,9 +193,9 @@ async function loadLibrary(reset){
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `Ver detalhes de ${ex.name_pt || ex.name}`);
     card.innerHTML = `
-      <div class="lib-thumb">${ex.image_urls?.[0] ? `<img src="${ex.image_urls[0]}" alt="${ex.name_pt || ex.name}" loading="lazy">` : '🏋️'}</div>
-      <span class="lib-card-name">${ex.name_pt || ex.name}</span>
-      <span class="lib-card-meta">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}</span>
+      <div class="lib-thumb">${ex.image_urls?.[0] ? `<img src="${escapeHtml(ex.image_urls[0])}" alt="${escapeHtml(ex.name_pt || ex.name)}" loading="lazy">` : '🏋️'}</div>
+      <span class="lib-card-name">${escapeHtml(ex.name_pt || ex.name)}</span>
+      <span class="lib-card-meta">${escapeHtml(ex.muscle_group)}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
     `;
     card.addEventListener('click', () => showLibDetail(ex));
     card.addEventListener('keydown', (e) => {
@@ -220,13 +221,13 @@ function showLibDetail(ex){
   libDetailPanel.innerHTML = `
     <div class="lib-detail-header">
       <div>
-        <h3 style="margin-bottom:4px">${ex.name_pt || ex.name}</h3>
-        <span class="lib-card-meta">${ex.muscle_group}${ex.equipment ? ' · ' + ex.equipment : ''}${ex.level ? ' · ' + ex.level : ''}</span>
+        <h3 style="margin-bottom:4px">${escapeHtml(ex.name_pt || ex.name)}</h3>
+        <span class="lib-card-meta">${escapeHtml(ex.muscle_group)}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}${ex.level ? ' · ' + escapeHtml(ex.level) : ''}</span>
       </div>
       <button type="button" class="btn-icon" id="btnCloseLibDetail">✕</button>
     </div>
-    ${ex.image_urls?.length ? `<div class="lib-detail-images">${ex.image_urls.map(url => `<img src="${url}" alt="" loading="lazy">`).join('')}</div>` : ''}
-    <div class="lib-detail-instructions">${ex.instructions_pt || ex.instructions || 'Sem instruções disponíveis.'}</div>
+    ${ex.image_urls?.length ? `<div class="lib-detail-images">${ex.image_urls.map(url => `<img src="${escapeHtml(url)}" alt="" loading="lazy">`).join('')}</div>` : ''}
+    <div class="lib-detail-instructions">${escapeHtml(ex.instructions_pt || ex.instructions || 'Sem instruções disponíveis.')}</div>
     <button type="button" class="btn btn-primary full" id="btnAddFromLib">Adicionar aos meus exercícios</button>
   `;
 

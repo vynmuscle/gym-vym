@@ -22,6 +22,7 @@ import {
 } from './services/dietService.js';
 import { searchFood, searchFoodByBarcode } from './services/openFoodFactsService.js';
 import { createProgressRing } from './design-system/progressRing.js';
+import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
 if (!sd.session) navigate('../login.html');
@@ -165,12 +166,6 @@ function hideSearchResults() {
 function showSearchStatus(text) {
   foodSearchStatus.textContent = text;
   foodSearchStatus.style.display = text ? '' : 'none';
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
 }
 
 function renderSearchResults(products) {
