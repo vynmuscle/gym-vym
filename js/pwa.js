@@ -50,6 +50,6 @@ function createConnectionIndicator() {
 export function initPWA() {
   registerServiceWorker();
   createConnectionIndicator();
-  flushQueue().catch(() => {});
-  window.addEventListener('online', () => flushQueue().catch(() => {}));
+  flushQueue().catch(err => console.error('flushQueue falhou:', err));
+  window.addEventListener('online', () => flushQueue().catch(err => console.error('flushQueue falhou:', err)));
 }

@@ -280,8 +280,8 @@ renderRecovery(recovery);
 renderInsight({ weekCount: sessionDates.length, weeklyGoal, streak, recovery });
 await renderHero();
 
-renderBody().catch(() => {});
-renderWatch().catch(() => {});
+renderBody().catch(err => console.error('renderBody falhou:', err));
+renderWatch().catch(err => console.error('renderWatch falhou:', err));
 renderRecentActivity();
 
 btnAskAI.addEventListener('click', () => {

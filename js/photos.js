@@ -146,7 +146,7 @@ btnSavePhoto.addEventListener('click', async () => {
   await reload();
   showMessage('Foto salva.', 'success');
 
-  checkAchievements(user.id, {}).catch(() => {});
+  checkAchievements(user.id, {}).catch(err => console.error('checkAchievements falhou:', err));
 });
 
 function updateCompareBar(){
