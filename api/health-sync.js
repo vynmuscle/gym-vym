@@ -1,3 +1,5 @@
+import { checkRateLimit } from './_rateLimit.js';
+
 const SUPABASE_URL = 'https://lyxzqejagdwkrnpfemkd.supabase.co';
 
 export default async function handler(req, res) {
@@ -27,6 +29,9 @@ export default async function handler(req, res) {
   try {
     const userId = await findUserByToken(token);
     if (!userId) return res.status(403).json({ error: 'Forbidden' });
+
+    const allowed = await checkRateLimit(userId, 'health-sync', 100);
+    if (!allowed) return res.status(429).json({ error: 'Limite diário de sincronizações atingido.' });
 
     const date = payload.date;
     if (!date) return res.status(400).json({ error: 'date é obrigatório' });

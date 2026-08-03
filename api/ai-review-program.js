@@ -1,3 +1,5 @@
+import { checkRateLimit } from './_rateLimit.js';
+
 const SUPABASE_URL = 'https://lyxzqejagdwkrnpfemkd.supabase.co';
 
 const MUSCLE_GROUPS = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'abdomen', 'gluteos', 'cardio'];
@@ -19,6 +21,10 @@ export default async function handler(req, res) {
     headers: { Authorization: `Bearer ${token}`, apikey: process.env.SUPABASE_SERVICE_KEY },
   });
   if (!authRes.ok) return res.status(403).json({ error: 'Forbidden' });
+  const { id: userId } = await authRes.json();
+
+  const allowed = await checkRateLimit(userId, 'ai-review-program', 20);
+  if (!allowed) return res.status(429).json({ error: 'Limite diário de avaliações por IA atingido. Tente novamente amanhã.' });
 
   try {
     const { workouts } = req.body;
