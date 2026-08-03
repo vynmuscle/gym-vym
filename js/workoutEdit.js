@@ -116,8 +116,8 @@ async function loadList(){
       </div>
       <div class="list-item-actions">
         <button type="button" class="btn-icon" data-swap="${item.id}" data-group="${item.exercises.muscle_group}" aria-label="Substituir exercício">🔁</button>
-        <button type="button" class="btn-icon" data-edit="${item.id}">✎</button>
-        <button type="button" class="btn-icon danger" data-delete="${item.id}">✕</button>
+        <button type="button" class="btn-icon" data-edit="${item.id}" aria-label="Editar exercício">✎</button>
+        <button type="button" class="btn-icon danger" data-delete="${item.id}" aria-label="Remover exercício">✕</button>
       </div>
     </div>`;
   }).join('');
@@ -216,7 +216,7 @@ function renderSuggestions(){
       <div class="ai-exercise-head">
         <span class="ai-exercise-name">${escapeHtml(ex.name)}</span>
         <span class="ai-exercise-meta">${escapeHtml(ex.muscle_group || '')}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
-        <button type="button" class="btn-icon danger" data-remove-exercise="${i}">✕</button>
+        <button type="button" class="btn-icon danger" data-remove-exercise="${i}" aria-label="Remover exercício">✕</button>
       </div>
       <div class="ai-exercise-fields">
         ${ex.is_duration ? `

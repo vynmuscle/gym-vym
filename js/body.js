@@ -289,8 +289,8 @@ function renderList(){
           <span class="list-item-sub">${extras.length ? extras.join(' · ') : 'Sem outras medidas'}</span>
         </div>
         <div class="list-item-actions">
-          <button type="button" class="btn-icon" data-edit="${m.id}">✎</button>
-          <button type="button" class="btn-icon danger" data-delete="${m.id}">✕</button>
+          <button type="button" class="btn-icon" data-edit="${m.id}" aria-label="Editar medida">✎</button>
+          <button type="button" class="btn-icon danger" data-delete="${m.id}" aria-label="Excluir medida">✕</button>
         </div>
       </div>
     `;

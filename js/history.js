@@ -51,7 +51,7 @@ async function loadIncomplete(){
       </div>
       <div class="list-item-actions">
         ${s.workout_id ? `<button type="button" class="btn-icon" data-continue="${s.id}" data-workout="${s.workout_id}" aria-label="Continuar">↺</button>` : ''}
-        <button type="button" class="btn-icon danger" data-delete="${s.id}">✕</button>
+        <button type="button" class="btn-icon danger" data-delete="${s.id}" aria-label="Excluir sessão">✕</button>
       </div>
     </div>
   `).join('');

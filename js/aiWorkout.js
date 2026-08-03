@@ -56,14 +56,14 @@ function renderReview(){
     <div class="panel ai-workout-card">
       <div class="ai-workout-head">
         <h3>${escapeHtml(w.name)}</h3>
-        <button type="button" class="btn-icon danger" data-remove-workout="${wi}">✕</button>
+        <button type="button" class="btn-icon danger" data-remove-workout="${wi}" aria-label="Remover ficha">✕</button>
       </div>
       ${w.exercises.map((ex, ei) => `
         <div class="ai-exercise-row">
           <div class="ai-exercise-head">
             <span class="ai-exercise-name">${escapeHtml(ex.name)}</span>
             <span class="ai-exercise-meta">${escapeHtml(ex.muscle_group || '')}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
-            <button type="button" class="btn-icon danger" data-remove-exercise data-workout="${wi}" data-exercise="${ei}">✕</button>
+            <button type="button" class="btn-icon danger" data-remove-exercise data-workout="${wi}" data-exercise="${ei}" aria-label="Remover exercício">✕</button>
           </div>
           <div class="ai-exercise-fields">
             <label>Séries

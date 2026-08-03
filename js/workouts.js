@@ -73,10 +73,10 @@ async function loadList(){
           <span class="list-item-sub">${escapeHtml(w.description || '')}</span>
         </div>
         <div class="list-item-actions">
-          <a href="./train.html?id=${w.id}" class="btn-icon" title="Treinar">▶</a>
-          <a href="./workout-edit.html?id=${w.id}" class="btn-icon" title="Montar exercícios">🏋</a>
-          <button type="button" class="btn-icon" data-edit="${w.id}">✎</button>
-          <button type="button" class="btn-icon danger" data-delete="${w.id}">✕</button>
+          <a href="./train.html?id=${w.id}" class="btn-icon" title="Treinar" aria-label="Treinar">▶</a>
+          <a href="./workout-edit.html?id=${w.id}" class="btn-icon" title="Montar exercícios" aria-label="Montar exercícios">🏋</a>
+          <button type="button" class="btn-icon" data-edit="${w.id}" aria-label="Editar ficha">✎</button>
+          <button type="button" class="btn-icon danger" data-delete="${w.id}" aria-label="Excluir ficha">✕</button>
         </div>
       </div>
     `).join('');
@@ -99,9 +99,9 @@ async function loadList(){
         <span class="list-item-sub">${escapeHtml(w.description || '')}</span>
       </div>
       <div class="list-item-actions">
-        <button type="button" class="btn-icon" data-reactivate="${w.id}" title="Reativar">↺</button>
-        <button type="button" class="btn-icon" data-edit="${w.id}">✎</button>
-        <button type="button" class="btn-icon danger" data-delete="${w.id}">✕</button>
+        <button type="button" class="btn-icon" data-reactivate="${w.id}" title="Reativar" aria-label="Reativar ficha">↺</button>
+        <button type="button" class="btn-icon" data-edit="${w.id}" aria-label="Editar ficha">✎</button>
+        <button type="button" class="btn-icon danger" data-delete="${w.id}" aria-label="Excluir ficha">✕</button>
       </div>
     </div>
   `).join('');
@@ -185,7 +185,7 @@ function renderProgramSuggestions(){
           <div class="ai-exercise-head">
             <span class="ai-exercise-name">${escapeHtml(ex.name)}</span>
             <span class="ai-exercise-meta">${escapeHtml(ex.muscle_group || '')}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
-            <button type="button" class="btn-icon danger" data-remove-exercise data-workout="${wi}" data-exercise="${ei}">✕</button>
+            <button type="button" class="btn-icon danger" data-remove-exercise data-workout="${wi}" data-exercise="${ei}" aria-label="Remover exercício">✕</button>
           </div>
           <div class="ai-exercise-fields">
             ${ex.is_duration ? `

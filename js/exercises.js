@@ -64,8 +64,8 @@ async function loadList(){
         <span class="list-item-sub">${escapeHtml(ex.muscle_group)}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}</span>
       </div>
       <div class="list-item-actions">
-        <button type="button" class="btn-icon" data-edit="${ex.id}">✎</button>
-        <button type="button" class="btn-icon danger" data-delete="${ex.id}">✕</button>
+        <button type="button" class="btn-icon" data-edit="${ex.id}" aria-label="Editar exercício">✎</button>
+        <button type="button" class="btn-icon danger" data-delete="${ex.id}" aria-label="Excluir exercício">✕</button>
       </div>
     </div>
   `).join('');
@@ -224,7 +224,7 @@ function showLibDetail(ex){
         <h3 style="margin-bottom:4px">${escapeHtml(ex.name_pt || ex.name)}</h3>
         <span class="lib-card-meta">${escapeHtml(ex.muscle_group)}${ex.equipment ? ' · ' + escapeHtml(ex.equipment) : ''}${ex.level ? ' · ' + escapeHtml(ex.level) : ''}</span>
       </div>
-      <button type="button" class="btn-icon" id="btnCloseLibDetail">✕</button>
+      <button type="button" class="btn-icon" id="btnCloseLibDetail" aria-label="Fechar detalhes">✕</button>
     </div>
     ${ex.image_urls?.length ? `<div class="lib-detail-images">${ex.image_urls.map(url => `<img src="${escapeHtml(url)}" alt="" loading="lazy">`).join('')}</div>` : ''}
     <div class="lib-detail-instructions">${escapeHtml(ex.instructions_pt || ex.instructions || 'Sem instruções disponíveis.')}</div>

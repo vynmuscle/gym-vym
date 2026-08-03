@@ -33,7 +33,7 @@ export function openExercisePicker({ userId, onPick, initialGroup }){
     <div class="ex-picker-header">
       <button type="button" class="btn-icon" id="epBack" style="display:none">‹</button>
       <span class="ex-picker-title" id="epTitle">Exercícios</span>
-      <button type="button" class="btn-icon" id="epClose">✕</button>
+      <button type="button" class="btn-icon" id="epClose" aria-label="Fechar">✕</button>
     </div>
     <div class="ex-picker-search">
       <input type="text" id="epSearchInput" placeholder="Buscar exercício...">
