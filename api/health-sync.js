@@ -12,11 +12,20 @@ export default async function handler(req, res) {
   if (!auth?.startsWith('Bearer ')) return res.status(403).json({ error: 'Forbidden' });
   const token = auth.slice(7);
 
+  const rawBody = await readRawBody(req);
+  let payload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch (err) {
+    console.error('JSON inválido recebido do Shortcut:', rawBody);
+    return res.status(400).json({ error: 'JSON inválido', raw: rawBody });
+  }
+
   try {
     const userId = await findUserByToken(token);
     if (!userId) return res.status(403).json({ error: 'Forbidden' });
 
-    const { date, steps, calories_total, workout } = req.body || {};
+    const { date, steps, calories_total, workout } = payload;
     if (!date) return res.status(400).json({ error: 'date é obrigatório' });
 
     await upsertDailyStats(userId, date, steps, calories_total);
@@ -31,6 +40,15 @@ export default async function handler(req, res) {
     console.error(err);
     return res.status(500).json({ error: 'Erro interno' });
   }
+}
+
+function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
 }
 
 async function findUserByToken(token) {
