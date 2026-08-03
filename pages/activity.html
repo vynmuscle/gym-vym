@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atividade - Gym Vym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/core/tokens.css">
+<link rel="stylesheet" href="../css/core/base.css">
+<link rel="stylesheet" href="../css/core/components.css">
+<link rel="stylesheet" href="../css/core/nav.css">
+<link rel="stylesheet" href="../css/core/overlays.css">
+<link rel="stylesheet" href="../css/core/motion.css">
+<link rel="stylesheet" href="../css/core/legacy.css">
+<link rel="stylesheet" href="../css/pages/train.css">
+<link rel="stylesheet" href="../css/pages/progress.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#0A0A0C">
+</head>
+
+<body>
+<main class="page">
+  <div class="container">
+    <h2>Atividade</h2>
+
+    <div id="emptyState" class="panel" style="display:none;margin-top:16px;text-align:center;padding:40px 20px">
+      <div class="gv3-empty">
+        <svg class="gv3-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8.5 4.5c1.6 0 2.6 1.3 2.6 3.1 0 1.6-.6 2.4-1.3 3.1-.9.9-1.3 1.8-1.3 3.5v4.3" /><path d="M15.5 9c1.6 0 2.6 1.3 2.6 3.1 0 1.6-.6 2.4-1.3 3.1-.9.9-1.3 1.8-1.3 3.5v.3" /></svg>
+        <div class="gv3-empty__title">Ainda sem dados suficientes</div>
+        <div class="gv3-empty__desc">Configure a sincronização com o smartwatch em Perfil pra ver seu histórico de passos e calorias aqui.</div>
+      </div>
+    </div>
+
+    <div id="chartPanel" style="display:none">
+      <div class="panel" style="margin-top:16px;padding:16px">
+        <div class="progress-toolbar">
+          <div class="metric-toggle">
+            <button type="button" class="tab-btn active" id="metricSteps">Passos</button>
+            <button type="button" class="tab-btn" id="metricCalories">Calorias</button>
+          </div>
+          <select id="periodSelect">
+            <option value="7">7 dias</option>
+            <option value="30" selected>30 dias</option>
+            <option value="90">90 dias</option>
+            <option value="all">Tudo</option>
+          </select>
+        </div>
+
+        <div class="chart-container" id="chartContainer">
+          <div class="chart-tooltip" id="chartTooltip" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="../js/activity.js"></script>
+</body>
+</html>

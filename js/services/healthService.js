@@ -10,3 +10,13 @@ export async function getDailyHealthStats(userId, date) {
   if (error) throw error;
   return data;
 }
+
+export async function listDailyHealthStats(userId) {
+  const { data, error } = await supabase
+    .from('daily_health_stats')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date');
+  if (error) throw error;
+  return data;
+}
