@@ -13,25 +13,34 @@ export default async function handler(req, res) {
   const token = auth.slice(7);
 
   const rawBody = await readRawBody(req);
+  const contentType = req.headers['content-type'] || '';
   let payload;
   try {
-    payload = JSON.parse(rawBody);
+    payload = contentType.includes('application/json')
+      ? JSON.parse(rawBody)
+      : parseForm(rawBody);
   } catch (err) {
-    console.error('JSON inválido recebido do Shortcut:', rawBody);
-    return res.status(400).json({ error: 'JSON inválido', raw: rawBody });
+    console.error('Corpo inválido recebido do Shortcut:', rawBody);
+    return res.status(400).json({ error: 'Corpo inválido', raw: rawBody });
   }
 
   try {
     const userId = await findUserByToken(token);
     if (!userId) return res.status(403).json({ error: 'Forbidden' });
 
-    const { date, steps, calories_total, workout } = payload;
+    const date = payload.date;
     if (!date) return res.status(400).json({ error: 'date é obrigatório' });
 
+    const steps = toNum(payload.steps);
+    const calories_total = toNum(payload.calories_total);
     await upsertDailyStats(userId, date, steps, calories_total);
 
-    if (workout) {
-      await applyWorkoutMetrics(userId, workout);
+    const avg_heart_rate = toNum(payload.avg_heart_rate);
+    const max_heart_rate = toNum(payload.max_heart_rate);
+    const workout_calories = toNum(payload.workout_calories);
+    const workout_duration_seconds = toNum(payload.workout_duration_seconds);
+    if (avg_heart_rate != null || max_heart_rate != null || workout_calories != null || workout_duration_seconds != null) {
+      await applyWorkoutMetrics(userId, { avg_heart_rate, max_heart_rate, calories: workout_calories, duration_seconds: workout_duration_seconds });
     }
 
     return res.status(200).json({ ok: true });
@@ -49,6 +58,21 @@ function readRawBody(req) {
     req.on('end', () => resolve(data));
     req.on('error', reject);
   });
+}
+
+// Corpo enviado como Formulário (application/x-www-form-urlencoded) pelo
+// Shortcut — campo vazio vira string vazia em vez de quebrar a sintaxe,
+// diferente do JSON montado à mão.
+function parseForm(rawBody) {
+  const obj = {};
+  for (const [key, value] of new URLSearchParams(rawBody)) obj[key] = value;
+  return obj;
+}
+
+function toNum(v) {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
 async function findUserByToken(token) {
