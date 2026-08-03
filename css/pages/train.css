@@ -156,10 +156,10 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   padding: 0 10px;
 }
 
-.set-row.completed .check-btn{ background: var(--gv3-status-good); border-color: var(--gv3-status-good); color: #0A0A0C; }
+.set-row.completed .check-btn{ background: var(--gv3-status-good); border-color: var(--gv3-status-good); color: var(--gv3-bg-root); }
 .set-row.completed .set-input{ opacity: .55; pointer-events: none; }
 .set-row.completed .set-num{ color: var(--gv3-status-good); }
-.set-row.pending .check-btn{ background: var(--gv3-status-warning); border-color: var(--gv3-status-warning); color: #0A0A0C; }
+.set-row.pending .check-btn{ background: var(--gv3-status-warning); border-color: var(--gv3-status-warning); color: var(--gv3-bg-root); }
 .set-row.pending .set-num{ color: var(--gv3-status-warning); }
 
 .add-set-btn{
@@ -256,7 +256,7 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   width: 100%; min-height: 54px;
   border: none; border-radius: var(--gv3-radius-md);
   background: var(--gv3-status-good);
-  color: #0A0A0C;
+  color: var(--gv3-bg-root);
   font-size: var(--gv3-text-base);
   font-weight: 700;
   cursor: pointer;

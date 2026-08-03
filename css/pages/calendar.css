@@ -48,7 +48,7 @@
   flex-shrink: 0;
 }
 .cal-marker.completed{ background: var(--gv3-status-good); color: #fff; }
-.cal-marker.incomplete{ background: var(--gv3-status-warning); color: #0A0A0C; }
+.cal-marker.incomplete{ background: var(--gv3-status-warning); color: var(--gv3-bg-root); }
 .cal-marker-more{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-muted); align-self: center; }
 
 .cal-footer{

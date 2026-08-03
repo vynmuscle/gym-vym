@@ -33,7 +33,7 @@
   font-size: var(--gv3-text-sm);
   font-weight: 700;
 }
-.gv3-day--done .gv3-day__dot{ background: var(--gv3-status-good); border-color: var(--gv3-status-good); color: #0A0A0C; }
+.gv3-day--done .gv3-day__dot{ background: var(--gv3-status-good); border-color: var(--gv3-status-good); color: var(--gv3-bg-root); }
 .gv3-day--today .gv3-day__dot{ border-color: var(--gv3-accent-ember); color: var(--gv3-text-primary); }
 .gv3-day--today .gv3-day__lbl{ color: var(--gv3-accent-ember); }
 

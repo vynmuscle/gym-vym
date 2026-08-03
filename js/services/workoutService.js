@@ -66,6 +66,22 @@ export async function listWorkoutExercises(workoutId) {
   return data;
 }
 
+// Mesmo dado de listWorkoutExercises, mas pra várias fichas numa query só
+// (evita 1 query por ficha em telas que avaliam/exibem o programa inteiro).
+// Retorna um Map workoutId -> items, na mesma ordem de sort_order.
+export async function listWorkoutExercisesForWorkouts(workoutIds) {
+  if (workoutIds.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from('workout_exercises')
+    .select('*, exercises(name, muscle_group, equipment, image_url, instructions, tracking_type)')
+    .in('workout_id', workoutIds)
+    .order('sort_order');
+  if (error) throw error;
+  const byWorkout = new Map(workoutIds.map(id => [id, []]));
+  for (const item of data) byWorkout.get(item.workout_id)?.push(item);
+  return byWorkout;
+}
+
 export async function swapWorkoutExerciseExercise(id, exerciseId) {
   const { data, error } = await supabase
     .from('workout_exercises')
@@ -91,6 +107,14 @@ export async function updateWorkoutExercise(id, payload) {
 
 export async function removeWorkoutExercise(id) {
   const { error } = await supabase.from('workout_exercises').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Remove vários itens de ficha numa query só (delete .in()) em vez de um
+// DELETE por item — usado ao substituir a ficha inteira pela sugestão da IA.
+export async function removeWorkoutExercises(ids) {
+  if (ids.length === 0) return;
+  const { error } = await supabase.from('workout_exercises').delete().in('id', ids);
   if (error) throw error;
 }
 

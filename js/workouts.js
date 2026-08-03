@@ -3,8 +3,9 @@ import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import {
-  listWorkouts, createWorkout, updateWorkout, deleteWorkout, listWorkoutExercises,
-  removeWorkoutExercise, addWorkoutExercise, listExercises, createExercise
+  listWorkouts, createWorkout, updateWorkout, deleteWorkout,
+  listWorkoutExercisesForWorkouts, removeWorkoutExercises,
+  addWorkoutExercise, listExercises, createExercise
 } from './services/workoutService.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 
@@ -248,9 +249,10 @@ btnAskAiProgram.addEventListener('click', async () => {
 
     activeWorkoutIdByName = new Map(active.map(w => [w.name.trim().toLowerCase(), w.id]));
 
+    const itemsByWorkout = await listWorkoutExercisesForWorkouts(active.map(w => w.id));
     const workouts = [];
     for(const w of active){
-      const items = await listWorkoutExercises(w.id);
+      const items = itemsByWorkout.get(w.id) || [];
       workouts.push({
         name: w.name,
         exercises: items.map(item => ({
@@ -324,13 +326,13 @@ btnApplyProgramSuggestions.addEventListener('click', async () => {
     const existing = await listExercises();
     const exerciseCache = new Map(existing.map(e => [e.name.trim().toLowerCase(), e.id]));
 
+    const workoutIds = matched.map(w => activeWorkoutIdByName.get(w.name.trim().toLowerCase()));
+    const currentItemsByWorkout = await listWorkoutExercisesForWorkouts(workoutIds);
+
     for(const w of matched){
       const workoutId = activeWorkoutIdByName.get(w.name.trim().toLowerCase());
-      const currentItems = await listWorkoutExercises(workoutId);
-
-      for(const item of currentItems){
-        await removeWorkoutExercise(item.id);
-      }
+      const currentItems = currentItemsByWorkout.get(workoutId) || [];
+      await removeWorkoutExercises(currentItems.map(item => item.id));
 
       let nonCardioOrder = 10;
       let cardioOrder = 900;

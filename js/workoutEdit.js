@@ -5,7 +5,7 @@ import { initPWA } from './pwa.js';
 import { openExercisePicker } from './exercisePicker.js';
 import {
   getWorkout, listWorkoutExercises, listExercises, createExercise,
-  addWorkoutExercise, updateWorkoutExercise, removeWorkoutExercise,
+  addWorkoutExercise, updateWorkoutExercise, removeWorkoutExercise, removeWorkoutExercises,
   swapWorkoutExerciseExercise
 } from './services/workoutService.js';
 import { escapeHtml } from './utils/escapeHtml.js';
@@ -328,9 +328,7 @@ btnApplySuggestions.addEventListener('click', async () => {
   showAiApplyMessage('Aplicando...');
 
   try {
-    for(const item of currentItems){
-      await removeWorkoutExercise(item.id);
-    }
+    await removeWorkoutExercises(currentItems.map(item => item.id));
 
     const existing = await listExercises();
     const exerciseCache = new Map(existing.map(e => [e.name.trim().toLowerCase(), e.id]));
