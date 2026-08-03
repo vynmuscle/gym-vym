@@ -553,18 +553,28 @@ export async function getActiveSessionToday() {
 // se nenhuma ficha está 100% recuperada, sugere a que foi treinada há mais
 // tempo (com warn=true pro chamador avisar o usuário).
 export async function getSuggestedWorkout(userId) {
-  const [workouts, recovery, settings] = await Promise.all([
+  const [workouts, recovery, settings, recentSessions] = await Promise.all([
     listWorkouts(),
     getMuscleRecovery(),
     userId
       ? supabase.from('user_settings').select('pending_suggested_workout_id').eq('user_id', userId).maybeSingle().then(r => r.data)
-      : Promise.resolve(null)
+      : Promise.resolve(null),
+    supabase.from('workout_sessions').select('workout_id, started_at').not('finished_at', 'is', null).order('started_at', { ascending: false }).then(r => r.data || [])
   ]);
   const activeWorkouts = workouts.filter(w => w.is_active);
   if (activeWorkouts.length === 0) return null;
 
   const recoveryByGroup = {};
   recovery.forEach(r => { recoveryByGroup[r.group] = r; });
+
+  // Última vez que cada FICHA (não só o grupo muscular) foi treinada — usado
+  // como desempate antes do grupo muscular, pra "ficha nunca feita nesse
+  // ciclo" vencer o empate mesmo quando compartilha um grupo com uma ficha
+  // treinada mais recentemente (ex: Tríceps aparece em duas fichas).
+  const lastTrainedByWorkout = {};
+  for (const s of recentSessions) {
+    if (!lastTrainedByWorkout[s.workout_id]) lastTrainedByWorkout[s.workout_id] = s.started_at;
+  }
 
   const candidates = [];
 
@@ -580,8 +590,11 @@ export async function getSuggestedWorkout(userId) {
     const recencyScore = Math.min(...groupStatuses.map(g =>
       g.lastTrained ? new Date(g.lastTrained).getTime() : -Infinity
     ));
+    const workoutRecencyScore = lastTrainedByWorkout[workout.id]
+      ? new Date(lastTrainedByWorkout[workout.id]).getTime()
+      : -Infinity;
 
-    candidates.push({ workout, avgPct, allRecovered, recencyScore, groups });
+    candidates.push({ workout, avgPct, allRecovered, recencyScore, workoutRecencyScore, groups });
   }
 
   if (candidates.length === 0) return null;
@@ -596,11 +609,15 @@ export async function getSuggestedWorkout(userId) {
 
   const fullyRecovered = candidates.filter(c => c.allRecovered);
   // Empate em 100% de recuperação é comum (pct satura no teto do grupo mais
-  // lento) — desempata pela ficha cujo grupo foi treinado há mais tempo, não
-  // pela ordem de criação da ficha.
+  // lento). Desempata em duas etapas: 1) a ficha que está há mais tempo sem
+  // ser feita (nunca feita conta como a mais devida) — evita que uma ficha
+  // recém-treinada vença só por compartilhar um grupo muscular parado com
+  // outra ficha (ex: Tríceps em duas fichas diferentes); 2) se ainda empatar,
+  // o grupo muscular treinado há mais tempo.
   const chosen = fullyRecovered.length > 0
     ? fullyRecovered.reduce((a, b) => {
         if (b.avgPct !== a.avgPct) return b.avgPct > a.avgPct ? b : a;
+        if (b.workoutRecencyScore !== a.workoutRecencyScore) return b.workoutRecencyScore < a.workoutRecencyScore ? b : a;
         return b.recencyScore < a.recencyScore ? b : a;
       })
     : candidates.reduce((a, b) => b.recencyScore < a.recencyScore ? b : a);
