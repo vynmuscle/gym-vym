@@ -98,18 +98,23 @@ async function loadSessions(){
     const hrLabel = s.avg_heart_rate ? ` · ${s.avg_heart_rate} bpm méd.` : '';
 
     return `
-    <div class="panel session-card" style="margin-bottom:12px;overflow:hidden">
-      <div class="list-item session-toggle" data-session="${s.id}" style="cursor:pointer">
-        <div class="list-item-info">
-          <span class="list-item-title">${escapeHtml(s.workouts ? s.workouts.name : 'Treino avulso')}</span>
-          <span class="list-item-sub">${formatDate(s.started_at)} · ${formatDuration(s.started_at, s.finished_at)}</span>
-        </div>
-        <div class="list-item-info" style="align-items:flex-end">
-          <span class="list-item-title">${stats.sets} séries</span>
-          <span class="list-item-sub">${stats.volume.toLocaleString('pt-BR')}kg · ${kcalLabel}${hrLabel}</span>
-        </div>
+    <div class="swipe-item" data-swipe-item="${s.id}" style="margin-bottom:12px">
+      <div class="swipe-delete-action">
+        <button type="button" class="swipe-delete-btn" data-delete-session="${s.id}" aria-label="Excluir treino">🗑<span>Excluir</span></button>
       </div>
-      <div class="session-details" id="details-${s.id}" style="display:none;padding:0 14px 14px"></div>
+      <div class="panel session-card swipe-content" style="overflow:hidden">
+        <div class="list-item session-toggle" data-session="${s.id}" style="cursor:pointer">
+          <div class="list-item-info">
+            <span class="list-item-title">${escapeHtml(s.workouts ? s.workouts.name : 'Treino avulso')}</span>
+            <span class="list-item-sub">${formatDate(s.started_at)} · ${formatDuration(s.started_at, s.finished_at)}</span>
+          </div>
+          <div class="list-item-info" style="align-items:flex-end">
+            <span class="list-item-title">${stats.sets} séries</span>
+            <span class="list-item-sub">${stats.volume.toLocaleString('pt-BR')}kg · ${kcalLabel}${hrLabel}</span>
+          </div>
+        </div>
+        <div class="session-details" id="details-${s.id}" style="display:none;padding:0 14px 14px"></div>
+      </div>
     </div>`;
   }).join('');
 
@@ -125,7 +130,79 @@ async function loadSessions(){
   }
 
   sessionsList.querySelectorAll('.session-toggle').forEach(el => {
-    el.addEventListener('click', () => toggleDetails(el.dataset.session));
+    el.addEventListener('click', () => {
+      if(el.closest('.swipe-item').classList.contains('swiped')) return;
+      toggleDetails(el.dataset.session);
+    });
+  });
+
+  sessionsList.querySelectorAll('[data-delete-session]').forEach(btn => {
+    btn.addEventListener('click', () => removeSession(btn.dataset.deleteSession));
+  });
+
+  sessionsList.querySelectorAll('.swipe-item').forEach(wireSwipe);
+}
+
+async function removeSession(id){
+  if(!confirm('Excluir este treino do histórico?')) return;
+  await deleteSession(id);
+  await loadSessions();
+}
+
+const SWIPE_REVEAL = 84;
+
+function wireSwipe(item){
+  const content = item.querySelector('.swipe-content');
+  let startX = 0, startY = 0, currentX = 0, dragging = false, axisLocked = null;
+
+  function setX(x, animate){
+    content.style.transition = animate ? 'transform .2s ease' : 'none';
+    content.style.transform = `translateX(${x}px)`;
+  }
+
+  function closeOthers(){
+    sessionsList.querySelectorAll('.swipe-item.swiped').forEach(other => {
+      if(other !== item){
+        other.classList.remove('swiped');
+        other.querySelector('.swipe-content').style.transform = 'translateX(0)';
+      }
+    });
+  }
+
+  content.addEventListener('touchstart', (e) => {
+    closeOthers();
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    currentX = item.classList.contains('swiped') ? -SWIPE_REVEAL : 0;
+    dragging = true;
+    axisLocked = null;
+  }, { passive: true });
+
+  content.addEventListener('touchmove', (e) => {
+    if(!dragging) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if(axisLocked === null) axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    if(axisLocked === 'y') return;
+    e.preventDefault();
+    const x = Math.min(0, Math.max(-SWIPE_REVEAL - 20, currentX + dx));
+    setX(x, false);
+  }, { passive: false });
+
+  content.addEventListener('touchend', (e) => {
+    if(!dragging) return;
+    dragging = false;
+    if(axisLocked !== 'x'){ axisLocked = null; return; }
+    const dx = e.changedTouches[0].clientX - startX;
+    const finalX = currentX + dx;
+    if(finalX < -SWIPE_REVEAL / 2){
+      setX(-SWIPE_REVEAL, true);
+      item.classList.add('swiped');
+    } else {
+      setX(0, true);
+      item.classList.remove('swiped');
+    }
+    axisLocked = null;
   });
 }
 

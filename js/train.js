@@ -815,6 +815,13 @@ document.getElementById('btnAddRest').addEventListener('click', () => {
     localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName: restExName, done: restDone, total: restTotal }));
   } catch(err) {}
   updateRestDisplay();
+  // Reinicia o interval e o keep-alive: se o navegador já tinha throttlado/
+  // pausado o setInterval anterior (aba em segundo plano por um tempo), só
+  // atualizar restEndTime não é suficiente — sem isso o alarme não dispara
+  // na hora certa depois de adicionar tempo.
+  clearInterval(restInterval);
+  restInterval = setInterval(updateRestDisplay, 1000);
+  startKeepAlive();
 });
 
 document.getElementById('btnSkipRest').addEventListener('click', closeRest);
