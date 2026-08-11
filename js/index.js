@@ -14,8 +14,8 @@ import { createProgressRing } from './design-system/progressRing.js';
 import { drawAscent } from './core/motion.js';
 import { getLatestWeight } from './services/dietService.js';
 import { getDailyHealthStats } from './services/healthService.js';
-import { showToast } from './core/toast.js';
 import { icon } from './icons.js';
+import { openAiAssistant } from './aiAssistant.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 
 const { data: sd } = await supabase.auth.getSession();
@@ -372,6 +372,4 @@ renderBody().catch(err => console.error('renderBody falhou:', err));
 renderWatch().catch(err => console.error('renderWatch falhou:', err));
 renderRecentActivity();
 
-btnAskAI.addEventListener('click', () => {
-  showToast('✨ Assistente de IA conversacional — em breve');
-});
+btnAskAI.addEventListener('click', () => openAiAssistant());

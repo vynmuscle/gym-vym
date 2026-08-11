@@ -87,3 +87,28 @@
 @media (prefers-reduced-motion: reduce){
   .gv3-backdrop, .gv3-modal, .gv3-sheet, .gv3-toast, .gv3-toast--out{ animation: none; }
 }
+
+/* Assistente de IA (aiAssistant.js) — modal injetado via JS, mesmas classes
+   gv3-backdrop/gv3-modal de qualquer overlay do app. */
+.ai-assistant-modal{ display: flex; flex-direction: column; gap: var(--gv3-space-3); max-height: 80dvh; }
+.ai-assistant-head{ display: flex; align-items: center; justify-content: space-between; }
+.ai-assistant-head h3{ font-size: var(--gv3-text-lg); margin: 0; }
+.ai-assistant-close{
+  background: var(--gv3-bg-card); border: 1px solid var(--gv3-border-strong);
+  border-radius: var(--gv3-radius-sm); width: 32px; height: 32px;
+  color: var(--gv3-text-secondary); font-size: 14px; cursor: pointer;
+}
+.ai-assistant-hint{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-muted); line-height: 1.4; }
+.ai-assistant-answer{
+  background: var(--gv3-bg-card); border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-md); padding: var(--gv3-space-3);
+  font-size: var(--gv3-text-sm); line-height: 1.5; color: var(--gv3-text-primary);
+  max-height: 40dvh; overflow-y: auto; white-space: pre-wrap;
+}
+.ai-assistant-answer--error{ color: var(--gv3-status-danger); }
+.ai-assistant-input{
+  width: 100%; min-height: 64px; resize: vertical;
+  background: var(--gv3-bg-surface); border: 1px solid var(--gv3-border-strong);
+  border-radius: var(--gv3-radius-sm); padding: 10px 12px;
+  color: var(--gv3-text-primary); font-family: var(--gv3-font-ui); font-size: 16px;
+}
