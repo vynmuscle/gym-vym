@@ -257,6 +257,8 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 .summary-prs h3{ font-size: var(--gv3-text-sm); color: var(--gv3-accent-precision); margin: 0 0 8px; }
 .summary-pr-item{ font-size: var(--gv3-text-sm); color: var(--gv3-text-primary); padding: 4px 0; }
 
+.summary-progress-note{ font-size: var(--gv3-text-sm); color: var(--gv3-text-secondary); text-align: center; margin-bottom: 20px; position: relative; }
+
 .summary-card button{
   width: 100%; min-height: 54px;
   border: none; border-radius: var(--gv3-radius-md);

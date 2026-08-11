@@ -58,6 +58,7 @@ const sumTime = document.getElementById('sumTime');
 const sumSets = document.getElementById('sumSets');
 const sumVolume = document.getElementById('sumVolume');
 const summaryPRs = document.getElementById('summaryPRs');
+const summaryProgressNote = document.getElementById('summaryProgressNote');
 const summaryXP = document.getElementById('summaryXP');
 const summaryKcal = document.getElementById('summaryKcal');
 
@@ -233,6 +234,37 @@ function progressionLabel(progression){
   if(!progression || !progression.reason) return '';
   const suffix = progression.suggestedWeight != null ? ` — sugestão: ${formatWheelValue(progression.suggestedWeight)}kg` : '';
   return `<div class="ex-uplevel ex-uplevel--${PROGRESSION_CLASS[progression.action]}">${PROGRESSION_ICONS[progression.action]} ${escapeHtml(progression.reason)}${suffix}</div>`;
+}
+
+// Resumo pós-treino: compara o que foi feito hoje contra a sugestão do
+// motor que já apareceu no início do treino (ex.progression, calculado em
+// buildWorkout) — só pros exercícios onde havia sugestão de subir/reduzir.
+// Sem dado novo, sem query nova — só interpreta o que já está em memória.
+function buildProgressionNarrative(){
+  let met = 0, missed = 0;
+
+  for(const ex of exercisesData){
+    if(ex.isDuration || !ex.progression) continue;
+    if(ex.progression.action !== 'increase' && ex.progression.action !== 'reduce') continue;
+
+    const completed = ex.sets.filter(s => s.completed);
+    if(completed.length === 0) continue;
+
+    // "Seguiu a sugestão" compara sempre com suggestedWeight (o alvo), nunca
+    // com previousWeight — senão quem ignora o conselho de reduzir e mantém
+    // o peso antigo contaria como "bateu a meta" por engano.
+    const topWeight = Math.max(...completed.map(s => s.kg || 0));
+    if(ex.progression.action === 'increase'){
+      if(topWeight >= ex.progression.suggestedWeight) met++; else missed++;
+    } else {
+      if(topWeight <= ex.progression.suggestedWeight + 0.01) met++; else missed++;
+    }
+  }
+
+  if(met === 0 && missed === 0) return null;
+  if(missed === 0) return `Bateu a meta sugerida em ${met} exercício${met > 1 ? 's' : ''} hoje. 💪`;
+  if(met === 0) return `Não chegou na carga sugerida em ${missed} exercício${missed > 1 ? 's' : ''} — sem problema, ajusta no seu ritmo.`;
+  return `Bateu a meta sugerida em ${met} de ${met + missed} exercícios com sugestão de mudança hoje.`;
 }
 
 function openWheelPicker(field, currentValue, anchorEl){
@@ -878,6 +910,12 @@ finishBtn.addEventListener('click', async () => {
       .map(pr => `<div class="summary-pr-item">🏆 ${escapeHtml(pr.name)}: ${formatWheelValue(pr.weight)}kg</div>`)
       .join('');
     summaryPRs.style.display = 'block';
+  }
+
+  const progressNote = buildProgressionNarrative();
+  if(progressNote){
+    summaryProgressNote.textContent = progressNote;
+    summaryProgressNote.style.display = 'block';
   }
 
   closeRest();

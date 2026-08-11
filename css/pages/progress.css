@@ -4,6 +4,8 @@
    var(--muted)/var(--border)/var(--bg) diretamente — essas variáveis são
    redirecionadas pros tokens gv3 em css/core/tokens.css (compat shim). */
 
+.progress-note{ font-size: var(--gv3-text-sm); color: var(--gv3-text-secondary); text-align: center; margin: 10px 0 4px; }
+
 .progress-toolbar{ display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .metric-toggle{ display: flex; gap: 4px; }
 .metric-toggle .tab-btn{ padding: 8px 12px; min-height: 40px; font-size: var(--gv3-text-sm); }

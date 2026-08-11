@@ -18,6 +18,7 @@ const progressContent = document.getElementById('progressContent');
 const cardPR = document.getElementById('cardPR');
 const cardLast = document.getElementById('cardLast');
 const cardEvolution = document.getElementById('cardEvolution');
+const progressNote = document.getElementById('progressNote');
 const metricMax = document.getElementById('metricMax');
 const metricVolume = document.getElementById('metricVolume');
 const periodSelect = document.getElementById('periodSelect');
@@ -92,6 +93,17 @@ function computeStats(sessions){
   return { pr, last, evolutionPct };
 }
 
+// Traduz o número (evolutionPct, já calculado em computeStats) numa frase —
+// mesma métrica que já existe no card "Evolução 4 sem.", só interpretada.
+function evolutionNarrative(evolutionPct){
+  if(evolutionPct === null) return null;
+  const pct = Math.round(evolutionPct);
+  if(pct >= 10) return `Você evoluiu ${pct}% nos últimos 28 dias. Continue assim!`;
+  if(pct > 0) return `Progresso estável — evolução de ${pct}% nas últimas semanas.`;
+  if(pct === 0) return 'Sem mudança nas últimas semanas — na mesma carga/volume de 28 dias atrás.';
+  return 'Leve queda de desempenho nas últimas semanas — considere um descanso extra ou reduzir o volume.';
+}
+
 function renderCards(){
   const stats = computeStats(allSessions);
   const field = prField();
@@ -101,6 +113,10 @@ function renderCards(){
   cardEvolution.textContent = stats.evolutionPct === null
     ? '—'
     : `${stats.evolutionPct > 0 ? '+' : ''}${stats.evolutionPct.toFixed(0)}%`;
+
+  const note = evolutionNarrative(stats.evolutionPct);
+  progressNote.textContent = note || '';
+  progressNote.style.display = note ? 'block' : 'none';
 }
 
 function renderChart(){
