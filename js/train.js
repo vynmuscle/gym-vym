@@ -216,7 +216,8 @@ const WHEEL_FIELD_CONFIG = {
   reps: { min: 0, max: 50, step: 1, unit: '' },
   durationMin: { min: 0, max: 180, step: 1, unit: 'min' },
   distanceKm: { min: 0, max: 100, step: 0.1, unit: 'km' },
-  inclinePct: { min: 0, max: 15, step: 0.5, unit: '%' }
+  inclinePct: { min: 0, max: 15, step: 0.5, unit: '%' },
+  rpe: { min: 1, max: 10, step: 0.5, unit: '' }
 };
 
 function formatWheelValue(v){
@@ -295,12 +296,14 @@ function setRowHTML(ei, setNumber, set, isDuration){
       </div>`;
   }
 
+  const rpeValue = set.rpe ?? 0;
   return `
     <div class="${rowClass}" id="set-${ei}-${setNumber}">
       <div class="set-num">${setNumber}</div>
       <div class="set-prev">${set.prev || '—'}</div>
       <button type="button" class="value-btn" data-field="kg" data-value="${set.kg ?? 0}">${formatWheelValue(set.kg ?? 0)}</button>
       <button type="button" class="value-btn" data-field="reps" data-value="${set.reps ?? 0}">${formatWheelValue(set.reps ?? 0)}</button>
+      <button type="button" class="value-btn rpe${rpeValue ? ' set' : ''}" data-field="rpe" data-value="${rpeValue}" aria-label="RPE (esforço percebido), opcional">${rpeValue ? formatWheelValue(rpeValue) : '—'}</button>
       ${checkCol}
     </div>`;
 }
@@ -419,7 +422,7 @@ function renderExerciseCard(ei){
   const uplevelLabel = ex.suggestUp ? `<div class="ex-uplevel">🔼 Hora de subir a carga</div>` : '';
   const headerLabels = ex.isDuration
     ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div>Km</div><div>Elev%</div><div>✓</div>`
-    : `<div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>✓</div>`;
+    : `<div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>RPE</div><div>✓</div>`;
 
   card.innerHTML = `
     <div class="ex-head">
@@ -629,6 +632,7 @@ function syncSetFromDOM(ei, setNumber){
   } else {
     set.kg = parseFloat(row.querySelector('[data-field="kg"]').dataset.value) || 0;
     set.reps = parseInt(row.querySelector('[data-field="reps"]').dataset.value) || 0;
+    set.rpe = parseFloat(row.querySelector('[data-field="rpe"]').dataset.value) || 0;
   }
 }
 
@@ -702,12 +706,14 @@ async function completeSet(ei, setNumber, row){
   } else {
     kg = parseFloat(row.querySelector('[data-field="kg"]').dataset.value) || 0;
     reps = parseInt(row.querySelector('[data-field="reps"]').dataset.value) || 0;
+    const rpe = parseFloat(row.querySelector('[data-field="rpe"]').dataset.value) || 0;
     payload = {
       session_id: session.id,
       exercise_id: ex.exerciseId,
       set_number: setNumber,
       reps,
       weight: kg,
+      rpe: rpe || null,
       notes: noteValue
     };
   }

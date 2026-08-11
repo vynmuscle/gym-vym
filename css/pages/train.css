@@ -89,7 +89,7 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 
 .sets-header, .set-row{
   display: grid;
-  grid-template-columns: 32px 1fr 64px 64px 92px;
+  grid-template-columns: 32px 1fr 64px 64px 48px 92px;
   align-items: center;
   gap: 6px;
   padding: 0 10px;
@@ -97,6 +97,8 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 .sets-header.duration, .set-row.duration{
   grid-template-columns: 28px 1fr 52px 52px 52px 92px;
 }
+.value-btn.rpe{ color: var(--gv3-text-secondary); font-size: var(--gv3-text-sm); }
+.value-btn.rpe.set{ color: var(--gv3-text-primary); }
 .sets-header{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-muted); text-transform: uppercase; letter-spacing: .1em; padding-bottom: 8px; text-align: center; }
 .sets-header .left{ text-align: left; padding-left: 4px; }
 .set-row{ min-height: 58px; }
