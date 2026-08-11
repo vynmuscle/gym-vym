@@ -516,12 +516,24 @@ async function buildWorkout(){
     existingByExercise.get(s.exercise_id).set(s.set_number, s);
   });
 
-  for(const item of items){
-    const lastSets = await getLastSets(item.exercise_id);
+  // Busca o histórico e a sugestão de progressão de todos os exercícios da
+  // ficha em paralelo — antes era um exercício de cada vez (uma query
+  // esperando a outra), o que deixava fichas com mais exercícios abrirem
+  // proporcionalmente mais devagar.
+  const [allLastSets, allProgressions] = await Promise.all([
+    Promise.all(items.map(item => getLastSets(item.exercise_id))),
+    Promise.all(items.map(item =>
+      item.exercises.tracking_type === 'duration'
+        ? null
+        : getProgressionForExercise(item.exercise_id, item.target_reps, session?.id)
+    ))
+  ]);
+
+  items.forEach((item, itemIndex) => {
+    const lastSets = allLastSets[itemIndex];
     const isDuration = item.exercises.tracking_type === 'duration';
     const doneForExercise = existingByExercise.get(item.exercise_id);
-
-    const progression = isDuration ? null : await getProgressionForExercise(item.exercise_id, item.target_reps, session?.id);
+    const progression = allProgressions[itemIndex];
 
     const ex = {
       workoutExerciseId: item.id,
@@ -565,7 +577,7 @@ async function buildWorkout(){
     }
 
     exercisesData.push(ex);
-  }
+  });
 
   totalSets = exercisesData.reduce((sum, ex) => sum + ex.sets.length, 0);
   totalCountEl.textContent = totalSets;

@@ -150,13 +150,13 @@ async function renderHero(){
         </div>
       </div>`;
     drawAscent(document.getElementById('heroAscent'));
-    return;
+    return true;
   }
 
   const suggestion = await getSuggestedWorkout(user.id);
   if(!suggestion){
     heroSection.innerHTML = '';
-    return;
+    return false;
   }
 
   const groupNames = suggestion.groups.map(g => MUSCLE_GROUP_LABELS[g]).join(' e ');
@@ -179,6 +179,8 @@ async function renderHero(){
   document.getElementById('btnStartHero').addEventListener('click', () => {
     navigate('./pages/train.html?id=' + suggestion.workout.id);
   });
+
+  return false;
 }
 
 // Resumo de 1 linha (não lista exercício por exercício — isso já aparece
@@ -270,9 +272,10 @@ function showCheckinAck(feeling){
   checkinAck.style.display = 'block';
 }
 
-async function renderCheckin(){
-  const todaysSessions = await getTodaysCompletedSessions();
-  if(todaysSessions.length > 0){
+// trainedToday vem do retorno de renderHero() — evita repetir a mesma
+// query (getTodaysCompletedSessions) que a Hero já fez.
+function renderCheckin(trainedToday){
+  if(trainedToday){
     checkinCard.style.display = 'none';
     return;
   }
@@ -365,8 +368,8 @@ leagueLabel.textContent = `${league.name} · ${xp} XP`;
 
 renderRecovery(recovery);
 renderInsight({ weekCount: sessionDates.length, weeklyGoal, streak, recovery });
-await renderHero();
-renderCheckin().catch(err => console.error('renderCheckin falhou:', err));
+const trainedToday = await renderHero();
+try { renderCheckin(trainedToday); } catch(err) { console.error('renderCheckin falhou:', err); }
 
 renderBody().catch(err => console.error('renderBody falhou:', err));
 renderWatch().catch(err => console.error('renderWatch falhou:', err));

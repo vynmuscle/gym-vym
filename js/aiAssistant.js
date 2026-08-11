@@ -30,7 +30,7 @@ export function openAiAssistant(){
         <button type="button" class="ai-assistant-close" aria-label="Fechar">✕</button>
       </div>
       <div class="ai-assistant-hint">Pergunte sobre seu treino, evolução ou recuperação. Não é orientação médica — pra dor ou lesão, procure um profissional.</div>
-      <div class="ai-assistant-answer" id="aiAssistantAnswer" style="display:none"></div>
+      <div class="ai-assistant-answer" id="aiAssistantAnswer" style="display:none" aria-live="polite"></div>
       <textarea class="ai-assistant-input" id="aiAssistantInput" placeholder="Ex.: como estou evoluindo no supino?" rows="2" maxlength="500"></textarea>
       <button type="button" class="gv3-btn gv3-btn--primary gv3-btn--full" id="aiAssistantSend">Perguntar</button>
     </div>`;
