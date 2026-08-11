@@ -17,6 +17,7 @@ await renderNav('workouts');
 
 const nameInput = document.getElementById('name');
 const muscleGroupInput = document.getElementById('muscleGroup');
+const movementPatternInput = document.getElementById('movementPattern');
 const equipmentInput = document.getElementById('equipment');
 const notesInput = document.getElementById('notes');
 const trackingTypeInput = document.getElementById('trackingType');
@@ -37,6 +38,7 @@ function resetForm(){
   editingId = null;
   nameInput.value = '';
   muscleGroupInput.value = 'peito';
+  movementPatternInput.value = '';
   equipmentInput.value = '';
   notesInput.value = '';
   trackingTypeInput.checked = false;
@@ -82,6 +84,7 @@ function startEdit(ex){
   editingId = ex.id;
   nameInput.value = ex.name;
   muscleGroupInput.value = ex.muscle_group;
+  movementPatternInput.value = ex.movement_pattern || '';
   equipmentInput.value = ex.equipment || '';
   notesInput.value = ex.notes || '';
   trackingTypeInput.checked = ex.tracking_type === 'duration';
@@ -107,6 +110,7 @@ btnSave.addEventListener('click', async () => {
   const payload = {
     name,
     muscle_group: muscleGroupInput.value,
+    movement_pattern: movementPatternInput.value || null,
     equipment: equipmentInput.value || null,
     notes: notesInput.value.trim() || null,
     tracking_type: trackingTypeInput.checked ? 'duration' : 'reps'

@@ -7,7 +7,8 @@ import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout,
   getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
-  getProgressionForExercise, getPersonalRecordsMap, getUserXP, getSessionStartedAt
+  getProgressionForExercise, getPersonalRecordsMap, getUserXP, getSessionStartedAt,
+  getSubstituteSuggestions, addExerciseFromLibrary
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
@@ -392,7 +393,7 @@ function showExerciseInfo(ex){
   overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
 }
 
-function swapExercise(ei){
+function openFullPicker(ei){
   const ex = exercisesData[ei];
   openExercisePicker({
     userId: user.id,
@@ -401,6 +402,91 @@ function swapExercise(ei){
       await swapWorkoutExerciseExercise(ex.workoutExerciseId, newEx.id);
       await refreshExerciseCard(ei, newEx);
     }
+  });
+}
+
+const SUBSTITUTE_MAX_SUGGESTIONS = 4;
+
+async function swapExercise(ei){
+  const ex = exercisesData[ei];
+
+  let suggestions;
+  try {
+    suggestions = await getSubstituteSuggestions({
+      id: ex.exerciseId,
+      muscle_group: ex.muscleGroup,
+      movement_pattern: ex.movementPattern
+    });
+  } catch(err) {
+    suggestions = { mine: [], library: [] };
+  }
+
+  // "Meus" primeiro (já treinado antes, mais familiar, sem precisar
+  // adicionar de novo), completa com a biblioteca até o limite.
+  const candidates = [
+    ...suggestions.mine.map(e => ({ ...e, __mine: true })),
+    ...suggestions.library
+  ].slice(0, SUBSTITUTE_MAX_SUGGESTIONS);
+
+  if(candidates.length === 0){
+    openFullPicker(ei);
+    return;
+  }
+
+  openSubstituteSheet(ei, candidates);
+}
+
+function openSubstituteSheet(ei, candidates){
+  const ex = exercisesData[ei];
+
+  const overlay = document.createElement('div');
+  overlay.className = 'gv3-backdrop';
+  overlay.innerHTML = `
+    <div class="gv3-sheet substitute-sheet" role="dialog" aria-label="Trocar exercício">
+      <div class="gv3-sheet__handle"></div>
+      <h3 class="substitute-sheet__title">Trocar ${escapeHtml(ex.name)}</h3>
+      <p class="substitute-sheet__hint">Mesmo grupo muscular e padrão de movimento — troca na hora.</p>
+      <div class="substitute-sheet__list">
+        ${candidates.map((c, i) => {
+          const img = c.__mine ? c.image_url : c.image_urls?.[0];
+          const name = c.__mine ? c.name : (c.name_pt || c.name);
+          return `
+            <button type="button" class="substitute-item" data-index="${i}">
+              <div class="substitute-item__thumb">${img ? `<img src="${escapeHtml(img)}" alt="" loading="lazy">` : '🏋️'}</div>
+              <div class="substitute-item__info">
+                <span class="substitute-item__name">${escapeHtml(name)}</span>
+                <span class="substitute-item__meta">${c.__mine ? 'Já treinado' : escapeHtml(c.equipment || '')}</span>
+              </div>
+            </button>`;
+        }).join('')}
+      </div>
+      <button type="button" class="gv3-btn gv3-btn--secondary gv3-btn--full" id="substituteSeeAll">Ver todos os exercícios</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  function close(){
+    overlay.remove();
+  }
+
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) close(); });
+
+  overlay.querySelectorAll('.substitute-item').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const chosen = candidates[Number(btn.dataset.index)];
+      close();
+      try {
+        const newEx = chosen.__mine ? chosen : await addExerciseFromLibrary(user.id, chosen);
+        await swapWorkoutExerciseExercise(ex.workoutExerciseId, newEx.id);
+        await refreshExerciseCard(ei, newEx);
+      } catch(err) {
+        showToast('Não foi possível trocar. Tente de novo.');
+      }
+    });
+  });
+
+  overlay.querySelector('#substituteSeeAll').addEventListener('click', () => {
+    close();
+    openFullPicker(ei);
   });
 }
 
@@ -421,6 +507,7 @@ async function refreshExerciseCard(ei, newEx){
   ex.imageUrl = newEx.image_url;
   ex.instructions = newEx.instructions;
   ex.muscleGroup = newEx.muscle_group;
+  ex.movementPattern = newEx.movement_pattern;
   ex.isDuration = isDuration;
   ex.sets = [];
 
@@ -543,6 +630,7 @@ async function buildWorkout(){
       imageUrl: item.exercises.image_url,
       instructions: item.exercises.instructions,
       muscleGroup: item.exercises.muscle_group,
+      movementPattern: item.exercises.movement_pattern,
       isDuration,
       rest: item.rest_seconds,
       note: '',

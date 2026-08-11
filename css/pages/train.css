@@ -312,6 +312,29 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 .ex-info-img{ width: 100%; border-radius: var(--gv3-radius-sm); margin: 12px 0; }
 .ex-info-text{ font-size: var(--gv3-text-sm); line-height: 1.5; color: var(--gv3-text-primary); white-space: pre-line; }
 
+/* Substituição inteligente de exercícios (🔁) — sheet com até 4 sugestões
+   do mesmo grupo muscular + padrão de movimento, antes do seletor completo. */
+.substitute-sheet__title{ font-family: var(--gv3-font-display); font-size: var(--gv3-text-lg); margin: 0 0 4px; }
+.substitute-sheet__hint{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); margin: 0 0 14px; }
+.substitute-sheet__list{ display: flex; flex-direction: column; margin-bottom: 14px; }
+.substitute-item{
+  display: flex; align-items: center; gap: 12px; padding: 10px 4px;
+  border: none; border-bottom: 1px solid var(--gv3-border);
+  background: none; text-align: left; cursor: pointer; min-height: 56px;
+}
+.substitute-item:last-child{ border-bottom: none; }
+.substitute-item:active{ background: var(--gv3-bg-card-raised); }
+.substitute-item__thumb{
+  width: 44px; height: 44px; border-radius: var(--gv3-radius-pill);
+  background: var(--gv3-bg-card-raised); border: 1px solid var(--gv3-border);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  overflow: hidden; font-size: 18px;
+}
+.substitute-item__thumb img{ width: 100%; height: 100%; object-fit: cover; }
+.substitute-item__info{ display: flex; flex-direction: column; gap: 2px; }
+.substitute-item__name{ font-weight: 600; font-size: var(--gv3-text-sm); color: var(--gv3-text-primary); }
+.substitute-item__meta{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); }
+
 /* Linha de Ascensão — atrás do card de resumo, celebrando o treino concluído */
 .summary-card::before{
   content: '';

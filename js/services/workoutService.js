@@ -60,7 +60,7 @@ export async function deleteWorkout(id) {
 export async function listWorkoutExercises(workoutId) {
   const { data, error } = await supabase
     .from('workout_exercises')
-    .select('*, exercises(name, muscle_group, equipment, image_url, instructions, tracking_type)')
+    .select('*, exercises(name, muscle_group, equipment, image_url, instructions, tracking_type, movement_pattern)')
     .eq('workout_id', workoutId)
     .order('sort_order');
   if (error) throw error;
@@ -74,7 +74,7 @@ export async function listWorkoutExercisesForWorkouts(workoutIds) {
   if (workoutIds.length === 0) return new Map();
   const { data, error } = await supabase
     .from('workout_exercises')
-    .select('*, exercises(name, muscle_group, equipment, image_url, instructions, tracking_type)')
+    .select('*, exercises(name, muscle_group, equipment, image_url, instructions, tracking_type, movement_pattern)')
     .in('workout_id', workoutIds)
     .order('sort_order');
   if (error) throw error;
@@ -92,6 +92,37 @@ export async function swapWorkoutExerciseExercise(id, exerciseId) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// Substituição inteligente: candidatos do mesmo grupo muscular + mesmo
+// padrão de movimento principal do exercício atual. "meus" primeiro (já
+// treinado antes, mais familiar) e depois a biblioteca — sem misturar,
+// pra quem chama poder priorizar "meus" na exibição. Sem movement_pattern
+// no exercício atual, não dá pra sugerir nada com segurança (retorna vazio).
+export async function getSubstituteSuggestions(exercise) {
+  if (!exercise.movement_pattern) return { mine: [], library: [] };
+
+  const [mineRes, libRes] = await Promise.all([
+    supabase
+      .from('exercises')
+      .select('*')
+      .eq('muscle_group', exercise.muscle_group)
+      .eq('movement_pattern', exercise.movement_pattern)
+      .neq('id', exercise.id)
+      .order('name')
+      .limit(8),
+    supabase
+      .from('library_exercises')
+      .select('*')
+      .eq('muscle_group', exercise.muscle_group)
+      .eq('movement_pattern', exercise.movement_pattern)
+      .order('name')
+      .limit(8)
+  ]);
+  if (mineRes.error) throw mineRes.error;
+  if (libRes.error) throw libRes.error;
+
+  return { mine: mineRes.data, library: libRes.data };
 }
 
 export async function addWorkoutExercise(userId, payload) {
@@ -333,7 +364,8 @@ export async function addExerciseFromLibrary(userId, libEx) {
       equipment: libEx.equipment,
       image_url: libEx.image_urls?.[0] || null,
       instructions: libEx.instructions_pt || libEx.instructions || null,
-      tracking_type: libEx.tracking_type || 'reps'
+      tracking_type: libEx.tracking_type || 'reps',
+      movement_pattern: libEx.movement_pattern || null
     })
     .select()
     .single();
