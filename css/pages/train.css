@@ -95,7 +95,7 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   padding: 0 8px;
 }
 .sets-header.duration, .set-row.duration{
-  grid-template-columns: 24px minmax(0, 1fr) 44px 44px 44px 84px;
+  grid-template-columns: 24px minmax(0, 1fr) 44px 44px 48px 84px;
 }
 .value-btn.rpe{ color: var(--gv3-text-secondary); font-size: var(--gv3-text-sm); }
 .value-btn.rpe.set{ color: var(--gv3-text-primary); }
