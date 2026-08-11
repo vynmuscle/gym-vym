@@ -44,6 +44,9 @@ const progressSub = document.getElementById('progressSub');
 const streakIcon = document.getElementById('streakIcon');
 const streakValue = document.getElementById('streakValue');
 const recoveryStrip = document.getElementById('recoveryStrip');
+const checkinCard = document.getElementById('checkinCard');
+const checkinOptions = document.getElementById('checkinOptions');
+const checkinAck = document.getElementById('checkinAck');
 const insightCard = document.getElementById('insightCard');
 const insightText = document.getElementById('insightText');
 const caloriesValue = document.getElementById('caloriesValue');
@@ -249,6 +252,58 @@ function todayStr(){
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+const CHECKIN_STORAGE_KEY = `gymvym_checkin_${user.id}`;
+
+const CHECKIN_ACK = {
+  mal: 'Anotado. Vai com calma hoje, sem exagerar na carga.',
+  normal: 'Anotado. Bom treino!',
+  otimo: 'Anotado! Aproveita esse gás. 🔥',
+  cansado: 'Anotado. Fique de olho no corpo — reduza o volume se precisar.'
+};
+
+// Check-in de disposição — só informativo por enquanto (não altera a
+// sugestão de treino nem o motor de progressão). Guardado no aparelho, não
+// no banco: não pergunta de novo no mesmo dia, sem precisar de tabela nova.
+function showCheckinAck(feeling){
+  checkinOptions.style.display = 'none';
+  checkinAck.textContent = CHECKIN_ACK[feeling] || 'Anotado!';
+  checkinAck.style.display = 'block';
+}
+
+async function renderCheckin(){
+  const todaysSessions = await getTodaysCompletedSessions();
+  if(todaysSessions.length > 0){
+    checkinCard.style.display = 'none';
+    return;
+  }
+
+  checkinCard.style.display = 'block';
+
+  let saved = null;
+  try {
+    const raw = localStorage.getItem(CHECKIN_STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed.date === todayStr()) saved = parsed.feeling;
+    }
+  } catch(err) {}
+
+  if(saved){
+    showCheckinAck(saved);
+    return;
+  }
+
+  checkinOptions.querySelectorAll('.gv3-checkin-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const feeling = btn.dataset.feeling;
+      try {
+        localStorage.setItem(CHECKIN_STORAGE_KEY, JSON.stringify({ date: todayStr(), feeling }));
+      } catch(err) {}
+      showCheckinAck(feeling);
+    });
+  });
+}
+
 async function renderBody(){
   const weightRow = await getLatestWeight(user.id);
   if(!weightRow) return;
@@ -311,6 +366,7 @@ leagueLabel.textContent = `${league.name} · ${xp} XP`;
 renderRecovery(recovery);
 renderInsight({ weekCount: sessionDates.length, weeklyGoal, streak, recovery });
 await renderHero();
+renderCheckin().catch(err => console.error('renderCheckin falhou:', err));
 
 renderBody().catch(err => console.error('renderBody falhou:', err));
 renderWatch().catch(err => console.error('renderWatch falhou:', err));
