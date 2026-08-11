@@ -61,6 +61,8 @@
 .gv3-hero__why{ font-size: var(--gv3-text-sm); color: var(--gv3-text-secondary); margin-bottom: var(--gv3-space-4); }
 .gv3-hero__why b{ color: var(--gv3-status-good); font-weight: 600; }
 .gv3-hero__why--warn b{ color: var(--gv3-status-warning); }
+.gv3-hero__progression{ font-size: var(--gv3-text-sm); color: var(--gv3-status-good); font-weight: 600; margin: -8px 0 var(--gv3-space-4); }
+.gv3-hero__progression--down{ color: var(--gv3-status-danger); }
 .gv3-hero__ai-link{ display: block; text-align: center; margin-top: var(--gv3-space-3); font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); text-decoration: underline; }
 .gv3-hero--done{ text-align: center; box-shadow: var(--gv3-glow-ember); }
 .gv3-hero--done .gv3-hero__tag{

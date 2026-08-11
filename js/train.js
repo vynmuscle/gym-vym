@@ -7,9 +7,8 @@ import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout,
   getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
-  getExerciseProgress, getPersonalRecordsMap, getUserXP, getSessionStartedAt
+  getProgressionForExercise, getPersonalRecordsMap, getUserXP, getSessionStartedAt
 } from './services/workoutService.js';
-import { decideProgression } from './services/progressionService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
 import { getLeagueForXP } from './leagues.js';
@@ -471,26 +470,6 @@ function renderExerciseCard(ei){
   exNoteInput.addEventListener('input', () => { ex.note = exNoteInput.value; });
 }
 
-// Extrai a faixa de reps da meta (texto livre: "8-12", "10", "até a falha").
-// min/max ficam null quando não há número pra comparar (ex.: "até a falha").
-function parseTargetRepsRange(targetReps){
-  const numbers = (targetReps || '').match(/\d+/g);
-  if(!numbers) return { min: null, max: null };
-  const values = numbers.map(Number);
-  return { min: Math.min(...values), max: Math.max(...values) };
-}
-
-// Roda o motor de progressão (progressionService.js) pra um exercício:
-// busca o histórico (excluindo a sessão atual, ainda em andamento) e decide
-// subir/manter/reduzir a carga sugerida pro próximo treino.
-async function getProgressionForExercise(exerciseId, targetReps){
-  const { min, max } = parseTargetRepsRange(targetReps);
-  const progress = await getExerciseProgress(exerciseId);
-  const pastSessions = progress.filter(s => s.session_id !== session?.id);
-  const currentWeight = pastSessions[pastSessions.length - 1]?.maxWeight || 0;
-  return decideProgression({ sessions: pastSessions, repsMin: min, repsMax: max, currentWeight });
-}
-
 async function buildWorkout(){
   const items = await listWorkoutExercises(workoutId);
   exercisesData = [];
@@ -510,7 +489,7 @@ async function buildWorkout(){
     const isDuration = item.exercises.tracking_type === 'duration';
     const doneForExercise = existingByExercise.get(item.exercise_id);
 
-    const progression = isDuration ? null : await getProgressionForExercise(item.exercise_id, item.target_reps);
+    const progression = isDuration ? null : await getProgressionForExercise(item.exercise_id, item.target_reps, session?.id);
 
     const ex = {
       workoutExerciseId: item.id,

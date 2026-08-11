@@ -5,7 +5,7 @@ import { initPWA } from './pwa.js';
 import {
   getMuscleRecovery, getSuggestedWorkout, getTodaysCompletedSessions,
   getSessionDatesInRange, getRecentCompletedSessionDates, getUserXP,
-  listCompletedSessions
+  listCompletedSessions, listWorkoutExercises, getProgressionForExercise
 } from './services/workoutService.js';
 import { getUserSettings } from './services/profileService.js';
 import { computeStreak } from './utils.js';
@@ -161,11 +161,14 @@ async function renderHero(){
     ? 'Todos os grupos ainda em recuperação — sugestão baseada na ficha treinada há mais tempo.'
     : `${groupNames} <b>100% recuperados</b>`;
 
+  const progressionLine = await getProgressionSummaryLine(suggestion.workout.id);
+
   heroSection.innerHTML = `
     <div class="gv3-hero gv3-anim-in">
       <div class="gv3-hero__tag">Treino de hoje</div>
       <h2>${escapeHtml(suggestion.workout.name)}</h2>
       <div class="gv3-hero__why${suggestion.warn ? ' gv3-hero__why--warn' : ''}">${why}</div>
+      ${progressionLine}
       <button type="button" class="gv3-btn gv3-btn--primary gv3-btn--full" id="btnStartHero">Iniciar treino</button>
       <a href="./pages/ai-workout.html" class="gv3-hero__ai-link">Renovar treinos com IA</a>
     </div>`;
@@ -173,6 +176,35 @@ async function renderHero(){
   document.getElementById('btnStartHero').addEventListener('click', () => {
     navigate('./pages/train.html?id=' + suggestion.workout.id);
   });
+}
+
+// Resumo de 1 linha (não lista exercício por exercício — isso já aparece
+// dentro do treino) do que o motor de progressão (progressionService.js)
+// sugere pra ficha de hoje. Roda em paralelo pra não travar a Início
+// esperando uma query por exercício.
+async function getProgressionSummaryLine(workoutId){
+  try {
+    const items = await listWorkoutExercises(workoutId);
+    const repsItems = items.filter(item => item.exercises.tracking_type !== 'duration');
+    if(repsItems.length === 0) return '';
+
+    const decisions = await Promise.all(
+      repsItems.map(item => getProgressionForExercise(item.exercise_id, item.target_reps))
+    );
+
+    const increases = decisions.filter(d => d.action === 'increase').length;
+    const reduces = decisions.filter(d => d.action === 'reduce').length;
+
+    if(increases > 0){
+      return `<div class="gv3-hero__progression">🔼 ${increases} exercício${increases > 1 ? 's' : ''} com sugestão de carga maior hoje</div>`;
+    }
+    if(reduces > 0){
+      return `<div class="gv3-hero__progression gv3-hero__progression--down">🔽 ${reduces} exercício${reduces > 1 ? 's' : ''} com sugestão de reduzir a carga</div>`;
+    }
+    return '';
+  } catch(err) {
+    return '';
+  }
 }
 
 function renderRecovery(recovery){

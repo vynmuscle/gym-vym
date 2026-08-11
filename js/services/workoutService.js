@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient.js';
+import { decideProgression } from './progressionService.js';
 
 export const MUSCLE_GROUPS = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'abdomen', 'gluteos'];
 export const EXERCISE_GROUPS = [...MUSCLE_GROUPS, 'cardio'];
@@ -396,6 +397,27 @@ export async function getExerciseProgress(exerciseId) {
   }
 
   return [...bySession.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+// Extrai a faixa de reps da meta (texto livre: "8-12", "10", "até a falha").
+// min/max ficam null quando não há número pra comparar.
+function parseTargetRepsRange(targetReps) {
+  const numbers = (targetReps || '').match(/\d+/g);
+  if (!numbers) return { min: null, max: null };
+  const values = numbers.map(Number);
+  return { min: Math.min(...values), max: Math.max(...values) };
+}
+
+// Roda o motor de progressão (progressionService.js) pra um exercício: busca
+// o histórico e decide subir/manter/reduzir a carga sugerida pro próximo
+// treino. excludeSessionId filtra a sessão em andamento (chamado de dentro
+// do treino); na tela Início, sem sessão em andamento, fica null.
+export async function getProgressionForExercise(exerciseId, targetReps, excludeSessionId = null) {
+  const { min, max } = parseTargetRepsRange(targetReps);
+  const progress = await getExerciseProgress(exerciseId);
+  const pastSessions = excludeSessionId ? progress.filter(s => s.session_id !== excludeSessionId) : progress;
+  const currentWeight = pastSessions[pastSessions.length - 1]?.maxWeight || 0;
+  return decideProgression({ sessions: pastSessions, repsMin: min, repsMax: max, currentWeight });
 }
 
 // Recorde de carga por exercício (todas as sessões do usuário, exceto a
