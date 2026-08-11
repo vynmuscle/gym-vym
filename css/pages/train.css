@@ -86,6 +86,8 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 }
 .ex-rest{ display: flex; align-items: center; gap: 8px; padding: 0 14px 12px; font-size: var(--gv3-text-sm); color: var(--gv3-accent-ember); font-weight: 600; }
 .ex-uplevel{ display: flex; align-items: center; gap: 8px; padding: 0 14px 12px; font-size: var(--gv3-text-sm); color: var(--gv3-status-good); font-weight: 600; }
+.ex-uplevel--down{ color: var(--gv3-status-danger); }
+.ex-uplevel--hold{ color: var(--gv3-text-secondary); font-weight: 500; }
 
 .sets-header, .set-row{
   display: grid;

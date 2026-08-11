@@ -9,6 +9,7 @@ import {
   getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
   getExerciseProgress, getPersonalRecordsMap, getUserXP, getSessionStartedAt
 } from './services/workoutService.js';
+import { decideProgression } from './services/progressionService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
 import { getLeagueForXP } from './leagues.js';
@@ -224,6 +225,17 @@ function formatWheelValue(v){
   return Number.isInteger(v) ? String(v) : v.toFixed(1);
 }
 
+const PROGRESSION_ICONS = { increase: '🔼', reduce: '🔽', hold: 'ℹ️' };
+const PROGRESSION_CLASS = { increase: 'up', reduce: 'down', hold: 'hold' };
+
+// Só mostra a linha quando o motor tem algo a dizer — "hold" sem motivo
+// (sem histórico suficiente, ou tudo normal) fica em silêncio, igual antes.
+function progressionLabel(progression){
+  if(!progression || !progression.reason) return '';
+  const suffix = progression.suggestedWeight != null ? ` — sugestão: ${formatWheelValue(progression.suggestedWeight)}kg` : '';
+  return `<div class="ex-uplevel ex-uplevel--${PROGRESSION_CLASS[progression.action]}">${PROGRESSION_ICONS[progression.action]} ${escapeHtml(progression.reason)}${suffix}</div>`;
+}
+
 function openWheelPicker(field, currentValue, anchorEl){
   const config = WHEEL_FIELD_CONFIG[field];
   return new Promise(resolve => {
@@ -419,7 +431,7 @@ function renderExerciseCard(ei){
   ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set, ex.isDuration));
 
   const restLabel = ex.isDuration ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
-  const uplevelLabel = ex.suggestUp ? `<div class="ex-uplevel">🔼 Hora de subir a carga</div>` : '';
+  const uplevelLabel = progressionLabel(ex.progression);
   const headerLabels = ex.isDuration
     ? `<div>Nº</div><div class="left">Ant.</div><div>Min</div><div>Km</div><div>Elev%</div><div>✓</div>`
     : `<div>Nº</div><div class="left">Ant.</div><div>KG</div><div>Reps</div><div>RPE</div><div>✓</div>`;
@@ -459,24 +471,24 @@ function renderExerciseCard(ei){
   exNoteInput.addEventListener('input', () => { ex.note = exNoteInput.value; });
 }
 
-// Extrai o topo da faixa de reps da meta (texto livre: "8-12", "10", "até a
-// falha"). Retorna null quando não há número pra comparar.
-function parseTargetRepsMax(targetReps){
+// Extrai a faixa de reps da meta (texto livre: "8-12", "10", "até a falha").
+// min/max ficam null quando não há número pra comparar (ex.: "até a falha").
+function parseTargetRepsRange(targetReps){
   const numbers = (targetReps || '').match(/\d+/g);
-  if(!numbers) return null;
-  return Math.max(...numbers.map(Number));
+  if(!numbers) return { min: null, max: null };
+  const values = numbers.map(Number);
+  return { min: Math.min(...values), max: Math.max(...values) };
 }
 
-// Sugere subir a carga quando o topo da meta de reps foi batido/superado nas
-// últimas sessões seguidas desse exercício (excluindo a sessão atual, ainda
-// em andamento). Exige pelo menos 2 sessões de histórico pra não avisar cedo demais.
-async function shouldSuggestWeightIncrease(exerciseId, targetRepsMax){
-  if(targetRepsMax === null) return false;
+// Roda o motor de progressão (progressionService.js) pra um exercício:
+// busca o histórico (excluindo a sessão atual, ainda em andamento) e decide
+// subir/manter/reduzir a carga sugerida pro próximo treino.
+async function getProgressionForExercise(exerciseId, targetReps){
+  const { min, max } = parseTargetRepsRange(targetReps);
   const progress = await getExerciseProgress(exerciseId);
   const pastSessions = progress.filter(s => s.session_id !== session?.id);
-  const lastSessions = pastSessions.slice(-3);
-  if(lastSessions.length < 2) return false;
-  return lastSessions.every(s => s.topReps >= targetRepsMax);
+  const currentWeight = pastSessions[pastSessions.length - 1]?.maxWeight || 0;
+  return decideProgression({ sessions: pastSessions, repsMin: min, repsMax: max, currentWeight });
 }
 
 async function buildWorkout(){
@@ -498,6 +510,8 @@ async function buildWorkout(){
     const isDuration = item.exercises.tracking_type === 'duration';
     const doneForExercise = existingByExercise.get(item.exercise_id);
 
+    const progression = isDuration ? null : await getProgressionForExercise(item.exercise_id, item.target_reps);
+
     const ex = {
       workoutExerciseId: item.id,
       exerciseId: item.exercise_id,
@@ -509,7 +523,7 @@ async function buildWorkout(){
       isDuration,
       rest: item.rest_seconds,
       note: '',
-      suggestUp: isDuration ? false : await shouldSuggestWeightIncrease(item.exercise_id, parseTargetRepsMax(item.target_reps)),
+      progression,
       sets: []
     };
 
@@ -527,9 +541,12 @@ async function buildWorkout(){
           completed: !!done
         });
       } else {
+        // Peso sugerido pelo motor de progressão substitui o "repete o de
+        // sempre" (prev.weight) quando ele decidiu subir/reduzir a carga.
+        const suggestedWeight = progression?.suggestedWeight;
         ex.sets.push({
           prev: prev ? `${prev.weight ?? 0}kg x ${prev.reps ?? 0}` : null,
-          kg: done ? done.weight : (prev ? prev.weight : (item.target_weight || 0)),
+          kg: done ? done.weight : (suggestedWeight ?? (prev ? prev.weight : (item.target_weight || 0))),
           reps: done ? done.reps : (prev ? prev.reps : (parseInt(item.target_reps) || 0)),
           completed: !!done
         });

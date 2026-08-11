@@ -359,7 +359,7 @@ export async function listExercisesWithProgress() {
 export async function getExerciseProgress(exerciseId) {
   const { data, error } = await supabase
     .from('session_sets')
-    .select('weight, reps, duration_seconds, distance_km, incline_pct, session_id, completed_at, workout_sessions(started_at)')
+    .select('weight, reps, rpe, duration_seconds, distance_km, incline_pct, session_id, completed_at, workout_sessions(started_at)')
     .eq('exercise_id', exerciseId)
     .order('completed_at', { ascending: true });
   if (error) throw error;
@@ -372,7 +372,7 @@ export async function getExerciseProgress(exerciseId) {
     if (!bySession.has(row.session_id)) {
       bySession.set(row.session_id, {
         session_id: row.session_id, date,
-        maxWeight: 0, topReps: 0, volume: 0,
+        maxWeight: 0, topReps: 0, topRpe: null, volume: 0,
         maxDurationMin: 0, maxDistanceKm: 0, maxInclinePct: 0
       });
     }
@@ -380,9 +380,12 @@ export async function getExerciseProgress(exerciseId) {
     const s = bySession.get(row.session_id);
     const w = row.weight || 0;
     const r = row.reps || 0;
+    // RPE "da série mais pesada" (a série que define se o exercício ficou
+    // fácil ou difícil o suficiente pra progredir) — não a média da sessão.
     if (w > s.maxWeight) {
       s.maxWeight = w;
       s.topReps = r;
+      s.topRpe = row.rpe ?? null;
     }
     s.volume += w * r;
 
