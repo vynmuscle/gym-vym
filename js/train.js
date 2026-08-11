@@ -421,8 +421,8 @@ function renderExerciseCard(ei){
   const restLabel = ex.isDuration ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
   const uplevelLabel = ex.suggestUp ? `<div class="ex-uplevel">🔼 Hora de subir a carga</div>` : '';
   const headerLabels = ex.isDuration
-    ? `<div>Série</div><div class="left">Anterior</div><div>Min</div><div>Km</div><div>Elev%</div><div>✓</div>`
-    : `<div>Série</div><div class="left">Anterior</div><div>KG</div><div>Reps</div><div>RPE</div><div>✓</div>`;
+    ? `<div>Série</div><div class="left">Ant.</div><div>Min</div><div>Km</div><div>Elev%</div><div>✓</div>`
+    : `<div>Série</div><div class="left">Ant.</div><div>KG</div><div>Reps</div><div>RPE</div><div>✓</div>`;
 
   card.innerHTML = `
     <div class="ex-head">

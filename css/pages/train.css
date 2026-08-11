@@ -89,17 +89,18 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 
 .sets-header, .set-row{
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) 58px 58px 46px 92px;
+  grid-template-columns: 26px minmax(0, 1fr) 48px 48px 36px 84px;
   align-items: center;
-  gap: 6px;
-  padding: 0 10px;
+  gap: 4px;
+  padding: 0 8px;
 }
 .sets-header.duration, .set-row.duration{
-  grid-template-columns: 28px minmax(0, 1fr) 52px 52px 52px 92px;
+  grid-template-columns: 24px minmax(0, 1fr) 44px 44px 44px 84px;
 }
 .value-btn.rpe{ color: var(--gv3-text-secondary); font-size: var(--gv3-text-sm); }
 .value-btn.rpe.set{ color: var(--gv3-text-primary); }
 .sets-header{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-muted); text-transform: uppercase; letter-spacing: .1em; padding-bottom: 8px; text-align: center; }
+.sets-header > div{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sets-header .left{ text-align: left; padding-left: 4px; }
 .set-row{ min-height: 58px; }
 .set-row:nth-child(even){ background: rgba(255,255,255,.025); }
