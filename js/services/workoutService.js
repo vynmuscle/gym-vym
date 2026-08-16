@@ -431,6 +431,46 @@ export async function getExerciseProgress(exerciseId) {
   return [...bySession.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
+// Início da semana (segunda-feira, fuso local) de uma data ISO — chave de
+// agrupamento do gráfico de volume semanal por grupo muscular.
+function weekStartISO(dateISO) {
+  const d = new Date(dateISO);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
+// Volume (kg) por semana × grupo muscular, últimas N semanas — pro gráfico
+// de barras empilhadas em Progresso. Cardio fica de fora (não tem carga).
+export async function getWeeklyVolumeByMuscleGroup(weeks = 8) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - weeks * 7);
+
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('weight, reps, completed_at, exercises(muscle_group)')
+    .gte('completed_at', cutoff.toISOString())
+    .order('completed_at', { ascending: true });
+  if (error) throw error;
+
+  const byWeek = new Map();
+  for (const row of data) {
+    const group = row.exercises?.muscle_group;
+    if (!group || group === 'cardio' || !row.completed_at) continue;
+
+    const week = weekStartISO(row.completed_at);
+    if (!byWeek.has(week)) byWeek.set(week, {});
+    const groups = byWeek.get(week);
+    groups[group] = (groups[group] || 0) + (row.weight || 0) * (row.reps || 0);
+  }
+
+  return [...byWeek.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([week, groups]) => ({ week, groups }));
+}
+
 // Extrai a faixa de reps da meta (texto livre: "8-12", "10", "até a falha").
 // min/max ficam null quando não há número pra comparar.
 function parseTargetRepsRange(targetReps) {

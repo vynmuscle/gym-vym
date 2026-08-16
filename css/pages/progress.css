@@ -29,3 +29,7 @@
   z-index: 5;
 }
 .chart-tooltip .num{ font-family: var(--gv3-font-display); font-weight: 700; font-size: var(--gv3-text-base); }
+
+.weekly-legend{ display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; justify-content: center; }
+.weekly-legend-item{ display: flex; align-items: center; gap: 6px; font-size: var(--gv3-text-xs); color: var(--gv3-text-secondary); }
+.weekly-legend-swatch{ width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }

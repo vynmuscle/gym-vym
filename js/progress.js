@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
-import { listExercisesWithProgress, getExerciseProgress } from './services/workoutService.js';
+import { listExercisesWithProgress, getExerciseProgress, getWeeklyVolumeByMuscleGroup, MUSCLE_GROUPS } from './services/workoutService.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { openAiAssistant } from './aiAssistant.js';
 
@@ -298,3 +298,122 @@ exerciseSelect.innerHTML = '<option value="">Selecione...</option>' +
 if(exercises.length === 0){
   showEmptyState('Você ainda não registrou nenhuma série. Treine primeiro pra ver seu progresso aqui!');
 }
+
+// ── Volume semanal por grupo muscular ───────────────────────────────────
+const GROUP_LABELS = {
+  peito: 'Peito', costas: 'Costas', pernas: 'Pernas', ombros: 'Ombros',
+  biceps: 'Bíceps', triceps: 'Tríceps', abdomen: 'Abdômen', gluteos: 'Glúteos'
+};
+const GROUP_COLORS = {
+  peito: '#e0575b', costas: '#4ea1e0', pernas: '#e0a83f', ombros: '#8a6fe0',
+  biceps: '#3fbf8f', triceps: '#e07fc0', abdomen: '#6fc7e0', gluteos: '#c7962f'
+};
+
+const weeklyWeeksSelect = document.getElementById('weeklyWeeksSelect');
+const weeklyChartContainer = document.getElementById('weeklyChartContainer');
+const weeklyChartTooltip = document.getElementById('weeklyChartTooltip');
+const weeklyLegend = document.getElementById('weeklyLegend');
+
+function formatWeekLabel(weekISO){
+  const d = new Date(weekISO + 'T00:00:00');
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+async function renderWeeklyVolumeChart(){
+  weeklyChartTooltip.style.display = 'none';
+  const weeks = await getWeeklyVolumeByMuscleGroup(Number(weeklyWeeksSelect.value));
+
+  weeklyChartContainer.querySelectorAll('svg, .chart-empty-msg').forEach(el => el.remove());
+
+  const usedGroups = MUSCLE_GROUPS.filter(g => weeks.some(w => w.groups[g] > 0));
+
+  if(weeks.length === 0 || usedGroups.length === 0){
+    const msg = document.createElement('p');
+    msg.className = 'muted chart-empty-msg';
+    msg.style.padding = '40px 0';
+    msg.style.textAlign = 'center';
+    msg.textContent = 'Sem séries registradas nesse período.';
+    weeklyChartContainer.appendChild(msg);
+    weeklyLegend.innerHTML = '';
+    return;
+  }
+
+  weeklyLegend.innerHTML = usedGroups.map(g => `
+    <span class="weekly-legend-item">
+      <span class="weekly-legend-swatch" style="background:${GROUP_COLORS[g]}"></span>${GROUP_LABELS[g]}
+    </span>`).join('');
+
+  const W = 340, H = 240;
+  const padL = 40, padR = 12, padT = 12, padB = 28;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const totals = weeks.map(w => usedGroups.reduce((sum, g) => sum + (w.groups[g] || 0), 0));
+  const maxTotal = Math.max(...totals, 1);
+
+  const n = weeks.length;
+  const barSlot = chartW / n;
+  const barW = Math.min(36, barSlot * 0.6);
+
+  const gridLines = [0, 0.5, 1].map(frac => {
+    const y = padT + chartH * (1 - frac);
+    const val = Math.round(maxTotal * frac);
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1" />
+      <text x="${padL - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${val}</text>`;
+  }).join('');
+
+  let barsSvg = '';
+  const barMeta = [];
+  weeks.forEach((w, i) => {
+    const x = padL + barSlot * i + (barSlot - barW) / 2;
+    let yCursor = padT + chartH;
+    usedGroups.forEach(g => {
+      const val = w.groups[g] || 0;
+      if(val <= 0) return;
+      const segH = (val / maxTotal) * chartH;
+      const y = yCursor - segH;
+      barsSvg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${segH.toFixed(1)}" fill="${GROUP_COLORS[g]}" class="weekly-bar-seg" data-week-index="${i}" style="cursor:pointer" />`;
+      yCursor = y;
+    });
+    barMeta.push({ x: x + barW / 2, week: w });
+  });
+
+  const step = Math.max(1, Math.ceil(n / 8));
+  const xLabels = barMeta
+    .filter((p, i) => i % step === 0 || i === n - 1)
+    .map(p => `<text x="${p.x.toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${formatWeekLabel(p.week.week)}</text>`)
+    .join('');
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'chart-svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = `${gridLines}${barsSvg}${xLabels}`;
+  weeklyChartContainer.appendChild(svg);
+
+  svg.querySelectorAll('.weekly-bar-seg').forEach(rect => {
+    rect.addEventListener('click', () => {
+      const i = Number(rect.dataset.weekIndex);
+      showWeeklyTooltip(rect, weeks[i], usedGroups);
+    });
+  });
+}
+
+function showWeeklyTooltip(rectEl, weekData, usedGroups){
+  const containerRect = weeklyChartContainer.getBoundingClientRect();
+  const rectBounds = rectEl.getBoundingClientRect();
+  const x = rectBounds.left + rectBounds.width / 2 - containerRect.left;
+  const y = rectBounds.top - containerRect.top;
+
+  const lines = usedGroups
+    .filter(g => weekData.groups[g] > 0)
+    .map(g => `${GROUP_LABELS[g]}: <span class="num">${Math.round(weekData.groups[g])}kg</span>`)
+    .join('<br>');
+
+  weeklyChartTooltip.innerHTML = `${formatWeekLabel(weekData.week)}<br>${lines}`;
+  weeklyChartTooltip.style.left = x + 'px';
+  weeklyChartTooltip.style.top = y + 'px';
+  weeklyChartTooltip.style.display = 'block';
+}
+
+weeklyWeeksSelect.addEventListener('change', renderWeeklyVolumeChart);
+renderWeeklyVolumeChart();
