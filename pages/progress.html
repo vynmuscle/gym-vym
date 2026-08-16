@@ -67,17 +67,22 @@
 
     <div class="panel" style="margin-top:16px;padding:16px">
       <div class="progress-toolbar">
-        <h3 style="margin:0">Volume semanal por grupo muscular</h3>
-        <select id="weeklyWeeksSelect">
-          <option value="6">6 sem.</option>
-          <option value="8" selected>8 sem.</option>
-          <option value="12">12 sem.</option>
+        <h3 style="margin:0">Grupos mais treinados</h3>
+        <select id="heatmapDaysSelect">
+          <option value="7">7 dias</option>
+          <option value="14">14 dias</option>
+          <option value="30" selected>30 dias</option>
+          <option value="90">90 dias</option>
         </select>
       </div>
-      <div class="chart-container" id="weeklyChartContainer">
-        <div class="chart-tooltip" id="weeklyChartTooltip" style="display:none"></div>
+      <div class="body-figures" id="bodyFigures">
+        <div class="chart-tooltip" id="heatmapTooltip" style="display:none"></div>
       </div>
-      <div class="weekly-legend" id="weeklyLegend"></div>
+      <div class="heat-legend">
+        <span class="heat-legend__label">Menos</span>
+        <span class="heat-legend__bar"></span>
+        <span class="heat-legend__label">Mais</span>
+      </div>
     </div>
   </div>
 </main>

@@ -2,7 +2,8 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
-import { listExercisesWithProgress, getExerciseProgress, getWeeklyVolumeByMuscleGroup, MUSCLE_GROUPS } from './services/workoutService.js';
+import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals } from './services/workoutService.js';
+import { BODY_VIEWBOX, BODY_OUTLINE, MUSCLE_PATHS } from './data/bodyMuscles.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { openAiAssistant } from './aiAssistant.js';
 
@@ -299,121 +300,84 @@ if(exercises.length === 0){
   showEmptyState('Você ainda não registrou nenhuma série. Treine primeiro pra ver seu progresso aqui!');
 }
 
-// ── Volume semanal por grupo muscular ───────────────────────────────────
+// ── Mapa de calor corporal (grupos mais treinados) ──────────────────────
 const GROUP_LABELS = {
   peito: 'Peito', costas: 'Costas', pernas: 'Pernas', ombros: 'Ombros',
   biceps: 'Bíceps', triceps: 'Tríceps', abdomen: 'Abdômen', gluteos: 'Glúteos'
 };
-const GROUP_COLORS = {
-  peito: '#e0575b', costas: '#4ea1e0', pernas: '#e0a83f', ombros: '#8a6fe0',
-  biceps: '#3fbf8f', triceps: '#e07fc0', abdomen: '#6fc7e0', gluteos: '#c7962f'
-};
 
-const weeklyWeeksSelect = document.getElementById('weeklyWeeksSelect');
-const weeklyChartContainer = document.getElementById('weeklyChartContainer');
-const weeklyChartTooltip = document.getElementById('weeklyChartTooltip');
-const weeklyLegend = document.getElementById('weeklyLegend');
-
-function formatWeekLabel(weekISO){
-  const d = new Date(weekISO + 'T00:00:00');
-  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+// Silhueta anatômica (react-native-body-highlighter, ver js/data/bodyMuscles.js)
+// dividida em regiões clicáveis por grupo muscular do GymVym.
+function bodyOutlineSVG(view){
+  const outline = `<path d="${BODY_OUTLINE[view]}" fill="none" stroke="var(--gv3-border-strong)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+  const groups = MUSCLE_PATHS[view];
+  const regions = Object.entries(groups).map(([group, paths]) =>
+    paths.map(d => `<path class="body-region" data-group="${group}" d="${d}"/>`).join('')
+  ).join('');
+  return `${outline}${regions}`;
 }
 
-async function renderWeeklyVolumeChart(){
-  weeklyChartTooltip.style.display = 'none';
-  const weeks = await getWeeklyVolumeByMuscleGroup(Number(weeklyWeeksSelect.value));
+function lerp(a, b, t){ return a + (b - a) * t; }
+function hexToRgb(hex){
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function lerpColor(hex1, hex2, t){
+  const [r1, g1, b1] = hexToRgb(hex1);
+  const [r2, g2, b2] = hexToRgb(hex2);
+  return `rgb(${Math.round(lerp(r1, r2, t))}, ${Math.round(lerp(g1, g2, t))}, ${Math.round(lerp(b1, b2, t))})`;
+}
+function heatColor(t){
+  if(t <= 0) return '#2a2d36';
+  return t < 0.5 ? lerpColor('#2a2d36', '#e0a83f', t * 2) : lerpColor('#e0a83f', '#FF5A36', (t - 0.5) * 2);
+}
 
-  weeklyChartContainer.querySelectorAll('svg, .chart-empty-msg').forEach(el => el.remove());
+const heatmapDaysSelect = document.getElementById('heatmapDaysSelect');
+const bodyFigures = document.getElementById('bodyFigures');
+const heatmapTooltip = document.getElementById('heatmapTooltip');
 
-  const usedGroups = MUSCLE_GROUPS.filter(g => weeks.some(w => w.groups[g] > 0));
+let bodySvgsBuilt = false;
 
-  if(weeks.length === 0 || usedGroups.length === 0){
-    const msg = document.createElement('p');
-    msg.className = 'muted chart-empty-msg';
-    msg.style.padding = '40px 0';
-    msg.style.textAlign = 'center';
-    msg.textContent = 'Sem séries registradas nesse período.';
-    weeklyChartContainer.appendChild(msg);
-    weeklyLegend.innerHTML = '';
-    return;
-  }
-
-  weeklyLegend.innerHTML = usedGroups.map(g => `
-    <span class="weekly-legend-item">
-      <span class="weekly-legend-swatch" style="background:${GROUP_COLORS[g]}"></span>${GROUP_LABELS[g]}
-    </span>`).join('');
-
-  const W = 340, H = 240;
-  const padL = 40, padR = 12, padT = 12, padB = 28;
-  const chartW = W - padL - padR;
-  const chartH = H - padT - padB;
-
-  const totals = weeks.map(w => usedGroups.reduce((sum, g) => sum + (w.groups[g] || 0), 0));
-  const maxTotal = Math.max(...totals, 1);
-
-  const n = weeks.length;
-  const barSlot = chartW / n;
-  const barW = Math.min(36, barSlot * 0.6);
-
-  const gridLines = [0, 0.5, 1].map(frac => {
-    const y = padT + chartH * (1 - frac);
-    const val = Math.round(maxTotal * frac);
-    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1" />
-      <text x="${padL - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${val}</text>`;
-  }).join('');
-
-  let barsSvg = '';
-  const barMeta = [];
-  weeks.forEach((w, i) => {
-    const x = padL + barSlot * i + (barSlot - barW) / 2;
-    let yCursor = padT + chartH;
-    usedGroups.forEach(g => {
-      const val = w.groups[g] || 0;
-      if(val <= 0) return;
-      const segH = (val / maxTotal) * chartH;
-      const y = yCursor - segH;
-      barsSvg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${segH.toFixed(1)}" fill="${GROUP_COLORS[g]}" class="weekly-bar-seg" data-week-index="${i}" style="cursor:pointer" />`;
-      yCursor = y;
-    });
-    barMeta.push({ x: x + barW / 2, week: w });
+function buildBodySvgs(){
+  ['front', 'back'].forEach(view => {
+    const wrap = document.createElement('div');
+    wrap.className = 'body-figure';
+    wrap.innerHTML = `
+      <svg class="body-svg" viewBox="${BODY_VIEWBOX[view]}" data-view="${view}">${bodyOutlineSVG(view)}</svg>
+      <span class="body-figure__label">${view === 'front' ? 'Frente' : 'Costas'}</span>`;
+    bodyFigures.appendChild(wrap);
   });
+  bodySvgsBuilt = true;
+}
 
-  const step = Math.max(1, Math.ceil(n / 8));
-  const xLabels = barMeta
-    .filter((p, i) => i % step === 0 || i === n - 1)
-    .map(p => `<text x="${p.x.toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${formatWeekLabel(p.week.week)}</text>`)
-    .join('');
+async function renderBodyHeatmap(){
+  heatmapTooltip.style.display = 'none';
+  if(!bodySvgsBuilt) buildBodySvgs();
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class', 'chart-svg');
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = `${gridLines}${barsSvg}${xLabels}`;
-  weeklyChartContainer.appendChild(svg);
+  const totals = await getMuscleVolumeTotals(Number(heatmapDaysSelect.value));
+  const maxVol = Math.max(...Object.values(totals), 1);
 
-  svg.querySelectorAll('.weekly-bar-seg').forEach(rect => {
-    rect.addEventListener('click', () => {
-      const i = Number(rect.dataset.weekIndex);
-      showWeeklyTooltip(rect, weeks[i], usedGroups);
-    });
+  bodyFigures.querySelectorAll('.body-region').forEach(el => {
+    const group = el.dataset.group;
+    const vol = totals[group] || 0;
+    el.style.fill = heatColor(vol / maxVol);
+    el.onclick = () => showHeatmapTooltip(el, group, vol);
   });
 }
 
-function showWeeklyTooltip(rectEl, weekData, usedGroups){
-  const containerRect = weeklyChartContainer.getBoundingClientRect();
-  const rectBounds = rectEl.getBoundingClientRect();
-  const x = rectBounds.left + rectBounds.width / 2 - containerRect.left;
-  const y = rectBounds.top - containerRect.top;
+function showHeatmapTooltip(el, group, vol){
+  const containerRect = bodyFigures.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  const x = elRect.left + elRect.width / 2 - containerRect.left;
+  const y = elRect.top - containerRect.top;
 
-  const lines = usedGroups
-    .filter(g => weekData.groups[g] > 0)
-    .map(g => `${GROUP_LABELS[g]}: <span class="num">${Math.round(weekData.groups[g])}kg</span>`)
-    .join('<br>');
-
-  weeklyChartTooltip.innerHTML = `${formatWeekLabel(weekData.week)}<br>${lines}`;
-  weeklyChartTooltip.style.left = x + 'px';
-  weeklyChartTooltip.style.top = y + 'px';
-  weeklyChartTooltip.style.display = 'block';
+  heatmapTooltip.innerHTML = vol > 0
+    ? `${GROUP_LABELS[group]}<br><span class="num">${Math.round(vol)}kg</span>`
+    : `${GROUP_LABELS[group]}<br>sem séries no período`;
+  heatmapTooltip.style.left = x + 'px';
+  heatmapTooltip.style.top = y + 'px';
+  heatmapTooltip.style.display = 'block';
 }
 
-weeklyWeeksSelect.addEventListener('change', renderWeeklyVolumeChart);
-renderWeeklyVolumeChart();
+heatmapDaysSelect.addEventListener('change', renderBodyHeatmap);
+renderBodyHeatmap();
