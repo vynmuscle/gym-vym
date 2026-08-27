@@ -2,6 +2,7 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
+import { requireSession } from './utils/authGuard.js';
 import { openExercisePicker } from './exercisePicker.js';
 import {
   getWorkout, listWorkoutExercises, listExercises, createExercise,
@@ -10,9 +11,7 @@ import {
 } from './services/workoutService.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 
-const { data: sd } = await supabase.auth.getSession();
-if(!sd.session) navigate('../login.html');
-const user = sd.session.user;
+const user = await requireSession('../login.html');
 initPWA();
 
 await renderNav('workouts');

@@ -1,14 +1,12 @@
-import { supabase } from './supabaseClient.js';
-import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
+import { requireSession } from './utils/authGuard.js';
 import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals } from './services/workoutService.js';
 import { BODY_VIEWBOX, BODY_OUTLINE, MUSCLE_PATHS } from './data/bodyMuscles.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { openAiAssistant } from './aiAssistant.js';
 
-const { data: sd } = await supabase.auth.getSession();
-if(!sd.session) navigate('../login.html');
+await requireSession('../login.html');
 initPWA();
 
 await renderNav('evolution');

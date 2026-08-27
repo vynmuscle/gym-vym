@@ -1,7 +1,6 @@
-import { supabase } from './supabaseClient.js';
-import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
+import { requireSession } from './utils/authGuard.js';
 import { showToast } from './toast.js';
 import {
   getDietProfile,
@@ -24,9 +23,7 @@ import { searchFood, searchFoodByBarcode } from './services/openFoodFactsService
 import { createProgressRing } from './design-system/progressRing.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 
-const { data: sd } = await supabase.auth.getSession();
-if (!sd.session) navigate('../login.html');
-const user = sd.session.user;
+const user = await requireSession('../login.html');
 initPWA();
 
 await renderNav('evolution');

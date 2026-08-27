@@ -1,7 +1,7 @@
-import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
+import { requireSession } from './utils/authGuard.js';
 import {
   listCompletedSessions, listIncompleteSessions,
   getSessionSetsSummary, getSessionDetails, deleteSession
@@ -10,8 +10,7 @@ import { listMeasurements } from './services/bodyService.js';
 import { estimateWorkoutKcal, findWeightAtDate } from './utils.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 
-const { data: sd } = await supabase.auth.getSession();
-if(!sd.session) navigate('../login.html');
+await requireSession('../login.html');
 initPWA();
 
 await renderNav('evolution');

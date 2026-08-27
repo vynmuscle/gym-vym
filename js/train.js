@@ -1,6 +1,6 @@
-import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { initPWA } from './pwa.js';
+import { requireSession } from './utils/authGuard.js';
 import { openExercisePicker } from './exercisePicker.js';
 import { queueSet, flushQueue, onSetSynced, removeQueuedSet, renumberQueuedSet } from './services/offlineQueue.js';
 import {
@@ -18,9 +18,7 @@ import { escapeHtml } from './utils/escapeHtml.js';
 import { celebrate } from './design-system/motion.js';
 import { estimateWorkoutKcal, findWeightAtDate } from './utils.js';
 
-const { data: sd } = await supabase.auth.getSession();
-if(!sd.session) navigate('../login.html');
-const user = sd.session.user;
+const user = await requireSession('../login.html');
 
 initPWA();
 

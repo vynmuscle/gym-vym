@@ -2,15 +2,14 @@ import { supabase } from './supabaseClient.js';
 import { navigate } from './router.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
+import { requireSession } from './utils/authGuard.js';
 import { getUserSettings, upsertUserSettings } from './services/profileService.js';
 import { getUserXP } from './services/workoutService.js';
 import { listUnlockedAchievements } from './services/achievementsService.js';
 import { ACHIEVEMENTS } from './achievements.js';
 import { getLeagueForXP, getNextLeague } from './leagues.js';
 
-const { data: sd } = await supabase.auth.getSession();
-if(!sd.session) navigate('../login.html');
-const user = sd.session.user;
+const user = await requireSession('../login.html');
 initPWA();
 
 await renderNav('profile');
