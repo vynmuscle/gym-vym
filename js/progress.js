@@ -25,6 +25,8 @@ const chartContainer = document.getElementById('chartContainer');
 const chartTooltip = document.getElementById('chartTooltip');
 
 document.getElementById('btnAskAI').addEventListener('click', () => openAiAssistant());
+document.getElementById('btnEvaluateTraining').addEventListener('click', () =>
+  openAiAssistant('Como está indo meu treino no último mês? O que vale ajustar?'));
 
 let allSessions = [];
 let currentMetric = 'maxWeight';

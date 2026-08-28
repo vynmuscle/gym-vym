@@ -395,6 +395,26 @@ export async function listExercisesWithProgress() {
   return exercises;
 }
 
+// Exercícios treinados nos últimos N dias (com nome) -- usado pra achar
+// candidatos a "estagnado" sem varrer o histórico inteiro de exercícios
+// que o usuário já treinou alguma vez.
+export async function getRecentlyTrainedExercises(days = 21) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const { data, error } = await supabase
+    .from('session_sets')
+    .select('exercise_id, exercises(name)')
+    .gte('completed_at', cutoff.toISOString());
+  if (error) throw error;
+
+  const byId = new Map();
+  for (const row of data) {
+    if (!byId.has(row.exercise_id)) byId.set(row.exercise_id, row.exercises?.name || '');
+  }
+  return [...byId.entries()].map(([id, name]) => ({ id, name }));
+}
+
 export async function getExerciseProgress(exerciseId) {
   const { data, error } = await supabase
     .from('session_sets')

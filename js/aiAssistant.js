@@ -18,7 +18,9 @@ function onKeydown(e){
   if(e.key === 'Escape') close();
 }
 
-export function openAiAssistant(){
+// initialQuestion (opcional): pré-preenche e já envia -- usado pelo atalho
+// "Avaliar meu treino" em Progresso, pra não precisar digitar a pergunta.
+export function openAiAssistant(initialQuestion){
   if(overlayEl) return;
 
   overlayEl = document.createElement('div');
@@ -76,5 +78,11 @@ export function openAiAssistant(){
       send();
     }
   });
-  input.focus();
+
+  if(initialQuestion){
+    input.value = initialQuestion;
+    send();
+  } else {
+    input.focus();
+  }
 }
