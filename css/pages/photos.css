@@ -17,7 +17,7 @@
   background: var(--gv3-bg-card-raised);
   border: 1px solid var(--gv3-border);
   cursor: pointer;
-  touch-action: none;
+  touch-action: pan-y;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;

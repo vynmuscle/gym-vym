@@ -238,6 +238,7 @@ function attachDrag(el, photo){
         if(Math.abs(ev.clientX - startX) > 10 || Math.abs(ev.clientY - startY) > 10) clearTimeout(longPressTimer);
         return;
       }
+      if(ev.cancelable) ev.preventDefault();
       const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.photo-thumb');
       clearDropTargets();
       if(target && target !== el){
@@ -251,6 +252,10 @@ function attachDrag(el, photo){
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);
       el.removeEventListener('pointercancel', onUp);
+      // Libera a captura ANTES de reorderWithinDate() disparar renderGrid()
+      // (que reescreve o innerHTML) — sem isso, no iOS Safari o ponteiro
+      // fica "preso" a um elemento removido e o scroll para de responder.
+      if(el.hasPointerCapture?.(ev.pointerId)) el.releasePointerCapture(ev.pointerId);
       if(!dragging) return;
       el.classList.remove('dragging');
       clearDropTargets();
