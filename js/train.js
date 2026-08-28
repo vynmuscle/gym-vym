@@ -376,6 +376,20 @@ function wireRow(ei, setNumber){
   });
 }
 
+function showRpeInfo(){
+  const overlay = document.createElement('div');
+  overlay.className = 'ex-info-overlay';
+  overlay.innerHTML = `
+    <div class="ex-info-card">
+      <button type="button" class="ex-info-close" aria-label="Fechar">✕</button>
+      <h3>O que é RPE?</h3>
+      <div class="ex-info-text">RPE (esforço percebido) é uma nota de 1 a 10 pra quão perto da falha você chegou na série — 10 é "não daria pra fazer nem mais 1 repetição". Opcional, mas ajuda: o app usa isso pra decidir quando é seguro sugerir mais carga no próximo treino (se o esforço já está alto, ele não empurra mais peso).</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('.ex-info-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
+}
+
 function showExerciseInfo(ex){
   const overlay = document.createElement('div');
   overlay.className = 'ex-info-overlay';
@@ -550,7 +564,7 @@ function renderExerciseCard(ei){
   const uplevelLabel = progressionLabel(ex.progression);
   const headerLabels = ex.isDuration
     ? `<div>Nº</div><div class="left">Ant.</div><div>Min</div><div>Km</div><div>Elev%</div><div>✓</div>`
-    : `<div>Nº</div><div class="left">Ant.</div><div>KG</div><div>Reps</div><div>RPE</div><div>✓</div>`;
+    : `<div>Nº</div><div class="left">Ant.</div><div>KG</div><div>Reps</div><div class="rpe-header-hint" role="button" tabindex="0">RPE</div><div>✓</div>`;
 
   card.innerHTML = `
     <div class="ex-head">
@@ -585,6 +599,14 @@ function renderExerciseCard(ei){
     if(!open) exNoteInput.focus();
   });
   exNoteInput.addEventListener('input', () => { ex.note = exNoteInput.value; });
+
+  const rpeHint = card.querySelector('.rpe-header-hint');
+  if(rpeHint){
+    rpeHint.addEventListener('click', showRpeInfo);
+    rpeHint.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); showRpeInfo(); }
+    });
+  }
 }
 
 async function buildWorkout(){
