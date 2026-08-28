@@ -1,6 +1,6 @@
 import { checkRateLimit } from './_rateLimit.js';
-
-const SUPABASE_URL = 'https://lyxzqejagdwkrnpfemkd.supabase.co';
+import { authenticateRequest } from './_aiAuth.js';
+import { MODEL_NAME } from './_aiConfig.js';
 
 const MUSCLE_GROUPS = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'abdomen', 'gluteos'];
 const EQUIPMENT_OPTIONS = ['barra', 'halter', 'maquina', 'polia', 'peso corporal'];
@@ -14,22 +14,8 @@ const TIME_GUIDANCE = {
 };
 
 export default async function handler(req, res) {
-
-  res.setHeader('Access-Control-Allow-Origin', 'https://gym-vym.vercel.app');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const auth = req.headers['authorization'];
-  if (!auth?.startsWith('Bearer ')) return res.status(403).json({ error: 'Forbidden' });
-  const token = auth.slice(7);
-  const authRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { Authorization: `Bearer ${token}`, apikey: process.env.SUPABASE_SERVICE_KEY },
-  });
-  if (!authRes.ok) return res.status(403).json({ error: 'Forbidden' });
-  const { id: userId } = await authRes.json();
+  const userId = await authenticateRequest(req, res);
+  if (!userId) return;
 
   const allowed = await checkRateLimit(userId, 'ai-workout', 20);
   if (!allowed) return res.status(429).json({ error: 'Limite diário de gerações por IA atingido. Tente novamente amanhã.' });
@@ -106,7 +92,7 @@ async function callClaudeForWorkout(prompt, attempt = 1) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: MODEL_NAME,
       max_tokens: 8000,
       messages: [{ role: 'user', content: prompt }],
     }),

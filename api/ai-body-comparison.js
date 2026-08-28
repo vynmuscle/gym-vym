@@ -1,6 +1,6 @@
 import { checkRateLimit } from './_rateLimit.js';
-
-const SUPABASE_URL = 'https://lyxzqejagdwkrnpfemkd.supabase.co';
+import { authenticateRequest } from './_aiAuth.js';
+import { MODEL_NAME } from './_aiConfig.js';
 
 const PROMPT = `Você é um coach de fisiculturismo/preparação física com olho clínico treinado em avaliação visual de físico (o tipo de análise que um coach faz numa foto de "check-in" de aluno). Vai comparar duas fotos de progresso do mesmo aluno (primeira imagem = mais antiga, segunda imagem = mais recente) e dar um parecer honesto, técnico mas acessível, em português.
 
@@ -20,22 +20,8 @@ Regras:
 - NUNCA mencione datas, meses ou anos específicos — você não tem como saber quando cada foto foi tirada só pela imagem (o app já mostra a data certa na tela). Refira-se só a "a foto mais antiga" e "a foto mais recente".`;
 
 export default async function handler(req, res) {
-
-  res.setHeader('Access-Control-Allow-Origin', 'https://gym-vym.vercel.app');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const auth = req.headers['authorization'];
-  if (!auth?.startsWith('Bearer ')) return res.status(403).json({ error: 'Forbidden' });
-  const token = auth.slice(7);
-  const authRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { Authorization: `Bearer ${token}`, apikey: process.env.SUPABASE_SERVICE_KEY },
-  });
-  if (!authRes.ok) return res.status(403).json({ error: 'Forbidden' });
-  const { id: userId } = await authRes.json();
+  const userId = await authenticateRequest(req, res);
+  if (!userId) return;
 
   const allowed = await checkRateLimit(userId, 'ai-body-comparison', 5);
   if (!allowed) return res.status(429).json({ error: 'Limite diário de análises por IA atingido. Tente novamente amanhã.' });
@@ -70,7 +56,7 @@ async function callClaudeForComparison(image1, image2, attempt = 1) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: MODEL_NAME,
       max_tokens: 1024,
       messages: [{
         role: 'user',
