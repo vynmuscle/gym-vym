@@ -323,7 +323,7 @@ async function renderWatch(){
 }
 
 async function renderRecentActivity(){
-  const sessions = (await listCompletedSessions()).slice(0, 3);
+  const sessions = await listCompletedSessions(3);
   if(sessions.length === 0){
     recentActivityCard.innerHTML = '<div class="gv3-activity-item"><div class="gv3-activity-item__sub">Nenhum treino concluído ainda.</div></div>';
     return;

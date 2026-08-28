@@ -251,12 +251,18 @@ export async function updateSessionSetNumber(sessionId, exerciseId, oldSetNumber
   if (error) throw error;
 }
 
-export async function listCompletedSessions() {
-  const { data, error } = await supabase
+// limit é opcional -- quem precisa só das N mais recentes (dashboard,
+// contexto do assistente) evita puxar o histórico inteiro pra descartar
+// quase tudo depois com .slice(). history.js/achievements.js continuam
+// sem passar limit, pra manter o histórico completo que já usavam.
+export async function listCompletedSessions(limit) {
+  let query = supabase
     .from('workout_sessions')
     .select('*, workouts(name)')
     .not('finished_at', 'is', null)
     .order('started_at', { ascending: false });
+  if (limit) query = query.limit(limit);
+  const { data, error } = await query;
   if (error) throw error;
   return data;
 }
@@ -679,9 +685,10 @@ export async function getSuggestedWorkout(userId) {
   }
 
   const candidates = [];
+  const itemsByWorkout = await listWorkoutExercisesForWorkouts(activeWorkouts.map(w => w.id));
 
   for (const workout of activeWorkouts) {
-    const items = await listWorkoutExercises(workout.id);
+    const items = itemsByWorkout.get(workout.id) || [];
     const groups = [...new Set(items.map(i => i.exercises.muscle_group))].filter(g => g !== 'cardio');
     if (groups.length === 0) continue;
 

@@ -16,7 +16,7 @@ export async function buildAssistantContext() {
   const [recovery, weekSessions, recentSessions, xp] = await Promise.all([
     getMuscleRecovery(),
     getSessionDatesInRange(weekStart.toISOString(), weekEnd.toISOString()),
-    listCompletedSessions(),
+    listCompletedSessions(8),
     getUserXP()
   ]);
 
