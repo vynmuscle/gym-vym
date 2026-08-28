@@ -17,6 +17,7 @@
   background: var(--gv3-bg-card-raised);
   border: 1px solid var(--gv3-border);
   cursor: pointer;
+  touch-action: none;
 }
 .photo-thumb img{ width: 100%; height: 100%; object-fit: cover; display: block; }
 .photo-thumb .date{
@@ -36,16 +37,19 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700;
 }
+.photo-thumb.dragging{ opacity: .4; }
+.photo-thumb.drop-target{ outline: 3px dashed var(--gv3-accent-ember); outline-offset: -3px; }
 
 .compare-bar{
   position: fixed; left: 16px; right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  z-index: 35;
+  bottom: calc(88px + 16px + env(safe-area-inset-bottom));
+  z-index: var(--gv3-z-overlay);
   background: var(--gv3-bg-card-raised);
   border: 1px solid var(--gv3-accent-precision);
   border-radius: var(--gv3-radius-lg);
   padding: 12px 16px;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
 }
 
 .photo-viewer{
@@ -56,10 +60,24 @@
   overflow-y: auto;
 }
 .photo-viewer.open{ display: flex; }
-.photo-viewer img{ width: 100%; border-radius: var(--gv3-radius-lg); margin-bottom: var(--gv3-space-4); }
+.photo-viewer img{ width: 100%; border-radius: var(--gv3-radius-lg); margin-bottom: var(--gv3-space-4); touch-action: pan-y; }
 .photo-viewer .meta{ text-align: center; margin-bottom: var(--gv3-space-4); }
 .photo-viewer .meta .date{ font-family: var(--gv3-font-display); font-size: var(--gv3-text-lg); font-weight: 700; }
 .photo-viewer .meta .notes{ color: var(--gv3-text-secondary); font-size: var(--gv3-text-sm); margin-top: 4px; }
+
+.viewer-frame{ position: relative; }
+.viewer-nav{
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px;
+  border: none; border-radius: var(--gv3-radius-pill);
+  background: rgba(0,0,0,.5);
+  color: #fff; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.viewer-nav:disabled{ opacity: .25; pointer-events: none; }
+.viewer-nav--prev{ left: 8px; }
+.viewer-nav--next{ right: 8px; }
 
 .compare-row{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
 .compare-diff{ text-align: center; font-size: var(--gv3-text-sm); color: var(--gv3-accent-precision); font-weight: 700; margin-bottom: var(--gv3-space-5); }

@@ -1,7 +1,7 @@
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { requireSession } from './utils/authGuard.js';
-import { listPhotos, uploadPhoto, createPhoto, deletePhoto, getSignedUrls } from './services/photosService.js';
+import { listPhotos, uploadPhoto, createPhoto, deletePhoto, getSignedUrls, reorderPhotos } from './services/photosService.js';
 import { checkAchievements } from './achievements.js';
 
 const user = await requireSession('../login.html');
@@ -32,6 +32,8 @@ const viewerDate = document.getElementById('viewerDate');
 const viewerNotes = document.getElementById('viewerNotes');
 const btnCloseViewer = document.getElementById('btnCloseViewer');
 const btnDeletePhoto = document.getElementById('btnDeletePhoto');
+const btnViewerPrev = document.getElementById('btnViewerPrev');
+const btnViewerNext = document.getElementById('btnViewerNext');
 const compareViewer = document.getElementById('compareViewer');
 const btnCloseCompare = document.getElementById('btnCloseCompare');
 const compareImg1 = document.getElementById('compareImg1');
@@ -173,10 +175,91 @@ function toggleSelect(photo){
 
 function openViewer(photo){
   viewingPhoto = photo;
+  const idx = photos.findIndex(p => p.id === photo.id);
   viewerImg.src = signedUrls[photo.storage_path] || '';
   viewerDate.textContent = formatDateBR(photo.taken_at);
   viewerNotes.textContent = photo.notes || '';
+  btnViewerPrev.disabled = idx <= 0;
+  btnViewerNext.disabled = idx === -1 || idx >= photos.length - 1;
   photoViewer.classList.add('open');
+}
+
+function stepViewer(delta){
+  if(!viewingPhoto) return;
+  const idx = photos.findIndex(p => p.id === viewingPhoto.id);
+  const next = photos[idx + delta];
+  if(next) openViewer(next);
+}
+
+// Reordena (drag) só entre fotos do MESMO dia — grupo é sempre contíguo em
+// `photos` porque a ordenação é (taken_at desc, sort_order asc).
+async function reorderWithinDate(draggedPhoto, targetPhoto){
+  const group = photos.filter(p => p.taken_at === draggedPhoto.taken_at);
+  const fromIdx = group.findIndex(p => p.id === draggedPhoto.id);
+  const toIdx = group.findIndex(p => p.id === targetPhoto.id);
+  if(fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+
+  group.splice(toIdx, 0, group.splice(fromIdx, 1)[0]);
+  const updates = group.map((p, i) => ({ id: p.id, sortOrder: i }));
+  updates.forEach(u => { group.find(p => p.id === u.id).sort_order = u.sortOrder; });
+
+  photos.sort((a, b) => {
+    if(a.taken_at !== b.taken_at) return a.taken_at < b.taken_at ? 1 : -1;
+    return a.sort_order - b.sort_order;
+  });
+
+  renderGrid();
+  await reorderPhotos(updates).catch(err => console.error('reorderPhotos falhou:', err));
+}
+
+function attachDrag(el, photo){
+  el.addEventListener('pointerdown', (e) => {
+    if(compareMode || e.button === 2) return;
+
+    let dragging = false;
+    const startX = e.clientX, startY = e.clientY;
+    const longPressTimer = setTimeout(() => {
+      dragging = true;
+      el.classList.add('dragging');
+      el.setPointerCapture(e.pointerId);
+    }, 300);
+
+    function clearDropTargets(){
+      photoGrid.querySelectorAll('.drop-target').forEach(t => t.classList.remove('drop-target'));
+    }
+
+    function onMove(ev){
+      if(!dragging){
+        if(Math.abs(ev.clientX - startX) > 10 || Math.abs(ev.clientY - startY) > 10) clearTimeout(longPressTimer);
+        return;
+      }
+      const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.photo-thumb');
+      clearDropTargets();
+      if(target && target !== el){
+        const targetPhoto = photos.find(p => p.id === target.dataset.id);
+        if(targetPhoto && targetPhoto.taken_at === photo.taken_at) target.classList.add('drop-target');
+      }
+    }
+
+    function onUp(ev){
+      clearTimeout(longPressTimer);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.removeEventListener('pointercancel', onUp);
+      if(!dragging) return;
+      el.classList.remove('dragging');
+      clearDropTargets();
+      const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.photo-thumb');
+      if(target && target !== el){
+        const targetPhoto = photos.find(p => p.id === target.dataset.id);
+        if(targetPhoto && targetPhoto.taken_at === photo.taken_at) reorderWithinDate(photo, targetPhoto);
+      }
+    }
+
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+  });
 }
 
 function renderGrid(){
@@ -195,15 +278,28 @@ function renderGrid(){
   `).join('');
 
   photoGrid.querySelectorAll('.photo-thumb').forEach(el => {
+    const photo = photos.find(p => p.id === el.dataset.id);
     el.addEventListener('click', () => {
-      const photo = photos.find(p => p.id === el.dataset.id);
       if(compareMode) toggleSelect(photo);
       else openViewer(photo);
     });
+    attachDrag(el, photo);
   });
 }
 
 btnCloseViewer.addEventListener('click', () => photoViewer.classList.remove('open'));
+btnViewerPrev.addEventListener('click', () => stepViewer(-1));
+btnViewerNext.addEventListener('click', () => stepViewer(1));
+
+let viewerSwipeStart = null;
+viewerImg.addEventListener('pointerdown', (e) => { viewerSwipeStart = { x: e.clientX, y: e.clientY }; });
+viewerImg.addEventListener('pointerup', (e) => {
+  if(!viewerSwipeStart) return;
+  const dx = e.clientX - viewerSwipeStart.x;
+  const dy = e.clientY - viewerSwipeStart.y;
+  viewerSwipeStart = null;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) stepViewer(dx < 0 ? 1 : -1);
+});
 
 btnDeletePhoto.addEventListener('click', async () => {
   if(!viewingPhoto) return;

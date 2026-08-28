@@ -8,9 +8,17 @@ export async function listPhotos(userId) {
     .from('progress_photos')
     .select('*')
     .eq('user_id', userId)
-    .order('taken_at', { ascending: false });
+    .order('taken_at', { ascending: false })
+    .order('sort_order', { ascending: true });
   if (error) throw error;
   return data;
+}
+
+// Persiste a nova ordem (arrastar) das fotos de um mesmo dia.
+export async function reorderPhotos(updates) {
+  await Promise.all(updates.map(({ id, sortOrder }) =>
+    supabase.from('progress_photos').update({ sort_order: sortOrder }).eq('id', id)
+  ));
 }
 
 export async function uploadPhoto(userId, blob) {

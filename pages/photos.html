@@ -69,7 +69,11 @@
 
 <div class="photo-viewer" id="photoViewer">
   <button type="button" class="btn-icon" id="btnCloseViewer" style="align-self:flex-end;margin-bottom:12px" aria-label="Fechar">✕</button>
-  <img id="viewerImg" alt="Foto">
+  <div class="viewer-frame">
+    <img id="viewerImg" alt="Foto">
+    <button type="button" class="viewer-nav viewer-nav--prev" id="btnViewerPrev" aria-label="Foto anterior">‹</button>
+    <button type="button" class="viewer-nav viewer-nav--next" id="btnViewerNext" aria-label="Próxima foto">›</button>
+  </div>
   <div class="meta">
     <div class="date" id="viewerDate">—</div>
     <div class="notes" id="viewerNotes"></div>
