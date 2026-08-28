@@ -380,11 +380,7 @@ btnAnalyzeCompare.addEventListener('click', async () => {
     const res = await fetch('/api/ai-body-comparison', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({
-        image1_base64, image2_base64,
-        date1: formatDateBR(comparePair.older.taken_at),
-        date2: formatDateBR(comparePair.newer.taken_at)
-      })
+      body: JSON.stringify({ image1_base64, image2_base64 })
     });
 
     const data = await res.json();
