@@ -18,8 +18,15 @@
   border: 1px solid var(--gv3-border);
   cursor: pointer;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
-.photo-thumb img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb img{
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
 .photo-thumb .date{
   position: absolute; left: 0; right: 0; bottom: 0;
   padding: 4px; font-size: 10px; text-align: center;
@@ -81,3 +88,14 @@
 
 .compare-row{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
 .compare-diff{ text-align: center; font-size: var(--gv3-text-sm); color: var(--gv3-accent-precision); font-weight: 700; margin-bottom: var(--gv3-space-5); }
+.compare-analysis{
+  margin-top: var(--gv3-space-4);
+  padding: var(--gv3-space-4);
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-lg);
+  font-size: var(--gv3-text-sm);
+  line-height: 1.5;
+  color: var(--gv3-text-secondary);
+  white-space: pre-wrap;
+}

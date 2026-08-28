@@ -1,3 +1,4 @@
+import { supabase } from './supabaseClient.js';
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { requireSession } from './utils/authGuard.js';
@@ -41,6 +42,8 @@ const compareImg2 = document.getElementById('compareImg2');
 const compareDate1 = document.getElementById('compareDate1');
 const compareDate2 = document.getElementById('compareDate2');
 const compareDiff = document.getElementById('compareDiff');
+const btnAnalyzeCompare = document.getElementById('btnAnalyzeCompare');
+const compareAnalysis = document.getElementById('compareAnalysis');
 
 let photos = [];
 let signedUrls = {};
@@ -213,6 +216,8 @@ async function reorderWithinDate(draggedPhoto, targetPhoto){
 }
 
 function attachDrag(el, photo){
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+
   el.addEventListener('pointerdown', (e) => {
     if(compareMode || e.button === 2) return;
 
@@ -272,7 +277,7 @@ function renderGrid(){
 
   photoGrid.innerHTML = photos.map(p => `
     <div class="photo-thumb${selectedIds.includes(p.id) ? ' selected' : ''}" data-id="${p.id}">
-      <img src="${signedUrls[p.storage_path] || ''}" alt="Foto de ${formatDateBR(p.taken_at)}" loading="lazy">
+      <img src="${signedUrls[p.storage_path] || ''}" alt="Foto de ${formatDateBR(p.taken_at)}" loading="lazy" draggable="false">
       <div class="date">${formatDateBR(p.taken_at)}</div>
     </div>
   `).join('');
@@ -309,10 +314,13 @@ btnDeletePhoto.addEventListener('click', async () => {
   await reload();
 });
 
+let comparePair = null; // { older, newer } — fotos em comparação, pra análise por IA
+
 btnViewCompare.addEventListener('click', () => {
   if(selectedIds.length !== 2) return;
   const [a, b] = selectedIds.map(id => photos.find(p => p.id === id));
   const [older, newer] = new Date(a.taken_at) <= new Date(b.taken_at) ? [a, b] : [b, a];
+  comparePair = { older, newer };
 
   compareImg1.src = signedUrls[older.storage_path] || '';
   compareImg2.src = signedUrls[newer.storage_path] || '';
@@ -322,10 +330,69 @@ btnViewCompare.addEventListener('click', () => {
   const days = Math.round((new Date(newer.taken_at) - new Date(older.taken_at)) / 86400000);
   compareDiff.textContent = `${days} ${days === 1 ? 'dia' : 'dias'} de diferença`;
 
+  compareAnalysis.style.display = 'none';
+  compareAnalysis.textContent = '';
+  btnAnalyzeCompare.disabled = false;
+  btnAnalyzeCompare.textContent = '✨ Análise por IA';
+
   compareViewer.classList.add('open');
 });
 
 btnCloseCompare.addEventListener('click', () => compareViewer.classList.remove('open'));
+
+async function urlToBase64(url){
+  const blob = await (await fetch(url)).blob();
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+  return dataUrl.split(',')[1];
+}
+
+btnAnalyzeCompare.addEventListener('click', async () => {
+  if(!comparePair) return;
+
+  btnAnalyzeCompare.disabled = true;
+  btnAnalyzeCompare.textContent = 'Analisando...';
+  compareAnalysis.style.display = 'block';
+  compareAnalysis.textContent = 'Analisando as fotos, isso pode levar alguns segundos...';
+
+  try {
+    const [image1_base64, image2_base64] = await Promise.all([
+      urlToBase64(compareImg1.src),
+      urlToBase64(compareImg2.src)
+    ]);
+
+    const { data: sd } = await supabase.auth.getSession();
+    const token = sd.session?.access_token;
+
+    const res = await fetch('/api/ai-body-comparison', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
+        image1_base64, image2_base64,
+        date1: formatDateBR(comparePair.older.taken_at),
+        date2: formatDateBR(comparePair.newer.taken_at)
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      compareAnalysis.textContent = data.error || 'Não consegui analisar as fotos agora.';
+      return;
+    }
+
+    compareAnalysis.textContent = data.analysis;
+  } catch(err){
+    compareAnalysis.textContent = 'Erro de conexão. Tente de novo.';
+  } finally {
+    btnAnalyzeCompare.disabled = false;
+    btnAnalyzeCompare.textContent = '✨ Análise por IA';
+  }
+});
 
 async function reload(){
   photos = await listPhotos(user.id);
