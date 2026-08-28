@@ -340,10 +340,14 @@ btnViewCompare.addEventListener('click', () => {
   btnAnalyzeCompare.disabled = false;
   btnAnalyzeCompare.textContent = '✨ Análise por IA';
 
+  compareBar.style.display = 'none';
   compareViewer.classList.add('open');
 });
 
-btnCloseCompare.addEventListener('click', () => compareViewer.classList.remove('open'));
+btnCloseCompare.addEventListener('click', () => {
+  compareViewer.classList.remove('open');
+  if(compareMode) compareBar.style.display = 'flex';
+});
 
 async function urlToBase64(url){
   const blob = await (await fetch(url)).blob();
