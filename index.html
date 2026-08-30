@@ -68,26 +68,14 @@
     </div>
   </div>
 
-  <div class="gv3-card gv3-anim-in gv3-today" id="todayCard" style="margin-top:14px">
-    <div class="gv3-today__eyebrow"><span class="gv3-today__dot"></span>Hoje</div>
-    <div class="gv3-today__stats" id="todayStatsRow">
-      <a href="./pages/activity.html" class="gv3-today__stat">
-        <div class="gv3-today__icon" id="caloriesIcon"></div>
-        <div class="v" id="caloriesValue">—</div>
-        <div class="k">Calorias</div>
-      </a>
-      <a href="./pages/body.html" class="gv3-today__stat">
-        <div class="gv3-today__icon" id="bodyIcon"></div>
-        <div class="v" id="bodyValue">—</div>
-        <div class="k">Peso</div>
-      </a>
-      <a href="./pages/activity.html" class="gv3-today__stat" id="watchStat" style="display:none">
-        <div class="gv3-today__icon" id="watchIcon"></div>
-        <div class="v" id="watchValue">—</div>
-        <div class="k">Passos</div>
-      </a>
+  <a href="./pages/body.html" class="gv3-card gv3-anim-in gv3-today" id="todayCard" style="margin-top:14px;display:block">
+    <div class="gv3-today__eyebrow"><span class="gv3-today__dot"></span>Peso</div>
+    <div class="gv3-today__weight">
+      <div class="v" id="bodyValue">—</div>
+      <div class="k">Peso atual</div>
     </div>
-  </div>
+    <div class="gv3-today__weight-chart" id="weightChart"></div>
+  </a>
 
   <div style="margin-top:14px">
     <div class="gv3-section-title">Recuperação</div>

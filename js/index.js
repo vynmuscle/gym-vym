@@ -12,8 +12,7 @@ import { computeStreak } from './utils.js';
 import { getLeagueForXP } from './leagues.js';
 import { createProgressRing } from './design-system/progressRing.js';
 import { drawAscent } from './core/motion.js';
-import { getLatestWeight } from './services/dietService.js';
-import { getDailyHealthStats } from './services/healthService.js';
+import { getWeightHistory } from './services/dietService.js';
 import { icon } from './icons.js';
 import { openAiAssistant } from './aiAssistant.js';
 import { escapeHtml } from './utils/escapeHtml.js';
@@ -48,18 +47,13 @@ const checkinOptions = document.getElementById('checkinOptions');
 const checkinAck = document.getElementById('checkinAck');
 const insightCard = document.getElementById('insightCard');
 const insightText = document.getElementById('insightText');
-const caloriesValue = document.getElementById('caloriesValue');
 const bodyValue = document.getElementById('bodyValue');
-const watchStat = document.getElementById('watchStat');
-const watchValue = document.getElementById('watchValue');
+const weightChart = document.getElementById('weightChart');
 const recentActivityCard = document.getElementById('recentActivityCard');
 const btnAskAI = document.getElementById('btnAskAI');
 
 btnAskAI.innerHTML = icon('sparkle');
 streakIcon.innerHTML = icon('flame');
-document.getElementById('caloriesIcon').innerHTML = icon('flame');
-document.getElementById('bodyIcon').innerHTML = icon('scale');
-document.getElementById('watchIcon').innerHTML = icon('footprints');
 
 const ring = createProgressRing({ size: 92, strokeWidth: 9, percent: 0 });
 const ringPct = document.createElement('div');
@@ -248,11 +242,6 @@ function renderInsight({ weekCount, weeklyGoal, streak, recovery }){
   insightCard.style.display = 'block';
 }
 
-function todayStr(){
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 function showCheckinAck(feeling){
   checkinOptions.style.display = 'none';
   checkinAck.textContent = CHECKIN_ACK[feeling] || 'Anotado!';
@@ -284,21 +273,49 @@ function renderCheckin(trainedToday){
   });
 }
 
-async function renderBody(){
-  const weightRow = await getLatestWeight(user.id);
-  if(!weightRow) return;
-  bodyValue.textContent = `${weightRow.weight_kg} kg`;
+// Sparkline sem eixos/tooltip só pra mostrar a tendência — o gráfico
+// detalhado com data/período continua em body.html.
+function buildWeightSparkline(rows){
+  const W = 320, H = 120, pad = 10;
+  const values = rows.map(r => r.weight_kg);
+
+  if(values.length === 1){
+    return `<svg viewBox="0 0 ${W} ${H}"><circle cx="${W / 2}" cy="${H / 2}" r="4" fill="var(--gv3-accent-precision)" /></svg>`;
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const points = values.map((v, i) => {
+    const x = pad + (i / (values.length - 1)) * (W - pad * 2);
+    const y = H - pad - ((v - min) / range) * (H - pad * 2);
+    return [x, y];
+  });
+
+  const pathD = points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  const [firstX] = points[0];
+  const [lastX, lastY] = points[points.length - 1];
+  const areaD = `${pathD} L${lastX.toFixed(1)} ${H} L${firstX.toFixed(1)} ${H} Z`;
+
+  return `<svg viewBox="0 0 ${W} ${H}">
+    <defs>
+      <linearGradient id="weightFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--gv3-accent-precision)" stop-opacity=".28" />
+        <stop offset="100%" stop-color="var(--gv3-accent-precision)" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+    <path d="${areaD}" fill="url(#weightFill)" stroke="none" />
+    <path d="${pathD}" fill="none" stroke="var(--gv3-accent-precision)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="4" fill="var(--gv3-accent-precision)" />
+  </svg>`;
 }
 
-async function renderWatch(){
-  const stats = await getDailyHealthStats(user.id, todayStr());
-  if(!stats) return;
+async function renderBody(){
+  const history = await getWeightHistory(user.id, 20);
+  if(history.length === 0) return;
 
-  if(stats.calories_total) caloriesValue.textContent = `${stats.calories_total.toLocaleString('pt-BR')} kcal`;
-
-  if(!stats.steps) return;
-  watchStat.style.display = '';
-  watchValue.textContent = stats.steps.toLocaleString('pt-BR');
+  bodyValue.textContent = `${history[history.length - 1].weight_kg} kg`;
+  weightChart.innerHTML = buildWeightSparkline(history);
 }
 
 async function renderRecentActivity(){
@@ -349,7 +366,6 @@ const trainedToday = await renderHero();
 try { renderCheckin(trainedToday); } catch(err) { console.error('renderCheckin falhou:', err); }
 
 renderBody().catch(err => console.error('renderBody falhou:', err));
-renderWatch().catch(err => console.error('renderWatch falhou:', err));
 renderRecentActivity();
 
 btnAskAI.addEventListener('click', () => openAiAssistant());

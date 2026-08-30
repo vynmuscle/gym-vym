@@ -80,6 +80,21 @@ export async function upsertDietProfile(userId, payload) {
   return data;
 }
 
+// Últimas N pesagens, mais antiga primeiro — usado pelo sparkline do card
+// "Hoje" na home (tendência compacta, sem os eixos/tooltip do gráfico
+// completo de body.html).
+export async function getWeightHistory(userId, limit = 20) {
+  const { data, error } = await supabase
+    .from('body_measurements')
+    .select('weight_kg, measured_at')
+    .eq('user_id', userId)
+    .not('weight_kg', 'is', null)
+    .order('measured_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data.reverse();
+}
+
 export async function getLatestWeight(userId) {
   const { data, error } = await supabase
     .from('body_measurements')
