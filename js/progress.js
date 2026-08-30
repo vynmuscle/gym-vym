@@ -1,7 +1,7 @@
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { requireSession } from './utils/authGuard.js';
-import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals } from './services/workoutService.js';
+import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals, getFeelingVolumeCorrelation } from './services/workoutService.js';
 import { BODY_VIEWBOX, BODY_OUTLINE, MUSCLE_PATHS } from './data/bodyMuscles.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { openAiAssistant } from './aiAssistant.js';
@@ -381,3 +381,42 @@ function showHeatmapTooltip(el, group, vol){
 
 heatmapDaysSelect.addEventListener('change', renderBodyHeatmap);
 renderBodyHeatmap();
+
+const FEELING_META = {
+  mal: { emoji: '😴', label: 'Dormi mal' },
+  normal: { emoji: '🙂', label: 'Normal' },
+  otimo: { emoji: '🔥', label: 'Ótimo' },
+  cansado: { emoji: '💢', label: 'Cansado' }
+};
+const FEELING_ORDER = ['mal', 'cansado', 'normal', 'otimo'];
+
+const feelingPanel = document.getElementById('feelingPanel');
+const feelingList = document.getElementById('feelingList');
+
+// Só mostra com pelo menos 2 disposições diferentes registradas — com uma
+// só não dá pra comparar nada, e sessões antigas (antes do popup existir)
+// nunca vão ter feeling preenchido.
+async function renderFeelingCorrelation(){
+  const rows = await getFeelingVolumeCorrelation();
+  if(rows.length < 2) return;
+
+  const maxAvg = Math.max(...rows.map(r => r.avgVolume), 1);
+  const sorted = [...rows].sort((a, b) => FEELING_ORDER.indexOf(a.feeling) - FEELING_ORDER.indexOf(b.feeling));
+
+  feelingList.innerHTML = sorted.map(row => {
+    const meta = FEELING_META[row.feeling] || { emoji: '', label: row.feeling };
+    const pct = Math.round((row.avgVolume / maxAvg) * 100);
+    return `
+      <div class="feeling-row">
+        <div class="feeling-row__head">
+          <span>${meta.emoji} ${meta.label} <span class="feeling-row__count">(${row.sessionCount} treino${row.sessionCount > 1 ? 's' : ''})</span></span>
+          <span class="num">${Math.round(row.avgVolume).toLocaleString('pt-BR')}kg</span>
+        </div>
+        <div class="feeling-row__track"><div class="feeling-row__fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+
+  feelingPanel.style.display = 'block';
+}
+
+renderFeelingCorrelation().catch(err => console.error('renderFeelingCorrelation falhou:', err));

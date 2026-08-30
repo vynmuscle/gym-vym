@@ -8,7 +8,7 @@ import {
   createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout,
   getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
   getProgressionForExercise, getPersonalRecordsMap, getUserXP, getSessionStartedAt,
-  getSubstituteSuggestions, addExerciseFromLibrary
+  getSubstituteSuggestions, addExerciseFromLibrary, setSessionFeeling
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
@@ -451,9 +451,15 @@ async function swapExercise(ei){
 
 // Pergunta a disposição só quando inicia uma sessão nova (não ao retomar
 // uma em aberto) e só se ainda não respondeu hoje — mesmo check-in do
-// card da home, só que aqui a gente não deixa passar batido.
-function maybeShowCheckinPopup(){
-  if(getTodayCheckin(user.id)) return;
+// card da home, só que aqui a gente não deixa passar batido. A resposta
+// vai pra workout_sessions.feeling (não só localStorage) pra alimentar a
+// correlação disposição x volume em Progresso.
+function maybeShowCheckinPopup(sessionId){
+  const existing = getTodayCheckin(user.id);
+  if(existing){
+    setSessionFeeling(sessionId, existing).catch(err => console.error('setSessionFeeling falhou:', err));
+    return;
+  }
 
   const overlay = document.createElement('div');
   overlay.className = 'gv3-backdrop';
@@ -472,6 +478,7 @@ function maybeShowCheckinPopup(){
   overlay.querySelectorAll('.gv3-checkin-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       saveTodayCheckin(user.id, btn.dataset.feeling);
+      setSessionFeeling(sessionId, btn.dataset.feeling).catch(err => console.error('setSessionFeeling falhou:', err));
       showToast(CHECKIN_ACK[btn.dataset.feeling] || 'Anotado!');
       overlay.remove();
     });
@@ -1147,7 +1154,7 @@ if(!workoutIdValid){
           startTime = new Date(incomplete.started_at).getTime();
         } else {
           session = await createWorkoutSession(user.id, workoutId);
-          maybeShowCheckinPopup();
+          maybeShowCheckinPopup(session.id);
         }
       }
       await buildWorkout();

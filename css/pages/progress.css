@@ -43,3 +43,9 @@
 .heat-legend{ display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; }
 .heat-legend__label{ font-size: var(--gv3-text-xs); color: var(--gv3-text-secondary); }
 .heat-legend__bar{ width: 120px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2a2d36, #e0a83f, #FF5A36); }
+
+.feeling-row{ margin-bottom: 12px; }
+.feeling-row__head{ display: flex; justify-content: space-between; font-size: var(--gv3-text-sm); margin-bottom: 4px; }
+.feeling-row__count{ color: var(--gv3-text-muted); }
+.feeling-row__track{ height: 8px; border-radius: 4px; background: var(--gv3-bg-card-raised); overflow: hidden; }
+.feeling-row__fill{ height: 100%; background: var(--gv3-accent-precision); border-radius: 4px; }

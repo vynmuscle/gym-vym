@@ -186,6 +186,11 @@ export async function createWorkoutSession(userId, workoutId) {
   return data;
 }
 
+export async function setSessionFeeling(sessionId, feeling) {
+  const { error } = await supabase.from('workout_sessions').update({ feeling }).eq('id', sessionId);
+  if (error) throw error;
+}
+
 export async function finishWorkoutSession(id) {
   const { data, error } = await supabase.from('workout_sessions').update({ finished_at: new Date().toISOString() }).eq('id', id).select().single();
   if (error) throw error;
@@ -476,6 +481,46 @@ export async function getMuscleVolumeTotals(days = 56) {
     totals[group] = (totals[group] || 0) + (row.weight || 0) * (row.reps || 0);
   }
   return totals;
+}
+
+// Volume médio por disposição registrada no início do treino (feeling em
+// workout_sessions) — correlação simples pra ver se dias "cansado"/"dormi
+// mal" realmente rendem menos volume que "ótimo"/"normal". Só sessões
+// concluídas e com feeling preenchido; sessões antigas (antes do popup)
+// ficam de fora, então a correlação começa vazia e vai enchendo aos poucos.
+export async function getFeelingVolumeCorrelation() {
+  const { data: sessions, error: sessionsError } = await supabase
+    .from('workout_sessions')
+    .select('id, feeling')
+    .not('feeling', 'is', null)
+    .not('finished_at', 'is', null);
+  if (sessionsError) throw sessionsError;
+  if (sessions.length === 0) return [];
+
+  const sessionIds = sessions.map(s => s.id);
+  const { data: sets, error: setsError } = await supabase
+    .from('session_sets')
+    .select('session_id, weight, reps')
+    .in('session_id', sessionIds);
+  if (setsError) throw setsError;
+
+  const volumeBySession = {};
+  for (const row of sets) {
+    volumeBySession[row.session_id] = (volumeBySession[row.session_id] || 0) + (row.weight || 0) * (row.reps || 0);
+  }
+
+  const byFeeling = {};
+  for (const session of sessions) {
+    if (!byFeeling[session.feeling]) byFeeling[session.feeling] = { totalVolume: 0, sessionCount: 0 };
+    byFeeling[session.feeling].totalVolume += volumeBySession[session.id] || 0;
+    byFeeling[session.feeling].sessionCount += 1;
+  }
+
+  return Object.entries(byFeeling).map(([feeling, { totalVolume, sessionCount }]) => ({
+    feeling,
+    sessionCount,
+    avgVolume: totalVolume / sessionCount
+  }));
 }
 
 // Extrai a faixa de reps da meta (texto livre: "8-12", "10", "até a falha").
