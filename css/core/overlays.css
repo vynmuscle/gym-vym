@@ -88,6 +88,26 @@
   .gv3-backdrop, .gv3-modal, .gv3-sheet, .gv3-toast, .gv3-toast--out{ animation: none; }
 }
 
+/* Check-in de disposição — card na home (dashboard.css) e popup ao iniciar
+   treino (train.js). */
+.gv3-checkin-options{ display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gv3-space-2); }
+.gv3-checkin-btn{
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--gv3-bg-card-raised);
+  border: 1px solid var(--gv3-border-strong);
+  border-radius: var(--gv3-radius-md);
+  padding: var(--gv3-space-3) 4px;
+  min-height: 64px;
+  font-size: 22px;
+  cursor: pointer;
+  transition: transform var(--gv3-duration-fast) ease, border-color var(--gv3-duration-normal) ease;
+}
+.gv3-checkin-btn span{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-secondary); font-weight: 600; text-align: center; }
+.gv3-checkin-btn:active{ transform: scale(.95); border-color: var(--gv3-accent-precision); }
+
+.checkin-popup h3{ font-size: var(--gv3-text-lg); margin: 0 0 var(--gv3-space-1); }
+.checkin-popup p{ font-size: var(--gv3-text-sm); color: var(--gv3-text-secondary); margin: 0 0 var(--gv3-space-4); }
+
 /* Assistente de IA (aiAssistant.js) — modal injetado via JS, mesmas classes
    gv3-backdrop/gv3-modal de qualquer overlay do app. */
 .ai-assistant-modal{ display: flex; flex-direction: column; gap: var(--gv3-space-3); max-height: 80dvh; }

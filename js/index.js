@@ -17,6 +17,7 @@ import { getDailyHealthStats } from './services/healthService.js';
 import { icon } from './icons.js';
 import { openAiAssistant } from './aiAssistant.js';
 import { escapeHtml } from './utils/escapeHtml.js';
+import { CHECKIN_ACK, getTodayCheckin, saveTodayCheckin } from './services/checkinService.js';
 
 const user = await requireSession('./login.html');
 initPWA();
@@ -252,18 +253,6 @@ function todayStr(){
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-const CHECKIN_STORAGE_KEY = `gymvym_checkin_${user.id}`;
-
-const CHECKIN_ACK = {
-  mal: 'Anotado. Vai com calma hoje, sem exagerar na carga.',
-  normal: 'Anotado. Bom treino!',
-  otimo: 'Anotado! Aproveita esse gás. 🔥',
-  cansado: 'Anotado. Fique de olho no corpo — reduza o volume se precisar.'
-};
-
-// Check-in de disposição — só informativo por enquanto (não altera a
-// sugestão de treino nem o motor de progressão). Guardado no aparelho, não
-// no banco: não pergunta de novo no mesmo dia, sem precisar de tabela nova.
 function showCheckinAck(feeling){
   checkinOptions.style.display = 'none';
   checkinAck.textContent = CHECKIN_ACK[feeling] || 'Anotado!';
@@ -280,15 +269,7 @@ function renderCheckin(trainedToday){
 
   checkinCard.style.display = 'block';
 
-  let saved = null;
-  try {
-    const raw = localStorage.getItem(CHECKIN_STORAGE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(parsed.date === todayStr()) saved = parsed.feeling;
-    }
-  } catch(err) {}
-
+  const saved = getTodayCheckin(user.id);
   if(saved){
     showCheckinAck(saved);
     return;
@@ -297,9 +278,7 @@ function renderCheckin(trainedToday){
   checkinOptions.querySelectorAll('.gv3-checkin-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const feeling = btn.dataset.feeling;
-      try {
-        localStorage.setItem(CHECKIN_STORAGE_KEY, JSON.stringify({ date: todayStr(), feeling }));
-      } catch(err) {}
+      saveTodayCheckin(user.id, feeling);
       showCheckinAck(feeling);
     });
   });

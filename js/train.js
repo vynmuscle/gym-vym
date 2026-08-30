@@ -17,6 +17,7 @@ import { listMeasurements } from './services/bodyService.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { celebrate } from './design-system/motion.js';
 import { estimateWorkoutKcal, findWeightAtDate } from './utils.js';
+import { CHECKIN_ACK, getTodayCheckin, saveTodayCheckin } from './services/checkinService.js';
 
 const user = await requireSession('../login.html');
 
@@ -446,6 +447,40 @@ async function swapExercise(ei){
   }
 
   openSubstituteSheet(ei, candidates);
+}
+
+// Pergunta a disposição só quando inicia uma sessão nova (não ao retomar
+// uma em aberto) e só se ainda não respondeu hoje — mesmo check-in do
+// card da home, só que aqui a gente não deixa passar batido.
+function maybeShowCheckinPopup(){
+  if(getTodayCheckin(user.id)) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'gv3-backdrop';
+  overlay.innerHTML = `
+    <div class="gv3-modal checkin-popup" role="dialog" aria-label="Como você está?">
+      <h3>Como você está hoje?</h3>
+      <p>Ajuda a ajustar o treino ao seu dia.</p>
+      <div class="gv3-checkin-options">
+        <button type="button" class="gv3-checkin-btn" data-feeling="mal">😴<span>Dormi mal</span></button>
+        <button type="button" class="gv3-checkin-btn" data-feeling="normal">🙂<span>Normal</span></button>
+        <button type="button" class="gv3-checkin-btn" data-feeling="otimo">🔥<span>Ótimo</span></button>
+        <button type="button" class="gv3-checkin-btn" data-feeling="cansado">💢<span>Cansado</span></button>
+      </div>
+    </div>`;
+
+  overlay.querySelectorAll('.gv3-checkin-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      saveTodayCheckin(user.id, btn.dataset.feeling);
+      showToast(CHECKIN_ACK[btn.dataset.feeling] || 'Anotado!');
+      overlay.remove();
+    });
+  });
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) overlay.remove();
+  });
+
+  document.body.appendChild(overlay);
 }
 
 function openSubstituteSheet(ei, candidates){
@@ -1112,6 +1147,7 @@ if(!workoutIdValid){
           startTime = new Date(incomplete.started_at).getTime();
         } else {
           session = await createWorkoutSession(user.id, workoutId);
+          maybeShowCheckinPopup();
         }
       }
       await buildWorkout();
