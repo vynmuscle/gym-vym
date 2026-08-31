@@ -11,6 +11,13 @@ export async function listExercises() {
   return data;
 }
 
+export async function getExercisesByIds(ids) {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase.from('exercises').select('*').in('id', ids);
+  if (error) throw error;
+  return data;
+}
+
 export async function createExercise(userId, payload) {
   const { data, error } = await supabase.from('exercises').insert({ ...payload, user_id: userId }).select().single();
   if (error) throw error;
@@ -159,6 +166,23 @@ export async function findIncompleteSessionForWorkout(userId, workoutId) {
     .select('id, started_at')
     .eq('user_id', userId)
     .eq('workout_id', workoutId)
+    .is('finished_at', null)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Mesma ideia de findIncompleteSessionForWorkout, mas pra um treino avulso
+// (workout_id null) — continua a sessão avulsa em aberto em vez de criar
+// outra toda vez que a aba é reaberta.
+export async function findIncompleteFreeSession(userId) {
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('id, started_at')
+    .eq('user_id', userId)
+    .is('workout_id', null)
     .is('finished_at', null)
     .order('started_at', { ascending: false })
     .limit(1)

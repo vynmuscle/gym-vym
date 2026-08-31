@@ -5,10 +5,10 @@ import { openExercisePicker } from './exercisePicker.js';
 import { queueSet, flushQueue, onSetSynced, removeQueuedSet, renumberQueuedSet } from './services/offlineQueue.js';
 import {
   getWorkout, listWorkoutExercises,
-  createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout,
+  createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout, findIncompleteFreeSession,
   getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
   getProgressionForExercise, getPersonalRecordsMap, getUserXP, getSessionStartedAt,
-  getSubstituteSuggestions, addExerciseFromLibrary, setSessionFeeling
+  getSubstituteSuggestions, addExerciseFromLibrary, setSessionFeeling, getExercisesByIds
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
@@ -27,6 +27,7 @@ const urlParams = new URLSearchParams(location.search);
 const workoutId = urlParams.get('id');
 const existingSessionId = urlParams.get('session');
 const workoutIdValid = !!workoutId && workoutId !== 'null' && workoutId !== 'undefined';
+const isFreeSession = urlParams.get('avulso') === '1';
 
 const trainError = document.getElementById('trainError');
 const trainErrorMsg = document.getElementById('trainErrorMsg');
@@ -36,6 +37,7 @@ function showTrainError(msg, linkHref, linkLabel){
   document.querySelector('header').style.display = 'none';
   document.querySelector('.finish-bar').style.display = 'none';
   document.getElementById('workout').style.display = 'none';
+  document.getElementById('btnAddExtraExercise').style.display = 'none';
   trainErrorMsg.textContent = msg;
   trainErrorLink.href = linkHref;
   trainErrorLink.textContent = linkLabel;
@@ -418,6 +420,58 @@ function openFullPicker(ei){
   });
 }
 
+// Exercício extra que não faz parte da ficha do dia (ex: sobrou tempo depois
+// do treino de ombros e quer emendar um pouco de bíceps) — vira uma sessão
+// avulsa (workout_id null) sem workoutExerciseId, então nunca aparece o
+// botão de substituir (não tem o que substituir, não é da ficha).
+async function addExtraExercise(newEx){
+  const isDuration = newEx.tracking_type === 'duration';
+  const lastSets = await getLastSets(newEx.id);
+  const setCount = isDuration ? 1 : 3;
+
+  const ex = {
+    workoutExerciseId: null,
+    exerciseId: newEx.id,
+    name: newEx.name,
+    equipment: newEx.equipment,
+    imageUrl: newEx.image_url,
+    instructions: newEx.instructions,
+    muscleGroup: newEx.muscle_group,
+    movementPattern: newEx.movement_pattern,
+    isDuration,
+    rest: 90,
+    note: '',
+    progression: null,
+    sets: []
+  };
+
+  for(let i = 0; i < setCount; i++){
+    const prev = lastSets[i];
+    if(isDuration){
+      ex.sets.push({
+        prev: prev ? `${Math.round((prev.duration_seconds || 0) / 60)}min${prev.distance_km ? ' · ' + prev.distance_km + 'km' : ''}${prev.incline_pct ? ' · ' + prev.incline_pct + '%' : ''}` : null,
+        durationMin: prev ? Math.round((prev.duration_seconds || 0) / 60) : 20,
+        distanceKm: prev ? (prev.distance_km || 0) : 0,
+        inclinePct: prev ? (prev.incline_pct || 0) : 0
+      });
+    } else {
+      ex.sets.push({
+        prev: prev ? `${prev.weight ?? 0}kg x ${prev.reps ?? 0}` : null,
+        kg: prev ? prev.weight : 0,
+        reps: prev ? prev.reps : 10
+      });
+    }
+  }
+
+  const ei = exercisesData.length;
+  exercisesData.push(ex);
+  totalSets += ex.sets.length;
+  totalCountEl.textContent = totalSets;
+  progressFill.style.width = (totalSets ? doneSets / totalSets * 100 : 0) + '%';
+  finishBtn.classList.remove('ready');
+  renderExerciseCard(ei);
+}
+
 const SUBSTITUTE_MAX_SUGGESTIONS = 4;
 
 async function swapExercise(ei){
@@ -613,7 +667,7 @@ function renderExerciseCard(ei){
       <div class="ex-thumb">${ex.imageUrl ? `<img src="${escapeHtml(ex.imageUrl)}" alt="${escapeHtml(ex.name)}" loading="lazy">` : '🏋️'}</div>
       <div class="ex-name">${escapeHtml(ex.name)}${ex.equipment ? ' (' + escapeHtml(ex.equipment) + ')' : ''}</div>
       <button type="button" class="ex-action-btn" aria-label="Como executar">ℹ️</button>
-      <button type="button" class="ex-action-btn" aria-label="Substituir exercício">🔁</button>
+      ${ex.workoutExerciseId ? '<button type="button" class="ex-action-btn" aria-label="Substituir exercício">🔁</button>' : ''}
       <button type="button" class="ex-action-btn" aria-label="Observação">📝</button>
     </div>
     <div class="ex-note-row" id="exnote-${ei}" style="display:none">
@@ -629,9 +683,9 @@ function renderExerciseCard(ei){
   if(ex.sets.length > 0 && ex.sets.every(s => s.completed)) card.classList.add('done');
 
   card.querySelector('.add-set-btn').addEventListener('click', () => addSet(ei));
-  const [infoBtn, swapBtn, noteBtn] = card.querySelectorAll('.ex-action-btn');
-  infoBtn.addEventListener('click', () => showExerciseInfo(ex));
-  swapBtn.addEventListener('click', () => swapExercise(ei));
+  card.querySelector('[aria-label="Como executar"]').addEventListener('click', () => showExerciseInfo(ex));
+  card.querySelector('[aria-label="Substituir exercício"]')?.addEventListener('click', () => swapExercise(ei));
+  const noteBtn = card.querySelector('[aria-label="Observação"]');
 
   const exNoteRow = document.getElementById(`exnote-${ei}`);
   const exNoteInput = exNoteRow.querySelector('.ex-note-input');
@@ -652,7 +706,7 @@ function renderExerciseCard(ei){
 }
 
 async function buildWorkout(){
-  const items = await listWorkoutExercises(workoutId);
+  const items = workoutId ? await listWorkoutExercises(workoutId) : [];
   exercisesData = [];
   recordsMap = await getPersonalRecordsMap(session.id);
 
@@ -721,6 +775,58 @@ async function buildWorkout(){
           prev: prev ? `${prev.weight ?? 0}kg x ${prev.reps ?? 0}` : null,
           kg: done ? done.weight : (suggestedWeight ?? (prev ? prev.weight : (item.target_weight || 0))),
           reps: done ? done.reps : (prev ? prev.reps : (parseInt(item.target_reps) || 0)),
+          completed: !!done
+        });
+      }
+    }
+
+    exercisesData.push(ex);
+  });
+
+  // Exercícios avulsos (sem workoutExerciseId) já gravados nesta sessão antes
+  // de fechar a aba — sem isso, ao reabrir uma sessão em aberto (de ficha ou
+  // 100% avulsa), as séries continuariam salvas no banco mas sumiriam da
+  // tela, como se nunca tivessem sido feitas.
+  const itemExerciseIds = new Set(items.map(item => item.exercise_id));
+  const extraExerciseIds = [...new Set(existingSets.map(s => s.exercise_id))].filter(id => !itemExerciseIds.has(id));
+  const extraExercises = await getExercisesByIds(extraExerciseIds);
+
+  extraExercises.forEach(exercise => {
+    const doneForExercise = existingByExercise.get(exercise.id);
+    const isDuration = exercise.tracking_type === 'duration';
+    const maxDoneSetNumber = Math.max(...doneForExercise.keys());
+
+    const ex = {
+      workoutExerciseId: null,
+      exerciseId: exercise.id,
+      name: exercise.name,
+      equipment: exercise.equipment,
+      imageUrl: exercise.image_url,
+      instructions: exercise.instructions,
+      muscleGroup: exercise.muscle_group,
+      movementPattern: exercise.movement_pattern,
+      isDuration,
+      rest: 90,
+      note: '',
+      progression: null,
+      sets: []
+    };
+
+    for(let i = 0; i < maxDoneSetNumber; i++){
+      const done = doneForExercise.get(i + 1) || null;
+      if(isDuration){
+        ex.sets.push({
+          prev: null,
+          durationMin: done ? Math.round((done.duration_seconds || 0) / 60) : 20,
+          distanceKm: done ? (done.distance_km || 0) : 0,
+          inclinePct: done ? (done.incline_pct || 0) : 0,
+          completed: !!done
+        });
+      } else {
+        ex.sets.push({
+          prev: null,
+          kg: done ? done.weight : 0,
+          reps: done ? done.reps : 10,
           completed: !!done
         });
       }
@@ -1100,6 +1206,10 @@ finishBtn.addEventListener('click', async () => {
   } catch(err) {}
 });
 
+document.getElementById('btnAddExtraExercise').addEventListener('click', () => {
+  openExercisePicker({ userId: user.id, onPick: addExtraExercise });
+});
+
 document.getElementById('btnBackToWorkouts').addEventListener('click', () => navigate('./workouts.html'));
 document.getElementById('btnViewProgress').addEventListener('click', () => navigate('./progress.html'));
 
@@ -1120,7 +1230,28 @@ document.addEventListener('visibilitychange', () => {
   updateElapsedDisplay();
 });
 
-if(!workoutIdValid){
+if(isFreeSession){
+  workoutNameEl.textContent = 'Treino avulso';
+  if(existingSessionId){
+    session = { id: existingSessionId };
+    isResumedSession = true;
+    startTime = new Date(await getSessionStartedAt(existingSessionId)).getTime();
+  } else {
+    // Mesma lógica de "continua a sessão em aberto" da ficha normal, só que
+    // pra sessão avulsa (workout_id null) — ver findIncompleteFreeSession.
+    const incomplete = await findIncompleteFreeSession(user.id);
+    if(incomplete){
+      session = incomplete;
+      isResumedSession = true;
+      startTime = new Date(incomplete.started_at).getTime();
+    } else {
+      session = await createWorkoutSession(user.id, null);
+      maybeShowCheckinPopup(session.id);
+    }
+  }
+  await buildWorkout();
+  flushQueue();
+} else if(!workoutIdValid){
   showTrainError('Nenhuma ficha selecionada.', './workouts.html', 'Ver fichas');
 } else {
   let workout;
