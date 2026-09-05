@@ -52,8 +52,10 @@ const totalCountEl = document.getElementById('totalCount');
 const workoutMain = document.getElementById('workout');
 const finishBtn = document.getElementById('finishBtn');
 const restSheet = document.getElementById('restSheet');
+const restLabel = document.getElementById('restLabel');
 const restTime = document.getElementById('restTime');
 const restContext = document.getElementById('restContext');
+const btnSkipRest = document.getElementById('btnSkipRest');
 const summaryOverlay = document.getElementById('summary');
 const summarySub = document.getElementById('summarySub');
 const sumTime = document.getElementById('sumTime');
@@ -76,6 +78,11 @@ let restEndTime = 0;
 let restExName = '';
 let restDone = 0;
 let restTotal = 0;
+// true assim que a contagem chega a 0 — a partir daí a sheet fica parada na
+// tela (sem contar mais nada) até o toque em "Continuar", em vez de sumir
+// sozinha sem o usuário perceber se o descanso realmente rodou.
+let restOver = false;
+let alarmInterval = null;
 let session = null;
 let isResumedSession = false;
 let exercisesData = [];
@@ -1075,6 +1082,11 @@ function startRest(seconds, exName, done, total){
   restExName = exName;
   restDone = done;
   restTotal = total;
+  restOver = false;
+  clearInterval(alarmInterval);
+  restLabel.textContent = 'Descanso';
+  restSheet.classList.remove('rest-over');
+  btnSkipRest.textContent = 'Pular descanso';
   restContext.textContent = `${exName} — série ${done}/${total} feita`;
   restSheet.classList.add('open');
   updateRestDisplay();
@@ -1086,21 +1098,43 @@ function startRest(seconds, exName, done, total){
   } catch(err) {}
 }
 
+// Repete o beep + vibração a cada 5s enquanto espera o toque em "Continuar"
+// — sem isso, quem tá longe do celular só percebe que o descanso acabou se
+// olhar a tela por acaso. Mantém o keep-alive ligado (startRest já ligou)
+// pra esse repeat não travar com a aba em segundo plano.
+function startAlarmRepeat(){
+  clearInterval(alarmInterval);
+  alarmInterval = setInterval(() => {
+    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    playRestSound();
+  }, 5000);
+}
+
+// Ao chegar a 0, a sheet NÃO fecha sozinha — fica parada mostrando "0:00"
+// até o usuário tocar em "Continuar treino". Sem isso, quem estava longe do
+// celular não sabia se o descanso realmente rodou ou não.
 function updateRestDisplay(){
   const remaining = Math.max(0, Math.round((restEndTime - Date.now()) / 1000));
   restTime.textContent = Math.floor(remaining / 60) + ':' + String(remaining % 60).padStart(2, '0');
   restTime.classList.toggle('ending', remaining <= 10);
-  if(remaining <= 0){
+  if(remaining <= 0 && !restOver){
+    restOver = true;
+    clearInterval(restInterval);
+    restLabel.textContent = 'Descanso concluído';
+    restSheet.classList.add('rest-over');
+    btnSkipRest.textContent = 'Continuar treino';
     if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
     playRestSound();
     notifyRestOver(restExName);
-    closeRest();
+    startAlarmRepeat();
   }
 }
 
 function closeRest(){
   clearInterval(restInterval);
-  restSheet.classList.remove('open');
+  clearInterval(alarmInterval);
+  restSheet.classList.remove('open', 'rest-over');
+  restOver = false;
   try { localStorage.removeItem(REST_STORAGE_KEY); } catch(err) {}
   stopKeepAlive();
 }
@@ -1113,6 +1147,11 @@ document.addEventListener('visibilitychange', () => {
 
 document.getElementById('btnAddRest').addEventListener('click', () => {
   restEndTime += 30000;
+  restOver = false;
+  clearInterval(alarmInterval);
+  restLabel.textContent = 'Descanso';
+  restSheet.classList.remove('rest-over');
+  btnSkipRest.textContent = 'Pular descanso';
   try {
     localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName: restExName, done: restDone, total: restTotal }));
   } catch(err) {}
@@ -1126,26 +1165,36 @@ document.getElementById('btnAddRest').addEventListener('click', () => {
   startKeepAlive();
 });
 
-document.getElementById('btnSkipRest').addEventListener('click', closeRest);
+btnSkipRest.addEventListener('click', closeRest);
 
+// Restaura o descanso ao reabrir a aba — inclusive se já tinha zerado sem o
+// usuário ter tocado em "Continuar" (a sheet fica salva até ser fechada de
+// propósito, não só enquanto ainda está contando).
 (function restoreRestFromStorage(){
   const raw = localStorage.getItem(REST_STORAGE_KEY);
   if(!raw) return;
   try {
     const saved = JSON.parse(raw);
-    if(saved.endTime > Date.now()){
-      restEndTime = saved.endTime;
-      restExName = saved.exName;
-      restDone = saved.done;
-      restTotal = saved.total;
-      restContext.textContent = `${saved.exName} — série ${saved.done}/${saved.total} feita`;
-      restSheet.classList.add('open');
-      updateRestDisplay();
+    restEndTime = saved.endTime;
+    restExName = saved.exName;
+    restDone = saved.done;
+    restTotal = saved.total;
+    restContext.textContent = `${saved.exName} — série ${saved.done}/${saved.total} feita`;
+    restSheet.classList.add('open');
+
+    restOver = restEndTime <= Date.now();
+    if(restOver){
+      restLabel.textContent = 'Descanso concluído';
+      restSheet.classList.add('rest-over');
+      btnSkipRest.textContent = 'Continuar treino';
+      startKeepAlive();
+      startAlarmRepeat();
+    }
+    updateRestDisplay();
+    if(!restOver){
       clearInterval(restInterval);
       restInterval = setInterval(updateRestDisplay, 1000);
       startKeepAlive();
-    } else {
-      localStorage.removeItem(REST_STORAGE_KEY);
     }
   } catch(err) {
     localStorage.removeItem(REST_STORAGE_KEY);

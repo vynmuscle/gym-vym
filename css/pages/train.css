@@ -197,6 +197,9 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
 .rest-label{ font-size: var(--gv3-text-2xs); color: var(--gv3-text-secondary); text-transform: uppercase; letter-spacing: .14em; text-align: center; }
 .rest-time{ font-family: var(--gv3-font-display); font-weight: 700; font-size: 84px; line-height: 1; text-align: center; margin: 6px 0 4px; font-variant-numeric: tabular-nums; color: var(--gv3-accent-precision); }
 .rest-time.ending{ color: var(--gv3-status-danger); }
+.rest-sheet.rest-over{ border-top-color: var(--gv3-status-good); }
+.rest-sheet.rest-over .rest-time{ color: var(--gv3-status-good); }
+.rest-sheet.rest-over .rest-label{ color: var(--gv3-status-good); }
 .rest-context{ text-align: center; font-size: var(--gv3-text-sm); color: var(--gv3-text-secondary); margin-bottom: 16px; }
 .rest-actions{ display: flex; gap: 10px; }
 .rest-actions button{ flex: 1; min-height: 56px; border-radius: var(--gv3-radius-md); border: none; font-size: var(--gv3-text-base); font-weight: 700; cursor: pointer; font-family: var(--gv3-font-ui); }
