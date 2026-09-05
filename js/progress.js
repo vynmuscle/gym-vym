@@ -1,7 +1,7 @@
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { requireSession } from './utils/authGuard.js';
-import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals, getFeelingVolumeCorrelation } from './services/workoutService.js';
+import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals, getFeelingVolumeCorrelation, getTimeOfDayVolumeCorrelation } from './services/workoutService.js';
 import { BODY_VIEWBOX, BODY_OUTLINE, MUSCLE_PATHS } from './data/bodyMuscles.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { openAiAssistant } from './aiAssistant.js';
@@ -420,3 +420,41 @@ async function renderFeelingCorrelation(){
 }
 
 renderFeelingCorrelation().catch(err => console.error('renderFeelingCorrelation falhou:', err));
+
+const TIME_OF_DAY_META = {
+  madrugada: { emoji: '🌙', label: 'Madrugada' },
+  manha: { emoji: '🌅', label: 'Manhã' },
+  tarde: { emoji: '☀️', label: 'Tarde' },
+  noite: { emoji: '🌆', label: 'Noite' }
+};
+const TIME_OF_DAY_ORDER = ['madrugada', 'manha', 'tarde', 'noite'];
+
+const timeOfDayPanel = document.getElementById('timeOfDayPanel');
+const timeOfDayList = document.getElementById('timeOfDayList');
+
+// Só mostra com pelo menos 2 faixas de horário diferentes registradas —
+// com uma só não dá pra comparar nada.
+async function renderTimeOfDayCorrelation(){
+  const rows = await getTimeOfDayVolumeCorrelation();
+  if(rows.length < 2) return;
+
+  const maxAvg = Math.max(...rows.map(r => r.avgVolume), 1);
+  const sorted = [...rows].sort((a, b) => TIME_OF_DAY_ORDER.indexOf(a.timeOfDay) - TIME_OF_DAY_ORDER.indexOf(b.timeOfDay));
+
+  timeOfDayList.innerHTML = sorted.map(row => {
+    const meta = TIME_OF_DAY_META[row.timeOfDay] || { emoji: '', label: row.timeOfDay };
+    const pct = Math.round((row.avgVolume / maxAvg) * 100);
+    return `
+      <div class="feeling-row">
+        <div class="feeling-row__head">
+          <span>${meta.emoji} ${meta.label} <span class="feeling-row__count">(${row.sessionCount} treino${row.sessionCount > 1 ? 's' : ''})</span></span>
+          <span class="num">${Math.round(row.avgVolume).toLocaleString('pt-BR')}kg</span>
+        </div>
+        <div class="feeling-row__track"><div class="feeling-row__fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+
+  timeOfDayPanel.style.display = 'block';
+}
+
+renderTimeOfDayCorrelation().catch(err => console.error('renderTimeOfDayCorrelation falhou:', err));

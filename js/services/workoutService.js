@@ -547,6 +547,59 @@ export async function getFeelingVolumeCorrelation() {
   }));
 }
 
+// madrugada/manhã/tarde/noite pelo horário local de started_at (new Date()
+// já converte o timestamptz do banco pro fuso do aparelho — mesma lógica
+// usada no resto do app pra "hoje").
+const TIME_OF_DAY_BUCKETS = [
+  { key: 'madrugada', from: 0, to: 5 },
+  { key: 'manha', from: 5, to: 12 },
+  { key: 'tarde', from: 12, to: 18 },
+  { key: 'noite', from: 18, to: 24 }
+];
+
+function timeOfDayBucket(startedAt) {
+  const hour = new Date(startedAt).getHours();
+  return TIME_OF_DAY_BUCKETS.find(b => hour >= b.from && hour < b.to).key;
+}
+
+// Volume médio por faixa de horário em que o treino começou — mesma ideia
+// da correlação de disposição, só que pra ver se você rende mais treinando
+// de manhã, tarde ou à noite.
+export async function getTimeOfDayVolumeCorrelation() {
+  const { data: sessions, error: sessionsError } = await supabase
+    .from('workout_sessions')
+    .select('id, started_at')
+    .not('finished_at', 'is', null);
+  if (sessionsError) throw sessionsError;
+  if (sessions.length === 0) return [];
+
+  const sessionIds = sessions.map(s => s.id);
+  const { data: sets, error: setsError } = await supabase
+    .from('session_sets')
+    .select('session_id, weight, reps')
+    .in('session_id', sessionIds);
+  if (setsError) throw setsError;
+
+  const volumeBySession = {};
+  for (const row of sets) {
+    volumeBySession[row.session_id] = (volumeBySession[row.session_id] || 0) + (row.weight || 0) * (row.reps || 0);
+  }
+
+  const byTimeOfDay = {};
+  for (const session of sessions) {
+    const bucket = timeOfDayBucket(session.started_at);
+    if (!byTimeOfDay[bucket]) byTimeOfDay[bucket] = { totalVolume: 0, sessionCount: 0 };
+    byTimeOfDay[bucket].totalVolume += volumeBySession[session.id] || 0;
+    byTimeOfDay[bucket].sessionCount += 1;
+  }
+
+  return Object.entries(byTimeOfDay).map(([timeOfDay, { totalVolume, sessionCount }]) => ({
+    timeOfDay,
+    sessionCount,
+    avgVolume: totalVolume / sessionCount
+  }));
+}
+
 // Extrai a faixa de reps da meta (texto livre: "8-12", "10", "até a falha").
 // min/max ficam null quando não há número pra comparar.
 function parseTargetRepsRange(targetReps) {
