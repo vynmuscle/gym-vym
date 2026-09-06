@@ -8,7 +8,8 @@ import {
   createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout, findIncompleteFreeSession,
   getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
   getProgressionForExercise, getPersonalRecordsMap, getUserXP, getSessionStartedAt,
-  getSubstituteSuggestions, addExerciseFromLibrary, setSessionFeeling, getExercisesByIds
+  getSubstituteSuggestions, addExerciseFromLibrary, setSessionFeeling, getExercisesByIds,
+  getPersonalRestSeconds
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
@@ -433,7 +434,10 @@ function openFullPicker(ei){
 // botão de substituir (não tem o que substituir, não é da ficha).
 async function addExtraExercise(newEx){
   const isDuration = newEx.tracking_type === 'duration';
-  const lastSets = await getLastSets(newEx.id);
+  const [lastSets, personalRest] = await Promise.all([
+    getLastSets(newEx.id),
+    isDuration ? null : getPersonalRestSeconds(newEx.id)
+  ]);
   const setCount = isDuration ? 1 : 3;
 
   const ex = {
@@ -446,7 +450,7 @@ async function addExtraExercise(newEx){
     muscleGroup: newEx.muscle_group,
     movementPattern: newEx.movement_pattern,
     isDuration,
-    rest: 90,
+    rest: personalRest ?? 90,
     note: '',
     progression: null,
     sets: []
@@ -664,6 +668,9 @@ function renderExerciseCard(ei){
   ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set, ex.isDuration));
 
   const restLabel = ex.isDuration ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
+  const restAdjustedLabel = ex.restAdjusted
+    ? `<div class="ex-rest-note">Ajustado pro seu ritmo — ficha: ${Math.floor(ex.restPlanned / 60)}min ${ex.restPlanned % 60}s</div>`
+    : '';
   const uplevelLabel = progressionLabel(ex.progression);
   const headerLabels = ex.isDuration
     ? `<div>Nº</div><div class="left">Ant.</div><div>Min</div><div>Km</div><div>Elev%</div><div>✓</div>`
@@ -682,6 +689,7 @@ function renderExerciseCard(ei){
     </div>
     ${uplevelLabel}
     ${restLabel}
+    ${restAdjustedLabel}
     <div class="sets-header${ex.isDuration ? ' duration' : ''}">${headerLabels}</div>
     <div class="sets-body" id="sets-${ei}">${rows}</div>
     <button type="button" class="add-set-btn" data-exercise="${ei}">+ Adicionar série</button>`;
@@ -730,12 +738,15 @@ async function buildWorkout(){
   // ficha em paralelo — antes era um exercício de cada vez (uma query
   // esperando a outra), o que deixava fichas com mais exercícios abrirem
   // proporcionalmente mais devagar.
-  const [allLastSets, allProgressions] = await Promise.all([
+  const [allLastSets, allProgressions, allPersonalRest] = await Promise.all([
     Promise.all(items.map(item => getLastSets(item.exercise_id))),
     Promise.all(items.map(item =>
       item.exercises.tracking_type === 'duration'
         ? null
         : getProgressionForExercise(item.exercise_id, item.target_reps, session?.id)
+    )),
+    Promise.all(items.map(item =>
+      item.exercises.tracking_type === 'duration' ? null : getPersonalRestSeconds(item.exercise_id)
     ))
   ]);
 
@@ -744,6 +755,7 @@ async function buildWorkout(){
     const isDuration = item.exercises.tracking_type === 'duration';
     const doneForExercise = existingByExercise.get(item.exercise_id);
     const progression = allProgressions[itemIndex];
+    const personalRest = allPersonalRest[itemIndex];
 
     const ex = {
       workoutExerciseId: item.id,
@@ -755,7 +767,9 @@ async function buildWorkout(){
       muscleGroup: item.exercises.muscle_group,
       movementPattern: item.exercises.movement_pattern,
       isDuration,
-      rest: item.rest_seconds,
+      rest: personalRest ?? item.rest_seconds,
+      restPlanned: item.rest_seconds,
+      restAdjusted: personalRest != null && Math.abs(personalRest - item.rest_seconds) >= 15,
       note: '',
       progression,
       sets: []
@@ -797,8 +811,11 @@ async function buildWorkout(){
   const itemExerciseIds = new Set(items.map(item => item.exercise_id));
   const extraExerciseIds = [...new Set(existingSets.map(s => s.exercise_id))].filter(id => !itemExerciseIds.has(id));
   const extraExercises = await getExercisesByIds(extraExerciseIds);
+  const extraPersonalRest = await Promise.all(
+    extraExercises.map(exercise => exercise.tracking_type === 'duration' ? null : getPersonalRestSeconds(exercise.id))
+  );
 
-  extraExercises.forEach(exercise => {
+  extraExercises.forEach((exercise, extraIndex) => {
     const doneForExercise = existingByExercise.get(exercise.id);
     const isDuration = exercise.tracking_type === 'duration';
     const maxDoneSetNumber = Math.max(...doneForExercise.keys());
@@ -813,7 +830,7 @@ async function buildWorkout(){
       muscleGroup: exercise.muscle_group,
       movementPattern: exercise.movement_pattern,
       isDuration,
-      rest: 90,
+      rest: extraPersonalRest[extraIndex] ?? 90,
       note: '',
       progression: null,
       sets: []
