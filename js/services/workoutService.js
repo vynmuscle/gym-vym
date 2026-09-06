@@ -600,6 +600,83 @@ export async function getTimeOfDayVolumeCorrelation() {
   }));
 }
 
+const REST_GAP_CAP_SECONDS = 15 * 60; // acima disso não é descanso, é interrupção (saiu do treino)
+const REST_MIN_SAMPLES = 10; // sem amostra suficiente, a média não diz nada
+
+// Descanso real (gap entre completed_at de séries seguidas do mesmo
+// exercício) x descanso planejado (rest_seconds da ficha) — só sessões de
+// ficha (workout_id não nulo), porque treino avulso não grava rest_seconds
+// em lugar nenhum. Gaps > 15min são descartados (não é descanso, é
+// interrupção — resposta de telefone, saiu do treino etc.), senão distorcem
+// a média pra cima.
+export async function getRestVsPlannedInsight() {
+  const { data: sessions, error: sessionsError } = await supabase
+    .from('workout_sessions')
+    .select('id, workout_id')
+    .not('finished_at', 'is', null)
+    .not('workout_id', 'is', null);
+  if (sessionsError) throw sessionsError;
+  if (sessions.length === 0) return null;
+
+  const workoutIdBySession = {};
+  const workoutIds = new Set();
+  for (const s of sessions) {
+    workoutIdBySession[s.id] = s.workout_id;
+    workoutIds.add(s.workout_id);
+  }
+
+  const sessionIds = sessions.map(s => s.id);
+  const [{ data: sets, error: setsError }, { data: workoutExercises, error: weError }] = await Promise.all([
+    supabase.from('session_sets').select('session_id, exercise_id, set_number, completed_at').in('session_id', sessionIds),
+    supabase.from('workout_exercises').select('workout_id, exercise_id, rest_seconds').in('workout_id', [...workoutIds])
+  ]);
+  if (setsError) throw setsError;
+  if (weError) throw weError;
+
+  const restLookup = {};
+  for (const item of workoutExercises) {
+    restLookup[`${item.workout_id}_${item.exercise_id}`] = item.rest_seconds;
+  }
+
+  const bySessionExercise = {};
+  for (const row of sets) {
+    const key = `${row.session_id}_${row.exercise_id}`;
+    if (!bySessionExercise[key]) bySessionExercise[key] = [];
+    bySessionExercise[key].push(row);
+  }
+
+  let totalActual = 0;
+  let totalPlanned = 0;
+  let sampleCount = 0;
+
+  for (const [key, rows] of Object.entries(bySessionExercise)) {
+    const [sessionId, exerciseId] = key.split('_');
+    const planned = restLookup[`${workoutIdBySession[sessionId]}_${exerciseId}`];
+    if (planned == null || planned <= 0) continue;
+
+    rows.sort((a, b) => a.set_number - b.set_number);
+    for (let i = 1; i < rows.length; i++) {
+      const gapSeconds = (new Date(rows[i].completed_at) - new Date(rows[i - 1].completed_at)) / 1000;
+      if (gapSeconds <= 0 || gapSeconds > REST_GAP_CAP_SECONDS) continue;
+      totalActual += gapSeconds;
+      totalPlanned += planned;
+      sampleCount++;
+    }
+  }
+
+  if (sampleCount < REST_MIN_SAMPLES) return null;
+
+  const avgActual = totalActual / sampleCount;
+  const avgPlanned = totalPlanned / sampleCount;
+  return {
+    avgActual,
+    avgPlanned,
+    diffSeconds: avgActual - avgPlanned,
+    diffPct: Math.round(((avgActual - avgPlanned) / avgPlanned) * 100),
+    sampleCount
+  };
+}
+
 // Extrai a faixa de reps da meta (texto livre: "8-12", "10", "até a falha").
 // min/max ficam null quando não há número pra comparar.
 function parseTargetRepsRange(targetReps) {

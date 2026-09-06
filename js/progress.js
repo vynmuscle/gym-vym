@@ -1,7 +1,7 @@
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { requireSession } from './utils/authGuard.js';
-import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals, getFeelingVolumeCorrelation, getTimeOfDayVolumeCorrelation } from './services/workoutService.js';
+import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals, getFeelingVolumeCorrelation, getTimeOfDayVolumeCorrelation, getRestVsPlannedInsight } from './services/workoutService.js';
 import { BODY_VIEWBOX, BODY_OUTLINE, MUSCLE_PATHS } from './data/bodyMuscles.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { openAiAssistant } from './aiAssistant.js';
@@ -458,3 +458,49 @@ async function renderTimeOfDayCorrelation(){
 }
 
 renderTimeOfDayCorrelation().catch(err => console.error('renderTimeOfDayCorrelation falhou:', err));
+
+function formatSeconds(s){
+  const m = Math.floor(s / 60);
+  const sec = Math.round(s % 60);
+  return m > 0 ? `${m}min ${sec}s` : `${sec}s`;
+}
+
+const restInsightPanel = document.getElementById('restInsightPanel');
+const restInsightNote = document.getElementById('restInsightNote');
+const restInsightList = document.getElementById('restInsightList');
+
+// Descanso real (gap entre séries do mesmo exercício) x planejado
+// (rest_seconds da ficha) — só aparece com amostra suficiente (ver
+// REST_MIN_SAMPLES em workoutService.js), senão a média não diz nada.
+async function renderRestInsight(){
+  const insight = await getRestVsPlannedInsight();
+  if(!insight) return;
+
+  const { avgActual, avgPlanned, diffPct } = insight;
+  const sign = diffPct >= 0 ? '+' : '';
+  restInsightNote.textContent = diffPct >= 0
+    ? `Em média, você descansa ${formatSeconds(insight.diffSeconds)} a mais que o programado (${sign}${diffPct}%).`
+    : `Em média, você descansa ${formatSeconds(-insight.diffSeconds)} a menos que o programado (${diffPct}%).`;
+
+  const maxVal = Math.max(avgActual, avgPlanned, 1);
+  const rows = [
+    { label: 'Planejado', value: avgPlanned },
+    { label: 'Real', value: avgActual }
+  ];
+
+  restInsightList.innerHTML = rows.map(row => {
+    const pct = Math.round((row.value / maxVal) * 100);
+    return `
+      <div class="feeling-row">
+        <div class="feeling-row__head">
+          <span>${row.label}</span>
+          <span class="num">${formatSeconds(row.value)}</span>
+        </div>
+        <div class="feeling-row__track"><div class="feeling-row__fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+
+  restInsightPanel.style.display = 'block';
+}
+
+renderRestInsight().catch(err => console.error('renderRestInsight falhou:', err));
