@@ -677,44 +677,6 @@ export async function getRestVsPlannedInsight() {
   };
 }
 
-const PERSONAL_REST_MIN_SAMPLES = 5;
-
-// Descanso real médio de UM exercício específico (qualquer ficha ou treino
-// avulso — aqui não compara com planejado, só mede o próprio ritmo do
-// usuário). Usado em train.js pra tocar o cronômetro no tempo que a pessoa
-// realmente costuma descansar naquele exercício, em vez do valor fixo da
-// ficha. Sem amostra suficiente, retorna null e quem chamou cai no
-// rest_seconds da ficha (ou 90s padrão, no exercício avulso).
-export async function getPersonalRestSeconds(exerciseId) {
-  const { data: sets, error } = await supabase
-    .from('session_sets')
-    .select('session_id, set_number, completed_at')
-    .eq('exercise_id', exerciseId);
-  if (error) throw error;
-  if (sets.length < 2) return null;
-
-  const bySession = {};
-  for (const row of sets) {
-    if (!bySession[row.session_id]) bySession[row.session_id] = [];
-    bySession[row.session_id].push(row);
-  }
-
-  let total = 0;
-  let count = 0;
-  for (const rows of Object.values(bySession)) {
-    rows.sort((a, b) => a.set_number - b.set_number);
-    for (let i = 1; i < rows.length; i++) {
-      const gapSeconds = (new Date(rows[i].completed_at) - new Date(rows[i - 1].completed_at)) / 1000;
-      if (gapSeconds <= 0 || gapSeconds > REST_GAP_CAP_SECONDS) continue;
-      total += gapSeconds;
-      count++;
-    }
-  }
-
-  if (count < PERSONAL_REST_MIN_SAMPLES) return null;
-  return Math.round(total / count / 15) * 15; // arredonda pra múltiplo de 15s
-}
-
 // Extrai a faixa de reps da meta (texto livre: "8-12", "10", "até a falha").
 // min/max ficam null quando não há número pra comparar.
 function parseTargetRepsRange(targetReps) {

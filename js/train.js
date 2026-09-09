@@ -8,8 +8,7 @@ import {
   createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout, findIncompleteFreeSession,
   getLastSets, getSessionSets, recordSet, deleteSessionSet, updateSessionSetNumber, swapWorkoutExerciseExercise,
   getProgressionForExercise, getPersonalRecordsMap, getUserXP, getSessionStartedAt,
-  getSubstituteSuggestions, addExerciseFromLibrary, setSessionFeeling, getExercisesByIds,
-  getPersonalRestSeconds
+  getSubstituteSuggestions, addExerciseFromLibrary, setSessionFeeling, getExercisesByIds
 } from './services/workoutService.js';
 import { showToast } from './toast.js';
 import { checkAchievements } from './achievements.js';
@@ -434,10 +433,7 @@ function openFullPicker(ei){
 // botão de substituir (não tem o que substituir, não é da ficha).
 async function addExtraExercise(newEx){
   const isDuration = newEx.tracking_type === 'duration';
-  const [lastSets, personalRest] = await Promise.all([
-    getLastSets(newEx.id),
-    isDuration ? null : getPersonalRestSeconds(newEx.id)
-  ]);
+  const lastSets = await getLastSets(newEx.id);
   const setCount = isDuration ? 1 : 3;
 
   const ex = {
@@ -450,7 +446,7 @@ async function addExtraExercise(newEx){
     muscleGroup: newEx.muscle_group,
     movementPattern: newEx.movement_pattern,
     isDuration,
-    rest: personalRest ?? 90,
+    rest: 90,
     note: '',
     progression: null,
     sets: []
@@ -668,9 +664,6 @@ function renderExerciseCard(ei){
   ex.sets.forEach((set, i) => rows += setRowHTML(ei, i + 1, set, ex.isDuration));
 
   const restLabel = ex.isDuration ? '' : `<div class="ex-rest">⏱ Descanso: ${Math.floor(ex.rest / 60)}min ${ex.rest % 60}s</div>`;
-  const restAdjustedLabel = ex.restAdjusted
-    ? `<div class="ex-rest-note">Ajustado pro seu ritmo — ficha: ${Math.floor(ex.restPlanned / 60)}min ${ex.restPlanned % 60}s</div>`
-    : '';
   const uplevelLabel = progressionLabel(ex.progression);
   const headerLabels = ex.isDuration
     ? `<div>Nº</div><div class="left">Ant.</div><div>Min</div><div>Km</div><div>Elev%</div><div>✓</div>`
@@ -689,7 +682,6 @@ function renderExerciseCard(ei){
     </div>
     ${uplevelLabel}
     ${restLabel}
-    ${restAdjustedLabel}
     <div class="sets-header${ex.isDuration ? ' duration' : ''}">${headerLabels}</div>
     <div class="sets-body" id="sets-${ei}">${rows}</div>
     <button type="button" class="add-set-btn" data-exercise="${ei}">+ Adicionar série</button>`;
@@ -738,15 +730,12 @@ async function buildWorkout(){
   // ficha em paralelo — antes era um exercício de cada vez (uma query
   // esperando a outra), o que deixava fichas com mais exercícios abrirem
   // proporcionalmente mais devagar.
-  const [allLastSets, allProgressions, allPersonalRest] = await Promise.all([
+  const [allLastSets, allProgressions] = await Promise.all([
     Promise.all(items.map(item => getLastSets(item.exercise_id))),
     Promise.all(items.map(item =>
       item.exercises.tracking_type === 'duration'
         ? null
         : getProgressionForExercise(item.exercise_id, item.target_reps, session?.id)
-    )),
-    Promise.all(items.map(item =>
-      item.exercises.tracking_type === 'duration' ? null : getPersonalRestSeconds(item.exercise_id)
     ))
   ]);
 
@@ -755,7 +744,6 @@ async function buildWorkout(){
     const isDuration = item.exercises.tracking_type === 'duration';
     const doneForExercise = existingByExercise.get(item.exercise_id);
     const progression = allProgressions[itemIndex];
-    const personalRest = allPersonalRest[itemIndex];
 
     const ex = {
       workoutExerciseId: item.id,
@@ -767,9 +755,7 @@ async function buildWorkout(){
       muscleGroup: item.exercises.muscle_group,
       movementPattern: item.exercises.movement_pattern,
       isDuration,
-      rest: personalRest ?? item.rest_seconds,
-      restPlanned: item.rest_seconds,
-      restAdjusted: personalRest != null && Math.abs(personalRest - item.rest_seconds) >= 15,
+      rest: item.rest_seconds,
       note: '',
       progression,
       sets: []
@@ -811,11 +797,8 @@ async function buildWorkout(){
   const itemExerciseIds = new Set(items.map(item => item.exercise_id));
   const extraExerciseIds = [...new Set(existingSets.map(s => s.exercise_id))].filter(id => !itemExerciseIds.has(id));
   const extraExercises = await getExercisesByIds(extraExerciseIds);
-  const extraPersonalRest = await Promise.all(
-    extraExercises.map(exercise => exercise.tracking_type === 'duration' ? null : getPersonalRestSeconds(exercise.id))
-  );
 
-  extraExercises.forEach((exercise, extraIndex) => {
+  extraExercises.forEach((exercise) => {
     const doneForExercise = existingByExercise.get(exercise.id);
     const isDuration = exercise.tracking_type === 'duration';
     const maxDoneSetNumber = Math.max(...doneForExercise.keys());
@@ -830,7 +813,7 @@ async function buildWorkout(){
       muscleGroup: exercise.muscle_group,
       movementPattern: exercise.movement_pattern,
       isDuration,
-      rest: extraPersonalRest[extraIndex] ?? 90,
+      rest: 90,
       note: '',
       progression: null,
       sets: []
@@ -1162,25 +1145,32 @@ document.addEventListener('visibilitychange', () => {
   updateRestDisplay();
 });
 
-document.getElementById('btnAddRest').addEventListener('click', () => {
-  restEndTime += 30000;
-  restOver = false;
-  clearInterval(alarmInterval);
-  restLabel.textContent = 'Descanso';
-  restSheet.classList.remove('rest-over');
-  btnSkipRest.textContent = 'Pular descanso';
+// Usado pelos botões +15s/-15s. Se o novo tempo ainda estiver no futuro,
+// volta pro estado "contando" (reinicia interval e keep-alive — se o
+// navegador já tinha throttlado/pausado o interval anterior com a aba em
+// segundo plano, só atualizar restEndTime não é suficiente pro alarme
+// disparar na hora certa). Se o novo tempo já ficou no passado (-15s zerou
+// o descanso), deixa updateRestDisplay detectar e disparar o alarme normal.
+function adjustRest(deltaMs){
+  restEndTime += deltaMs;
+  clearInterval(restInterval);
+  if(restEndTime > Date.now()){
+    restOver = false;
+    clearInterval(alarmInterval);
+    restLabel.textContent = 'Descanso';
+    restSheet.classList.remove('rest-over');
+    btnSkipRest.textContent = 'Pular descanso';
+    restInterval = setInterval(updateRestDisplay, 1000);
+    startKeepAlive();
+  }
   try {
     localStorage.setItem(REST_STORAGE_KEY, JSON.stringify({ endTime: restEndTime, exName: restExName, done: restDone, total: restTotal }));
   } catch(err) {}
   updateRestDisplay();
-  // Reinicia o interval e o keep-alive: se o navegador já tinha throttlado/
-  // pausado o setInterval anterior (aba em segundo plano por um tempo), só
-  // atualizar restEndTime não é suficiente — sem isso o alarme não dispara
-  // na hora certa depois de adicionar tempo.
-  clearInterval(restInterval);
-  restInterval = setInterval(updateRestDisplay, 1000);
-  startKeepAlive();
-});
+}
+
+document.getElementById('btnAddRest').addEventListener('click', () => adjustRest(15000));
+document.getElementById('btnSubtractRest').addEventListener('click', () => adjustRest(-15000));
 
 btnSkipRest.addEventListener('click', closeRest);
 

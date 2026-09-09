@@ -85,7 +85,6 @@ main{ padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
   min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
 }
 .ex-rest{ display: flex; align-items: center; gap: 8px; padding: 0 14px 12px; font-size: var(--gv3-text-sm); color: var(--gv3-accent-ember); font-weight: 600; }
-.ex-rest-note{ padding: 0 14px 12px; margin-top: -8px; font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); }
 .ex-uplevel{ display: flex; align-items: center; gap: 8px; padding: 0 14px 12px; font-size: var(--gv3-text-sm); color: var(--gv3-status-good); font-weight: 600; }
 .ex-uplevel--down{ color: var(--gv3-status-danger); }
 .ex-uplevel--hold{ color: var(--gv3-text-secondary); font-weight: 500; }
