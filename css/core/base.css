@@ -58,6 +58,18 @@ img, svg{ display: block; max-width: 100%; }
   font-variant-numeric: tabular-nums;
 }
 
+/* Numero-heroi: DM Mono nao tem peso bold real, entao numeros de destaque
+   (cronometro, resumo de treino, streak) usam Space Grotesk 700 em vez de
+   .gv3-mono. Antes essa regra so existia duplicada em train.css/progress.css/
+   calendar.css sob o nome .num — centralizada aqui pra valer em toda tela,
+   dashboard incluso. */
+.num{
+  font-family: var(--gv3-font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
 :focus-visible{
   outline: 2px solid var(--gv3-accent-precision);
   outline-offset: 2px;

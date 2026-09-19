@@ -28,10 +28,10 @@ label{ display: block; color: var(--gv3-text-secondary); font-size: var(--gv3-te
 
 input, select, textarea{
   width: 100%;
-  min-height: 52px;
+  min-height: 44px;
   padding: 12px;
   border: 1px solid var(--gv3-border-strong);
-  border-radius: var(--gv3-radius-sm);
+  border-radius: var(--gv3-radius-md);
   background: var(--gv3-bg-surface);
   color: var(--gv3-text-primary);
   font-size: 16px; /* >=16px evita zoom automático do iOS Safari ao focar */
@@ -45,9 +45,9 @@ input:focus{ border-color: var(--gv3-accent-precision); }
 
 .btn{
   border: 0;
-  border-radius: var(--gv3-radius-sm);
-  padding: 14px 16px;
-  min-height: 52px;
+  border-radius: var(--gv3-radius-md);
+  padding: 0 var(--gv3-space-4);
+  min-height: 44px;
   font-weight: 700;
   cursor: pointer;
   touch-action: manipulation;
@@ -55,7 +55,7 @@ input:focus{ border-color: var(--gv3-accent-precision); }
   user-select: none;
   transition: opacity var(--gv3-duration-normal) ease, transform var(--gv3-duration-normal) ease;
   margin-bottom: 8px;
-  font-size: var(--gv3-text-sm);
+  font-size: var(--gv3-text-base);
   font-family: var(--gv3-font-ui);
 }
 .btn:active{ opacity: .8; transform: scale(.97); }

@@ -170,17 +170,5 @@ a.gv3-hero__stat{ color: inherit; text-decoration: none; text-align: center; }
 .gv3-activity-item__title{ font-size: var(--gv3-text-sm); font-weight: 600; }
 .gv3-activity-item__sub{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); margin-top: 2px; }
 
-/* FAB de IA ------------------------------------------------------------ */
-.gv3-ai-fab{
-  position: fixed;
-  right: var(--gv3-space-4);
-  bottom: calc(96px + env(safe-area-inset-bottom));
-  width: 52px; height: 52px;
-  border-radius: var(--gv3-radius-pill);
-  background: var(--gv3-bg-card-raised);
-  border: 1px solid var(--gv3-border-strong);
-  box-shadow: var(--gv3-shadow-lg);
-  display: flex; align-items: center; justify-content: center;
-  z-index: var(--gv3-z-nav);
-  color: var(--gv3-accent-precision);
-}
+/* FAB de IA: usa .gv-fab (css/core/overlays.css) — classe unica compartilhada
+   por todas as telas com o botao "Perguntar a IA", sem duplicar a regra. */
