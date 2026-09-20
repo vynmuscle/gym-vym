@@ -17,6 +17,8 @@ import { icon } from './icons.js';
 import { openAiAssistant } from './aiAssistant.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { CHECKIN_ACK, getTodayCheckin, saveTodayCheckin } from './services/checkinService.js';
+import { listMeasurements } from './services/bodyService.js';
+import { listPhotos } from './services/photosService.js';
 
 const user = await requireSession('./login.html');
 initPWA();
@@ -47,6 +49,9 @@ const checkinOptions = document.getElementById('checkinOptions');
 const checkinAck = document.getElementById('checkinAck');
 const insightCard = document.getElementById('insightCard');
 const insightText = document.getElementById('insightText');
+const photoReminderCard = document.getElementById('photoReminderCard');
+const photoReminderText = document.getElementById('photoReminderText');
+const btnDismissPhotoReminder = document.getElementById('btnDismissPhotoReminder');
 const bodyValue = document.getElementById('bodyValue');
 const weightChart = document.getElementById('weightChart');
 const recentActivityCard = document.getElementById('recentActivityCard');
@@ -242,6 +247,49 @@ function renderInsight({ weekCount, weeklyGoal, streak, recovery }){
   insightCard.style.display = 'block';
 }
 
+const PHOTO_REMINDER_INTERVAL_DAYS = 30;
+
+function dismissKey(userId){
+  return `gymvym_photo_reminder_dismissed_${userId}`;
+}
+
+// Lembrete de registro fotográfico + medidas: some sozinho se já tiver
+// algum registro (foto ou medida) nos últimos 30 dias. "Depois" só adia
+// até o mês seguinte (não silencia pra sempre) — guardado no aparelho, sem
+// precisar de tabela/coluna nova nem de notificação push.
+async function renderPhotoReminder(){
+  const [measurements, photos] = await Promise.all([
+    listMeasurements(),
+    listPhotos(user.id)
+  ]);
+
+  const lastMeasureDate = measurements.length ? measurements[measurements.length - 1].measured_at : null;
+  const lastPhotoDate = photos.length ? photos[0].taken_at : null;
+  const lastDate = [lastMeasureDate, lastPhotoDate].filter(Boolean).sort().pop() || null;
+  const daysSince = lastDate ? Math.floor((Date.now() - new Date(lastDate)) / 86400000) : Infinity;
+
+  if(daysSince < PHOTO_REMINDER_INTERVAL_DAYS){
+    photoReminderCard.style.display = 'none';
+    return;
+  }
+
+  const monthKey = new Date().toISOString().slice(0, 7);
+  if(localStorage.getItem(dismissKey(user.id)) === monthKey){
+    photoReminderCard.style.display = 'none';
+    return;
+  }
+
+  photoReminderText.textContent = lastDate
+    ? `Já fazem ${daysSince} dias desde o último registro de fotos/medidas. Hora de atualizar.`
+    : 'Você ainda não tem registro fotográfico nem medidas guardados. Bora começar?';
+  photoReminderCard.style.display = 'block';
+
+  btnDismissPhotoReminder.addEventListener('click', () => {
+    localStorage.setItem(dismissKey(user.id), monthKey);
+    photoReminderCard.style.display = 'none';
+  }, { once: true });
+}
+
 function showCheckinAck(feeling){
   checkinOptions.style.display = 'none';
   checkinAck.textContent = CHECKIN_ACK[feeling] || 'Anotado!';
@@ -367,5 +415,6 @@ try { renderCheckin(trainedToday); } catch(err) { console.error('renderCheckin f
 
 renderBody().catch(err => console.error('renderBody falhou:', err));
 renderRecentActivity();
+renderPhotoReminder().catch(err => console.error('renderPhotoReminder falhou:', err));
 
 btnAskAI.addEventListener('click', () => openAiAssistant());
