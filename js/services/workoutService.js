@@ -252,8 +252,15 @@ export async function getSessionSets(sessionId) {
   return data;
 }
 
+// Upsert (não insert) na chave session_id+exercise_id+set_number: reenviar a
+// mesma série (retry depois de timeout, toque duplo no ✓) atualiza a linha
+// em vez de duplicar — ver constraint session_sets_session_exercise_set_unique.
 export async function recordSet(userId, payload) {
-  const { data, error } = await supabase.from('session_sets').insert({ ...payload, user_id: userId }).select().single();
+  const { data, error } = await supabase
+    .from('session_sets')
+    .upsert({ ...payload, user_id: userId }, { onConflict: 'session_id,exercise_id,set_number' })
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }

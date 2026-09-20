@@ -3,6 +3,7 @@ import { initPWA } from './pwa.js';
 import { requireSession } from './utils/authGuard.js';
 import { openExercisePicker } from './exercisePicker.js';
 import { queueSet, flushQueue, onSetSynced, removeQueuedSet, renumberQueuedSet } from './services/offlineQueue.js';
+import { withTimeout } from './utils/withTimeout.js';
 import {
   getWorkout, listWorkoutExercises,
   createWorkoutSession, finishWorkoutSession, findIncompleteSessionForWorkout, findIncompleteFreeSession,
@@ -985,7 +986,11 @@ async function deleteSet(ei, setNumber){
 }
 
 async function completeSet(ei, setNumber, row){
-  if(row.classList.contains('completed')) return;
+  // Trava contra toque duplo: 'completed' só entra depois do await lá
+  // embaixo, então um segundo toque enquanto o primeiro ainda está gravando
+  // (sinal lento) passava direto e mandava a série duas vezes.
+  if(row.classList.contains('completed') || row.dataset.saving === '1') return;
+  row.dataset.saving = '1';
 
   const ex = exercisesData[ei];
   const noteValue = ex.note?.trim() || null;
@@ -1023,11 +1028,12 @@ async function completeSet(ei, setNumber, row){
 
   let pending = false;
   try {
-    await recordSet(user.id, payload);
+    await withTimeout(recordSet(user.id, payload));
   } catch(err) {
     queueSet(user.id, payload, { ei, setNumber });
     pending = true;
   }
+  delete row.dataset.saving;
 
   ex.sets[setNumber - 1].completed = true;
   row.classList.add('completed');
@@ -1275,6 +1281,12 @@ function updateElapsedDisplay(){
 }
 
 setInterval(updateElapsedDisplay, 1000);
+
+// Tenta sincronizar a fila offline periodicamente durante o treino — o
+// evento 'online' do navegador não dispara em sinal de celular fraco
+// (aparece "conectado" mas sem dados de verdade), então sem isso a série
+// pendente só sincronizaria quando o app fosse reaberto.
+setInterval(() => { flushQueue().catch(() => {}); }, 20000);
 
 // Navegadores throttlam/pausam setInterval com a tela apagada ou o app em
 // segundo plano — o relógio parece "travar" até voltar a foco. Como o

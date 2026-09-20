@@ -1,4 +1,5 @@
 import { recordSet } from './workoutService.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const QUEUE_KEY = 'gymvym_pending_sets';
 
@@ -71,7 +72,7 @@ export async function flushQueue() {
 
     for (const item of queue) {
       try {
-        await recordSet(item.userId, item.payload);
+        await withTimeout(recordSet(item.userId, item.payload));
         writeQueue(readQueue().filter(q => q.localId !== item.localId));
         listeners.forEach(cb => cb(item));
       } catch (err) {
