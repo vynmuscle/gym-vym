@@ -374,20 +374,31 @@ export async function getLibraryGroupCounts() {
   return { counts, images };
 }
 
+// Normaliza nome pra comparar (ignora acento, maiúscula/minúscula e espaço
+// extra) — evita duplicar exercício quando o texto da biblioteca vem escrito
+// diferente do que o usuário já tinha cadastrado (ex.: "halter" x "halteres").
+function normalizeExerciseName(name) {
+  return name
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
 export async function addExerciseFromLibrary(userId, libEx) {
   const targetName = libEx.name_pt || libEx.name;
 
-  const orNames = libEx.name_pt && libEx.name_pt !== libEx.name
-    ? `name.ilike.${libEx.name},name.ilike.${libEx.name_pt}`
-    : `name.ilike.${libEx.name}`;
+  const candidateNames = new Set(
+    [libEx.name, libEx.name_pt].filter(Boolean).map(normalizeExerciseName)
+  );
 
-  const { data: existing, error: findErr } = await supabase
+  const { data: mine, error: findErr } = await supabase
     .from('exercises')
     .select('*')
-    .eq('user_id', userId)
-    .or(orNames)
-    .maybeSingle();
+    .eq('user_id', userId);
   if (findErr) throw findErr;
+
+  const existing = mine.find(ex => candidateNames.has(normalizeExerciseName(ex.name)));
   if (existing) return existing;
 
   const { data, error } = await supabase
