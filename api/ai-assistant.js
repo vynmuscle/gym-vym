@@ -5,7 +5,7 @@ import { MODEL_NAME } from './_aiConfig.js';
 // Limites de tamanho pra pergunta e pro contexto — evita abuso (custo de
 // tokens) e prompt injection via texto gigante escondido em algum campo.
 const MAX_QUESTION_LENGTH = 500;
-const MAX_CONTEXT_CHARS = 4000;
+const MAX_CONTEXT_CHARS = 7000;
 
 export default async function handler(req, res) {
   const userId = await authenticateRequest(req, res);
@@ -51,6 +51,8 @@ Pergunta do usuário: "${question}"
 Se os dados incluírem "disposicaoHoje", leve isso em conta na resposta quando fizer sentido (ex.: se o usuário perguntar como deve encarar o treino de hoje e a disposição estiver ruim ou de cansaço, sugira cautela — sem prescrever carga/reps, isso continua proibido pela regra abaixo).
 
 Se os dados incluírem "recuperacaoPorGrupo" com "diasDesdeUltimo" alto pra algum grupo, ou "exerciciosEstagnados" (peso não subiu nas últimas 3 sessões desse exercício), e a pergunta for sobre progresso geral/o que melhorar, cite isso como ponto de atenção — sem prescrever carga/reps novas, só apontando o padrão.
+
+Se os dados incluírem "progressaoExercicios" (histórico real de peso/reps/RPE por sessão de cada exercício treinado recentemente, mais antigo primeiro), USE ESSES NÚMEROS pra avaliar progressão exercício por exercício quando perguntarem sobre isso — não diga que não tem dado suficiente se o exercício aparecer aí. Compare peso e reps entre as sessões listadas: peso ou reps subindo é progressão real; estável por 3+ sessões é estagnação; caindo é retrocesso (considere RPE alto como possível causa, se presente). Não confunda com "exerciciosEstagnados", que é só um resumo — "progressaoExercicios" tem os números de verdade.
 
 Regras OBRIGATÓRIAS:
 - Você não é médico, fisioterapeuta nem educador físico licenciado. Nunca diagnostique dor, lesão ou qualquer sintoma físico — se o usuário mencionar dor, lesão, tontura, falta de ar anormal ou qualquer sintoma preocupante, oriente a procurar um profissional de saúde antes de continuar treinando, e não dê mais nenhum conselho de treino sobre isso.
