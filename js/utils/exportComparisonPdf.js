@@ -2,7 +2,7 @@
 // gerado no próprio navegador via jsPDF (CDN sob demanda -- mesmo padrão do
 // Motion One em js/core/motion.js) -- sem backend novo pra isso.
 export async function exportComparisonPdf({ pairs, conclusion }) {
-  const { jsPDF } = await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.4/+esm');
+  const { jsPDF } = await import('https://cdn.jsdelivr.net/npm/jspdf@4.2.1/+esm');
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
