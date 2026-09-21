@@ -1,30 +1,8 @@
 import { supabase } from '../supabaseClient.js';
 import {
   getMuscleRecovery, getSessionDatesInRange, listCompletedSessions, getUserXP,
-  getRecentlyTrainedExercises, getExerciseProgress
+  getRecentlyTrainedExercises, getExerciseProgress, getStagnantExercises
 } from './workoutService.js';
-
-// Limite de exercícios verificados por chamada -- evita N+1 grande (só
-// dispara quando o usuário pede a avaliação, não em toda tela de Progresso).
-const MAX_STAGNATION_CHECKS = 8;
-
-// "Estagnado" = peso máximo não subiu nas últimas 3 sessões desse exercício.
-// Sinal aproximado (não usa target_reps/RPE como o motor de progressão
-// de verdade) -- serve só pra alimentar o assistente, não decide nada.
-async function findStagnantExercises() {
-  const recent = await getRecentlyTrainedExercises(21);
-  const bounded = recent.slice(0, MAX_STAGNATION_CHECKS);
-
-  const results = await Promise.all(bounded.map(async ({ id, name }) => {
-    const progress = await getExerciseProgress(id);
-    const last3 = progress.filter(s => s.maxWeight > 0).slice(-3);
-    if (last3.length < 3) return null;
-    const stagnant = last3.every(s => s.maxWeight <= last3[0].maxWeight);
-    return stagnant ? name : null;
-  }));
-
-  return results.filter(Boolean);
-}
 
 // Número de sessões (peso/reps) por exercício que o assistente enxerga.
 // Antes o contexto só mandava um "estagnado sim/não" -- sem os números, a
@@ -93,16 +71,17 @@ export async function buildAssistantContext() {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
-  const [{ data: sd }, recovery, weekSessions, recentSessions, xp, exerciciosEstagnados, progressaoExercicios] = await Promise.all([
+  const [{ data: sd }, recovery, weekSessions, recentSessions, xp, stagnant, progressaoExercicios] = await Promise.all([
     supabase.auth.getSession(),
     getMuscleRecovery(),
     getSessionDatesInRange(weekStart.toISOString(), weekEnd.toISOString()),
     listCompletedSessions(8),
     getUserXP(),
-    findStagnantExercises(),
+    getStagnantExercises(),
     buildExerciseTrends()
   ]);
 
+  const exerciciosEstagnados = stagnant.map(e => e.name);
   const checkin = todaysCheckin(sd.session?.user?.id);
 
   return {

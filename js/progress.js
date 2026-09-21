@@ -1,7 +1,7 @@
 import { renderNav } from './navigation.js';
 import { initPWA } from './pwa.js';
 import { requireSession } from './utils/authGuard.js';
-import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals, getFeelingVolumeCorrelation, getTimeOfDayVolumeCorrelation, getRestVsPlannedInsight } from './services/workoutService.js';
+import { listExercisesWithProgress, getExerciseProgress, getMuscleVolumeTotals, getFeelingVolumeCorrelation, getTimeOfDayVolumeCorrelation, getRestVsPlannedInsight, getStagnantExercises } from './services/workoutService.js';
 import { BODY_VIEWBOX, BODY_OUTLINE, MUSCLE_PATHS } from './data/bodyMuscles.js';
 import { escapeHtml } from './utils/escapeHtml.js';
 import { openAiAssistant } from './aiAssistant.js';
@@ -23,6 +23,8 @@ const metricVolume = document.getElementById('metricVolume');
 const periodSelect = document.getElementById('periodSelect');
 const chartContainer = document.getElementById('chartContainer');
 const chartTooltip = document.getElementById('chartTooltip');
+const stagnantPanel = document.getElementById('stagnantPanel');
+const stagnantList = document.getElementById('stagnantList');
 
 document.getElementById('btnAskAI').addEventListener('click', () => openAiAssistant());
 document.getElementById('btnEvaluateTraining').addEventListener('click', () =>
@@ -299,6 +301,36 @@ exerciseSelect.innerHTML = '<option value="">Selecione...</option>' +
 if(exercises.length === 0){
   showEmptyState('Você ainda não registrou nenhuma série. Treine primeiro pra ver seu progresso aqui!');
 }
+
+// Visão geral de "carga parada" sem precisar escolher exercício por
+// exercício no dropdown -- mesmo critério (getStagnantExercises) que o
+// assistente usa, fonte única entre tela e IA.
+async function renderStagnantList(){
+  const stagnant = await getStagnantExercises();
+  if(stagnant.length === 0){
+    stagnantPanel.style.display = 'none';
+    return;
+  }
+
+  stagnantList.innerHTML = stagnant.map(ex => `
+    <button type="button" class="stagnant-row" data-id="${ex.id}">
+      <span class="stagnant-row__name">${escapeHtml(ex.name)}</span>
+      <span class="stagnant-row__meta">${ex.currentWeight}kg · ${formatDateShort(ex.lastDate)}</span>
+    </button>`).join('');
+
+  stagnantList.querySelectorAll('.stagnant-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.dataset.id;
+      exerciseSelect.value = id;
+      loadExerciseProgress(id);
+      exerciseSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+
+  stagnantPanel.style.display = 'block';
+}
+
+renderStagnantList().catch(err => console.error('renderStagnantList falhou:', err));
 
 // ── Mapa de calor corporal (grupos mais treinados) ──────────────────────
 const GROUP_LABELS = {

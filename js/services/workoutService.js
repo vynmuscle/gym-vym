@@ -504,6 +504,32 @@ export async function getExerciseProgress(exerciseId) {
   return [...bySession.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
+// Exercícios de carga (peso/reps -- cardio fica de fora) cujo peso máximo
+// não subiu nas últimas 3 sessões. Sinal aproximado (não usa target_reps/RPE
+// como o motor de progressão de verdade em progressionService.js) -- serve
+// pra dar uma visão geral (tela Progresso, assistente), não decide nada.
+// Fonte única: tanto a tela quanto o assistente usam essa mesma função, pra
+// não ter dois critérios diferentes de "estagnado" no app.
+const MAX_STAGNATION_CANDIDATES = 20;
+
+export async function getStagnantExercises() {
+  const recent = await getRecentlyTrainedExercises(30);
+  const bounded = recent.slice(0, MAX_STAGNATION_CANDIDATES);
+
+  const results = await Promise.all(bounded.map(async ({ id, name }) => {
+    const progress = await getExerciseProgress(id);
+    const last3 = progress.filter(s => s.maxWeight > 0).slice(-3);
+    if (last3.length < 3) return null;
+    const stagnant = last3.every(s => s.maxWeight <= last3[0].maxWeight);
+    if (!stagnant) return null;
+
+    const lastSession = last3[last3.length - 1];
+    return { id, name, currentWeight: lastSession.maxWeight, lastDate: lastSession.date };
+  }));
+
+  return results.filter(Boolean);
+}
+
 // Volume (kg) total por grupo muscular nos últimos N dias — pro mapa de
 // calor corporal em Progresso. Cardio fica de fora (não tem carga).
 export async function getMuscleVolumeTotals(days = 56) {

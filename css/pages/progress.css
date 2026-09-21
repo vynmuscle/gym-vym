@@ -44,6 +44,17 @@
 .heat-legend__label{ font-size: var(--gv3-text-xs); color: var(--gv3-text-secondary); }
 .heat-legend__bar{ width: 120px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2a2d36, #e0a83f, #FF5A36); }
 
+.stagnant-row{
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  width: 100%; text-align: left; font: inherit; color: inherit;
+  background: var(--gv3-bg-card-raised); border: 1px solid var(--gv3-border);
+  border-radius: var(--gv3-radius-md); padding: 10px 12px; margin-bottom: 8px;
+  min-height: 52px; cursor: pointer;
+}
+.stagnant-row:last-child{ margin-bottom: 0; }
+.stagnant-row__name{ font-size: var(--gv3-text-sm); }
+.stagnant-row__meta{ font-size: var(--gv3-text-xs); color: var(--gv3-text-muted); white-space: nowrap; }
+
 .feeling-row{ margin-bottom: 12px; }
 .feeling-row__head{ display: flex; justify-content: space-between; font-size: var(--gv3-text-sm); margin-bottom: 4px; }
 .feeling-row__count{ color: var(--gv3-text-muted); }
