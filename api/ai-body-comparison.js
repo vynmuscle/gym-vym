@@ -36,9 +36,8 @@ export default async function handler(req, res) {
   const userId = await authenticateRequest(req, res);
   if (!userId) return;
 
-  // 9 -- cada rodada de comparação usa até 4 chamadas (3 pares + 1
-  // conclusão final), então 5/dia mal dava nem pra 1 rodada completa.
-  const allowed = await checkRateLimit(userId, 'ai-body-comparison', 9);
+  // 40 -- ~10 rodadas completas por dia (3 pares + 1 conclusão cada).
+  const allowed = await checkRateLimit(userId, 'ai-body-comparison', 40);
   if (!allowed) return res.status(429).json({ error: 'Limite diário de análises por IA atingido. Tente novamente amanhã.' });
 
   if (req.body?.mode === 'summary') return handleSummary(req, res);
