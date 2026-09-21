@@ -19,14 +19,29 @@ Regras:
 - Responda em texto corrido dividido em parágrafos curtos (um por tópico acima), sem markdown, sem listas numeradas, sem JSON — linguagem direta, sem enrolação, máximo ~200 palavras.
 - NUNCA mencione datas, meses ou anos específicos — você não tem como saber quando cada foto foi tirada só pela imagem (o app já mostra a data certa na tela). Refira-se só a "a foto mais antiga" e "a foto mais recente".`;
 
+const MAX_SUMMARY_ANALYSES = 3;
+const MAX_SUMMARY_TEXT_LENGTH = 3000;
+
+const SUMMARY_PROMPT_HEADER = `Você é o mesmo coach de fisiculturismo/preparação física de antes. Abaixo estão as análises visuais individuais de até 3 pares de fotos de progresso do mesmo aluno -- cada par compara a mesma pose/ângulo entre uma sessão mais antiga e uma mais recente (ex: frente, lado, costas). Sintetize isso numa conclusão geral única, em português.
+
+Regras:
+- Não repita cada análise ponto a ponto -- cruze as informações: um sinal que aparece em TODAS as poses é um padrão real (ex: menos gordura no abdômen visível de frente e de lado); um sinal que aparece só numa pose pode ser ângulo/luz/postura naquele clique, não mudança de verdade -- aponte essa diferença quando notar.
+- Dê um veredito geral sobre definição muscular, composição corporal e postura, cruzando as 3 leituras.
+- Se as análises se contradizem ou o conjunto é inconclusivo em algum ponto, diga isso em vez de forçar uma conclusão limpa.
+- Não dê conselhos médicos nem prescreva treino/dieta.
+- Texto corrido, sem markdown, sem listas numeradas, máximo ~150 palavras.
+- NUNCA mencione datas específicas -- refira-se a "a comparação mais recente"/"a foto mais antiga" se precisar diferenciar.`;
+
 export default async function handler(req, res) {
   const userId = await authenticateRequest(req, res);
   if (!userId) return;
 
-  // 9 -- cada comparação de 3+3 fotos usa 3 chamadas (uma por par), então
-  // 5/dia mal dava pra 1 rodada completa. 9 cobre umas 3 rodadas por dia.
+  // 9 -- cada rodada de comparação usa até 4 chamadas (3 pares + 1
+  // conclusão final), então 5/dia mal dava nem pra 1 rodada completa.
   const allowed = await checkRateLimit(userId, 'ai-body-comparison', 9);
   if (!allowed) return res.status(429).json({ error: 'Limite diário de análises por IA atingido. Tente novamente amanhã.' });
+
+  if (req.body?.mode === 'summary') return handleSummary(req, res);
 
   try {
     const { image1_base64, image2_base64 } = req.body;
@@ -47,6 +62,64 @@ export default async function handler(req, res) {
     console.error(err);
     return res.status(500).json({ error: 'Erro interno' });
   }
+}
+
+// Conclusão geral cruzando as análises individuais já feitas (texto, sem
+// reenviar as imagens) -- chamada separada do handler principal só pra não
+// misturar a validação de payload (imagens x textos) num handler só.
+async function handleSummary(req, res) {
+  try {
+    const { analyses } = req.body;
+
+    if (!Array.isArray(analyses) || analyses.length === 0 || analyses.length > MAX_SUMMARY_ANALYSES) {
+      return res.status(400).json({ error: `Envie de 1 a ${MAX_SUMMARY_ANALYSES} análises pra sintetizar.` });
+    }
+
+    const safeAnalyses = analyses.map(a => String(a || '').slice(0, MAX_SUMMARY_TEXT_LENGTH));
+    const prompt = `${SUMMARY_PROMPT_HEADER}\n\n${safeAnalyses.map((a, i) => `Análise da pose ${i + 1}:\n${a}`).join('\n\n')}`;
+
+    const conclusion = await callClaudeForSummary(prompt);
+
+    if (!conclusion) {
+      return res.status(502).json({ error: 'Não consegui gerar a conclusão agora. Tente de novo em instantes.' });
+    }
+
+    return res.status(200).json({ conclusion });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro interno' });
+  }
+}
+
+async function callClaudeForSummary(prompt, attempt = 1) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: MODEL_NAME,
+      max_tokens: 600,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  if (!response.ok) {
+    if (attempt < 2) return callClaudeForSummary(prompt, attempt + 1);
+    return null;
+  }
+
+  const data = await response.json();
+  const text = data.content?.[0]?.text?.trim();
+  if (!text) {
+    if (attempt < 2) return callClaudeForSummary(prompt, attempt + 1);
+    return null;
+  }
+
+  return text;
 }
 
 async function callClaudeForComparison(image1, image2, attempt = 1) {

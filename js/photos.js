@@ -39,6 +39,9 @@ const compareViewer = document.getElementById('compareViewer');
 const btnCloseCompare = document.getElementById('btnCloseCompare');
 const comparePairs = document.getElementById('comparePairs');
 const btnAnalyzeCompare = document.getElementById('btnAnalyzeCompare');
+const compareConclusion = document.getElementById('compareConclusion');
+const compareConclusionText = document.getElementById('compareConclusionText');
+const btnExportPdf = document.getElementById('btnExportPdf');
 
 // Comparação sempre em pares por data (ex: 3 fotos de hoje x as mesmas 3
 // poses de uma sessão anterior) -- 6 = o uso real (3+3), mas aceita
@@ -320,6 +323,7 @@ btnDeletePhoto.addEventListener('click', async () => {
 });
 
 let comparisonPairs = []; // [{ older, newer }] — pares em comparação, pra análise por IA
+let lastConclusion = null; // texto da conclusão geral (null até gerar/se falhar) — usado na exportação em PDF
 
 // Agrupa a seleção em pares "mais antiga x mais recente" por data, casando
 // pela ordem dentro do dia (sort_order — a mesma ordem de sempre: frente,
@@ -374,6 +378,10 @@ btnViewCompare.addEventListener('click', () => {
 
   btnAnalyzeCompare.disabled = false;
   btnAnalyzeCompare.textContent = analyzeLabel(pairs.length);
+  compareConclusion.style.display = 'none';
+  compareConclusionText.textContent = '';
+  lastConclusion = null;
+  btnExportPdf.style.display = 'none';
 
   compareBar.style.display = 'none';
   compareViewer.classList.add('open');
@@ -402,6 +410,12 @@ btnAnalyzeCompare.addEventListener('click', async () => {
   if(comparisonPairs.length === 0) return;
 
   btnAnalyzeCompare.disabled = true;
+  compareConclusion.style.display = 'none';
+  compareConclusionText.textContent = '';
+  lastConclusion = null;
+  btnExportPdf.style.display = 'none';
+
+  const succeededTexts = [];
 
   for(let i = 0; i < comparisonPairs.length; i++){
     const pair = comparisonPairs[i];
@@ -429,6 +443,7 @@ btnAnalyzeCompare.addEventListener('click', async () => {
 
       const data = await res.json();
       block.textContent = res.ok ? data.analysis : (data.error || 'Não consegui analisar essa comparação.');
+      if(res.ok) succeededTexts.push(data.analysis);
 
       // Limite diário bateu no meio do lote -- para aqui, o resto fica sem
       // análise em vez de martelar o endpoint só pra repetir o mesmo erro.
@@ -442,6 +457,79 @@ btnAnalyzeCompare.addEventListener('click', async () => {
 
   btnAnalyzeCompare.disabled = false;
   btnAnalyzeCompare.textContent = analyzeLabel(comparisonPairs.length);
+
+  // Conclusão geral só faz sentido com pelo menos 1 análise de verdade --
+  // com 1 só ela vira basicamente a mesma análise reformulada, mas ainda
+  // assim cruza o texto em vez de simplesmente copiar.
+  if(succeededTexts.length > 0){
+    compareConclusion.style.display = 'block';
+    compareConclusionText.textContent = 'Gerando conclusão geral...';
+
+    try {
+      const { data: sd } = await supabase.auth.getSession();
+      const token = sd.session?.access_token;
+
+      const res = await fetch('/api/ai-body-comparison', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ mode: 'summary', analyses: succeededTexts })
+      });
+
+      const data = await res.json();
+      if(res.ok){
+        lastConclusion = data.conclusion;
+        compareConclusionText.textContent = data.conclusion;
+      } else {
+        compareConclusionText.textContent = data.error || 'Não consegui gerar a conclusão geral.';
+      }
+    } catch(err){
+      compareConclusionText.textContent = 'Erro de conexão. Tente de novo.';
+    }
+
+    btnExportPdf.style.display = 'block';
+  }
+});
+
+// Exporta em PDF o que já está na tela (fotos + análises + conclusão) --
+// não depende de ter chamado a IA de novo, só lê o que os blocos mostram
+// no momento do clique.
+btnExportPdf.addEventListener('click', async () => {
+  if(comparisonPairs.length === 0) return;
+
+  btnExportPdf.disabled = true;
+  btnExportPdf.textContent = 'Gerando PDF...';
+
+  try {
+    const { exportComparisonPdf } = await import('./utils/exportComparisonPdf.js');
+
+    const pairsData = await Promise.all(comparisonPairs.map(async (pair, i) => {
+      const block = comparePairs.querySelector(`.compare-pair[data-pair-index="${i}"]`);
+      const analysisText = block.querySelector('.compare-analysis')?.textContent || '';
+      const [olderImg, newerImg] = block.querySelectorAll('img');
+
+      const [olderBase64, newerBase64] = await Promise.all([
+        urlToBase64(signedUrls[pair.older.storage_path]),
+        urlToBase64(signedUrls[pair.newer.storage_path])
+      ]);
+
+      return {
+        olderBase64, newerBase64,
+        olderRatio: olderImg.naturalHeight / olderImg.naturalWidth,
+        newerRatio: newerImg.naturalHeight / newerImg.naturalWidth,
+        olderLabel: formatDateBR(pair.older.taken_at),
+        newerLabel: formatDateBR(pair.newer.taken_at),
+        analysisText
+      };
+    }));
+
+    await exportComparisonPdf({ pairs: pairsData, conclusion: lastConclusion });
+  } catch(err){
+    console.error('exportComparisonPdf falhou:', err);
+    showMessage('Não consegui gerar o PDF. Tente de novo.', 'warning');
+  } finally {
+    btnExportPdf.disabled = false;
+    btnExportPdf.textContent = '⬇️ Exportar PDF';
+  }
 });
 
 async function reload(){
