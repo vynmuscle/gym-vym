@@ -86,6 +86,8 @@
 .viewer-nav--prev{ left: 8px; }
 .viewer-nav--next{ right: 8px; }
 
+.compare-pair{ margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--gv3-border); }
+.compare-pair:last-of-type{ border-bottom: none; margin-bottom: 8px; }
 .compare-row{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
 .compare-diff{ text-align: center; font-size: var(--gv3-text-sm); color: var(--gv3-accent-precision); font-weight: 700; margin-bottom: var(--gv3-space-5); }
 .compare-analysis{

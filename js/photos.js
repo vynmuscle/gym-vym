@@ -37,13 +37,13 @@ const btnViewerPrev = document.getElementById('btnViewerPrev');
 const btnViewerNext = document.getElementById('btnViewerNext');
 const compareViewer = document.getElementById('compareViewer');
 const btnCloseCompare = document.getElementById('btnCloseCompare');
-const compareImg1 = document.getElementById('compareImg1');
-const compareImg2 = document.getElementById('compareImg2');
-const compareDate1 = document.getElementById('compareDate1');
-const compareDate2 = document.getElementById('compareDate2');
-const compareDiff = document.getElementById('compareDiff');
+const comparePairs = document.getElementById('comparePairs');
 const btnAnalyzeCompare = document.getElementById('btnAnalyzeCompare');
-const compareAnalysis = document.getElementById('compareAnalysis');
+
+// Comparação sempre em pares por data (ex: 3 fotos de hoje x as mesmas 3
+// poses de uma sessão anterior) -- 6 = o uso real (3+3), mas aceita
+// qualquer par de grupos com a mesma quantidade (2, 4, 6...).
+const MAX_COMPARE_SELECTION = 6;
 
 let photos = [];
 let signedUrls = {};
@@ -152,8 +152,8 @@ btnSavePhoto.addEventListener('click', async () => {
 });
 
 function updateCompareBar(){
-  compareCount.textContent = `${selectedIds.length}/2 selecionadas`;
-  btnViewCompare.disabled = selectedIds.length !== 2;
+  compareCount.textContent = `${selectedIds.length}/${MAX_COMPARE_SELECTION} selecionadas`;
+  btnViewCompare.disabled = selectedIds.length < 2 || selectedIds.length % 2 !== 0;
 }
 
 btnCompare.addEventListener('click', () => {
@@ -169,7 +169,7 @@ function toggleSelect(photo){
   if(selectedIds.includes(photo.id)){
     selectedIds = selectedIds.filter(id => id !== photo.id);
   } else {
-    if(selectedIds.length >= 2) selectedIds.shift();
+    if(selectedIds.length >= MAX_COMPARE_SELECTION) selectedIds.shift();
     selectedIds.push(photo.id);
   }
   updateCompareBar();
@@ -319,26 +319,61 @@ btnDeletePhoto.addEventListener('click', async () => {
   await reload();
 });
 
-let comparePair = null; // { older, newer } — fotos em comparação, pra análise por IA
+let comparisonPairs = []; // [{ older, newer }] — pares em comparação, pra análise por IA
+
+// Agrupa a seleção em pares "mais antiga x mais recente" por data, casando
+// pela ordem dentro do dia (sort_order — a mesma ordem de sempre: frente,
+// lado, costas etc.). Só funciona com exatamente 2 datas selecionadas e a
+// mesma quantidade de fotos em cada uma; senão não dá pra parear sozinho.
+function buildComparisonPairs(selected){
+  const dates = [...new Set(selected.map(p => p.taken_at))].sort();
+  if(dates.length !== 2) return null;
+
+  const [olderDate, newerDate] = dates;
+  const byOrder = (a, b) => a.sort_order - b.sort_order;
+  const olderGroup = selected.filter(p => p.taken_at === olderDate).sort(byOrder);
+  const newerGroup = selected.filter(p => p.taken_at === newerDate).sort(byOrder);
+  if(olderGroup.length !== newerGroup.length) return null;
+
+  return olderGroup.map((older, i) => ({ older, newer: newerGroup[i] }));
+}
+
+function analyzeLabel(n){
+  return n > 1 ? `✨ Analisar ${n} comparações` : '✨ Análise por IA';
+}
 
 btnViewCompare.addEventListener('click', () => {
-  if(selectedIds.length !== 2) return;
-  const [a, b] = selectedIds.map(id => photos.find(p => p.id === id));
-  const [older, newer] = new Date(a.taken_at) <= new Date(b.taken_at) ? [a, b] : [b, a];
-  comparePair = { older, newer };
+  const selected = selectedIds.map(id => photos.find(p => p.id === id));
+  const pairs = buildComparisonPairs(selected);
 
-  compareImg1.src = signedUrls[older.storage_path] || '';
-  compareImg2.src = signedUrls[newer.storage_path] || '';
-  compareDate1.textContent = formatDateBR(older.taken_at);
-  compareDate2.textContent = formatDateBR(newer.taken_at);
+  if(!pairs){
+    showMessage('Selecione a mesma quantidade de fotos em exatamente 2 datas pra comparar (ex: 3 fotos de hoje + as mesmas 3 poses de uma sessão anterior).', 'warning');
+    return;
+  }
 
-  const days = Math.round((new Date(newer.taken_at) - new Date(older.taken_at)) / 86400000);
-  compareDiff.textContent = `${days} ${days === 1 ? 'dia' : 'dias'} de diferença`;
+  comparisonPairs = pairs;
 
-  compareAnalysis.style.display = 'none';
-  compareAnalysis.textContent = '';
+  comparePairs.innerHTML = pairs.map((pair, i) => {
+    const days = Math.round((new Date(pair.newer.taken_at) - new Date(pair.older.taken_at)) / 86400000);
+    return `
+      <div class="compare-pair" data-pair-index="${i}">
+        <div class="compare-row">
+          <div>
+            <img src="${signedUrls[pair.older.storage_path] || ''}" alt="Foto mais antiga">
+            <div class="meta"><div class="date">${formatDateBR(pair.older.taken_at)}</div></div>
+          </div>
+          <div>
+            <img src="${signedUrls[pair.newer.storage_path] || ''}" alt="Foto mais recente">
+            <div class="meta"><div class="date">${formatDateBR(pair.newer.taken_at)}</div></div>
+          </div>
+        </div>
+        <div class="compare-diff">${days} ${days === 1 ? 'dia' : 'dias'} de diferença</div>
+        <div class="compare-analysis" style="display:none"></div>
+      </div>`;
+  }).join('');
+
   btnAnalyzeCompare.disabled = false;
-  btnAnalyzeCompare.textContent = '✨ Análise por IA';
+  btnAnalyzeCompare.textContent = analyzeLabel(pairs.length);
 
   compareBar.style.display = 'none';
   compareViewer.classList.add('open');
@@ -360,43 +395,53 @@ async function urlToBase64(url){
   return dataUrl.split(',')[1];
 }
 
+// Processa os pares um de cada vez (não em paralelo) -- mais fácil de
+// acompanhar na tela qual comparação está rodando, e evita estourar o
+// limite diário de golpe só porque o usuário selecionou 6 fotos de uma vez.
 btnAnalyzeCompare.addEventListener('click', async () => {
-  if(!comparePair) return;
+  if(comparisonPairs.length === 0) return;
 
   btnAnalyzeCompare.disabled = true;
-  btnAnalyzeCompare.textContent = 'Analisando...';
-  compareAnalysis.style.display = 'block';
-  compareAnalysis.textContent = 'Analisando as fotos, isso pode levar alguns segundos...';
 
-  try {
-    const [image1_base64, image2_base64] = await Promise.all([
-      urlToBase64(compareImg1.src),
-      urlToBase64(compareImg2.src)
-    ]);
+  for(let i = 0; i < comparisonPairs.length; i++){
+    const pair = comparisonPairs[i];
+    const block = comparePairs.querySelector(`.compare-pair[data-pair-index="${i}"] .compare-analysis`);
+    block.style.display = 'block';
+    block.textContent = 'Analisando as fotos, isso pode levar alguns segundos...';
+    btnAnalyzeCompare.textContent = comparisonPairs.length > 1
+      ? `Analisando ${i + 1}/${comparisonPairs.length}...`
+      : 'Analisando...';
 
-    const { data: sd } = await supabase.auth.getSession();
-    const token = sd.session?.access_token;
+    try {
+      const [image1_base64, image2_base64] = await Promise.all([
+        urlToBase64(signedUrls[pair.older.storage_path]),
+        urlToBase64(signedUrls[pair.newer.storage_path])
+      ]);
 
-    const res = await fetch('/api/ai-body-comparison', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ image1_base64, image2_base64 })
-    });
+      const { data: sd } = await supabase.auth.getSession();
+      const token = sd.session?.access_token;
 
-    const data = await res.json();
+      const res = await fetch('/api/ai-body-comparison', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ image1_base64, image2_base64 })
+      });
 
-    if(!res.ok){
-      compareAnalysis.textContent = data.error || 'Não consegui analisar as fotos agora.';
-      return;
+      const data = await res.json();
+      block.textContent = res.ok ? data.analysis : (data.error || 'Não consegui analisar essa comparação.');
+
+      // Limite diário bateu no meio do lote -- para aqui, o resto fica sem
+      // análise em vez de martelar o endpoint só pra repetir o mesmo erro.
+      if(!res.ok && res.status === 429){
+        break;
+      }
+    } catch(err){
+      block.textContent = 'Erro de conexão. Tente de novo.';
     }
-
-    compareAnalysis.textContent = data.analysis;
-  } catch(err){
-    compareAnalysis.textContent = 'Erro de conexão. Tente de novo.';
-  } finally {
-    btnAnalyzeCompare.disabled = false;
-    btnAnalyzeCompare.textContent = '✨ Análise por IA';
   }
+
+  btnAnalyzeCompare.disabled = false;
+  btnAnalyzeCompare.textContent = analyzeLabel(comparisonPairs.length);
 });
 
 async function reload(){

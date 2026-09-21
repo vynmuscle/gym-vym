@@ -23,7 +23,9 @@ export default async function handler(req, res) {
   const userId = await authenticateRequest(req, res);
   if (!userId) return;
 
-  const allowed = await checkRateLimit(userId, 'ai-body-comparison', 5);
+  // 9 -- cada comparação de 3+3 fotos usa 3 chamadas (uma por par), então
+  // 5/dia mal dava pra 1 rodada completa. 9 cobre umas 3 rodadas por dia.
+  const allowed = await checkRateLimit(userId, 'ai-body-comparison', 9);
   if (!allowed) return res.status(429).json({ error: 'Limite diário de análises por IA atingido. Tente novamente amanhã.' });
 
   try {
