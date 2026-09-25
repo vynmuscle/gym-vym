@@ -61,9 +61,18 @@ muscle_group deve ser exatamente um destes valores: ${MUSCLE_GROUPS.join(', ')}.
 equipment deve ser exatamente um destes valores (ou vazio): ${EQUIPMENT_OPTIONS.join(', ')}.`;
 }
 
+// muscle_group/equipment fora da whitelist do prompt não travam nada hoje
+// (colunas são texto livre no banco), só fazem o exercício sumir sem aviso
+// do mapa de calor e da recuperação muscular (que indexam por esse valor
+// exato) -- rejeitar aqui aciona o retry (callClaudeForReview já tenta de
+// novo) em vez de aceitar um valor que quebra essas telas silenciosamente.
 function isValidResult(parsed) {
   if (!parsed || typeof parsed.feedback !== 'string' || !Array.isArray(parsed.exercises) || parsed.exercises.length === 0) return false;
-  return parsed.exercises.every(ex => typeof ex.name === 'string');
+  return parsed.exercises.every(ex =>
+    typeof ex.name === 'string' &&
+    MUSCLE_GROUPS.includes(ex.muscle_group) &&
+    (!ex.equipment || EQUIPMENT_OPTIONS.includes(ex.equipment))
+  );
 }
 
 async function callClaudeForReview(prompt, attempt = 1) {
