@@ -428,6 +428,15 @@ function openFullPicker(ei){
   });
 }
 
+// Observação que já valia da última vez que o exercício foi feito (ex:
+// "máquina nova", "ajustar banco no 3") -- pré-preenche o campo em vez de
+// começar em branco toda sessão, mas o usuário pode apagar/trocar a
+// qualquer momento; o que valer no campo na hora de marcar ✓ é o que vai
+// pra aquela série em diante (séries já marcadas não mudam retroativamente).
+function lastNoteFrom(sets){
+  return sets.find(s => s.notes)?.notes || '';
+}
+
 // Exercício extra que não faz parte da ficha do dia (ex: sobrou tempo depois
 // do treino de ombros e quer emendar um pouco de bíceps) — vira uma sessão
 // avulsa (workout_id null) sem workoutExerciseId, então nunca aparece o
@@ -448,7 +457,7 @@ async function addExtraExercise(newEx){
     movementPattern: newEx.movement_pattern,
     isDuration,
     rest: 90,
-    note: '',
+    note: lastNoteFrom(lastSets),
     progression: null,
     sets: []
   };
@@ -757,7 +766,9 @@ async function buildWorkout(){
       movementPattern: item.exercises.movement_pattern,
       isDuration,
       rest: item.rest_seconds,
-      note: '',
+      // Sessão retomada: prioriza a observação já digitada hoje (senão some
+      // ao reabrir a aba). Sessão nova: pré-preenche com a da vez passada.
+      note: doneForExercise ? lastNoteFrom([...doneForExercise.values()]) : lastNoteFrom(lastSets),
       progression,
       sets: []
     };
@@ -815,7 +826,7 @@ async function buildWorkout(){
       movementPattern: exercise.movement_pattern,
       isDuration,
       rest: 90,
-      note: '',
+      note: lastNoteFrom([...doneForExercise.values()]),
       progression: null,
       sets: []
     };
