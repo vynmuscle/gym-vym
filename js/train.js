@@ -444,7 +444,9 @@ function lastNoteFrom(sets){
 async function addExtraExercise(newEx){
   const isDuration = newEx.tracking_type === 'duration';
   const lastSets = await getLastSets(newEx.id);
-  const setCount = isDuration ? 1 : 3;
+  // Mesmo raciocínio do buildWorkout: se da última vez fez mais que o
+  // padrão de 3, volta com essa quantidade pré-preenchida.
+  const setCount = Math.max(isDuration ? 1 : 3, lastSets.length);
 
   const ex = {
     workoutExerciseId: null,
@@ -773,8 +775,12 @@ async function buildWorkout(){
       sets: []
     };
 
+    // lastSets.length entra na conta: se a última vez teve mais séries que
+    // o target_sets da ficha (usou "+ Adicionar série" na hora), a série
+    // extra volta pré-preenchida em vez de precisar adicionar nela de novo
+    // toda sessão -- antes só contava o que já tinha sido feito hoje.
     const maxDoneSetNumber = doneForExercise ? Math.max(...doneForExercise.keys()) : 0;
-    const setCount = Math.max(isDuration ? 1 : item.target_sets, maxDoneSetNumber);
+    const setCount = Math.max(isDuration ? 1 : item.target_sets, maxDoneSetNumber, lastSets.length);
     for(let i = 0; i < setCount; i++){
       const done = doneForExercise?.get(i + 1) || null;
       const prev = lastSets[i];
