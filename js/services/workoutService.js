@@ -980,19 +980,25 @@ export async function getSuggestedWorkout(userId) {
   if (pending) return { ...pending, warn: !pending.allRecovered };
 
   const fullyRecovered = candidates.filter(c => c.allRecovered);
-  // Empate em 100% de recuperação é comum (pct satura no teto do grupo mais
-  // lento). Desempata em duas etapas: 1) a ficha que está há mais tempo sem
-  // ser feita (nunca feita conta como a mais devida) — evita que uma ficha
-  // recém-treinada vença só por compartilhar um grupo muscular parado com
-  // outra ficha (ex: Tríceps em duas fichas diferentes); 2) se ainda empatar,
-  // o grupo muscular treinado há mais tempo.
+  // Desempate em três etapas, usado tanto com ficha 100% recuperada (comum
+  // dar empate: pct satura no teto do grupo mais lento) quanto sem nenhuma
+  // 100% (fichas com grupos musculares muito sobrepostos raramente batem
+  // 100% ao mesmo tempo -- sem o mesmo desempate aqui, esse caminho só
+  // olhava recencyScore por GRUPO muscular, nunca por FICHA, e podia ficar
+  // preso alternando só entre 2 fichas mesmo com outras 3 esperando há mais
+  // tempo): 1) maior recuperação média; 2) a ficha que está há mais tempo
+  // sem ser feita (nunca feita conta como a mais devida) — evita que uma
+  // ficha recém-treinada vença só por compartilhar um grupo muscular parado
+  // com outra ficha (ex: Tríceps em duas fichas diferentes); 3) se ainda
+  // empatar, o grupo muscular treinado há mais tempo.
+  function pickMoreDue(a, b){
+    if (b.avgPct !== a.avgPct) return b.avgPct > a.avgPct ? b : a;
+    if (b.workoutRecencyScore !== a.workoutRecencyScore) return b.workoutRecencyScore < a.workoutRecencyScore ? b : a;
+    return b.recencyScore < a.recencyScore ? b : a;
+  }
   const chosen = fullyRecovered.length > 0
-    ? fullyRecovered.reduce((a, b) => {
-        if (b.avgPct !== a.avgPct) return b.avgPct > a.avgPct ? b : a;
-        if (b.workoutRecencyScore !== a.workoutRecencyScore) return b.workoutRecencyScore < a.workoutRecencyScore ? b : a;
-        return b.recencyScore < a.recencyScore ? b : a;
-      })
-    : candidates.reduce((a, b) => b.recencyScore < a.recencyScore ? b : a);
+    ? fullyRecovered.reduce(pickMoreDue)
+    : candidates.reduce(pickMoreDue);
   const warn = fullyRecovered.length === 0;
 
   if (userId) {
